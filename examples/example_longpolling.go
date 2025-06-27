@@ -12,6 +12,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"syscall"
 
 	maxbot "github.com/max-messenger/max-bot-api-client-go"
 
@@ -47,7 +48,7 @@ func main() {
 	}()
 	go func() {
 		exit := make(chan os.Signal)
-		signal.Notify(exit, os.Kill, os.Interrupt)
+		signal.Notify(exit, syscall.SIGTERM, os.Interrupt)
 		select {
 		case <-exit:
 			cancel()
