@@ -47,7 +47,7 @@ func main() {
 		}
 	}()
 	go func() {
-		exit := make(chan os.Signal)
+		exit := make(chan os.Signal, 1)
 		signal.Notify(exit, syscall.SIGTERM, os.Interrupt)
 		select {
 		case <-exit:
