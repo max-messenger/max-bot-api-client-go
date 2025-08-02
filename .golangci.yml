@@ -1,0 +1,30 @@
+run:
+  timeout: 5m
+  tests: false
+  exclude-dirs:
+    - "mocks"
+  exclude-files:
+    - "example.go"
+
+linters:
+  enable:
+    - govet
+    - errcheck
+    - staticcheck
+    - gosimple
+    - unused
+    - ineffassign
+    - typecheck
+    - gofmt
+    - goimports
+    - misspell
+    - gocritic
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+output:
+  formats:
+    - format: colored-line-number
