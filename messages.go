@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -48,7 +48,7 @@ func (a *messages) GetMessages(ctx context.Context, chatID int64, messageIDs []s
 	}
 	defer func() {
 		if err := body.Close(); err != nil {
-			log.Println(err)
+			slog.Error("failed to close response body", "error", err)
 		}
 	}()
 	return result, json.NewDecoder(body).Decode(result)
@@ -77,7 +77,7 @@ func (a *messages) DeleteMessage(ctx context.Context, messageID int64) (*schemes
 	}
 	defer func() {
 		if err := body.Close(); err != nil {
-			log.Println(err)
+			slog.Error("failed to close response body", "error", err)
 		}
 	}()
 	return result, json.NewDecoder(body).Decode(result)
@@ -94,7 +94,7 @@ func (a *messages) AnswerOnCallback(ctx context.Context, callbackID string, call
 	}
 	defer func() {
 		if err := body.Close(); err != nil {
-			log.Println(err)
+			slog.Error("failed to close response body", "error", err)
 		}
 	}()
 	return result, json.NewDecoder(body).Decode(result)
@@ -112,7 +112,7 @@ func (a *messages) Send(ctx context.Context, m *Message) (string, error) {
 	return a.sendMessage(ctx, m.vip, m.reset, m.chatID, m.userID, m.message)
 }
 
-// Send sends a message to a chat. As a result for this method new message identifier returns.
+// SendMessageResult sends a message to a chat and returns the message result.
 func (a *messages) SendMessageResult(ctx context.Context, m *Message) (schemes.Message, error) {
 	_, err := a.sendMessage(ctx, m.vip, m.reset, m.chatID, m.userID, m.message)
 	if message, ok := err.(*schemes.Error); ok {
@@ -139,12 +139,15 @@ func (a *messages) sendMessage(ctx context.Context, vip bool, reset bool, chatID
 	}
 	body, err := a.client.request(ctx, http.MethodPost, mode, values, reset, message)
 	if err != nil {
-		return "heir", err
+		return "", err
 	}
-	defer body.Close() //nolint:errcheck
+	defer func() {
+		if err := body.Close(); err != nil {
+			slog.Error("failed to close response body", "error", err)
+		}
+	}()
 	if err := json.NewDecoder(body).Decode(result); err != nil {
-		// Message sent without errors
-		return "err", err
+		return "", err
 	}
 	if result.Code == "" {
 		if mode == "notify" {
@@ -152,7 +155,6 @@ func (a *messages) sendMessage(ctx context.Context, vip bool, reset bool, chatID
 		} else {
 			return result.Message.Body.Mid, result
 		}
-
 	}
 	return "", result
 }
@@ -167,7 +169,7 @@ func (a *messages) editMessage(ctx context.Context, messageID int64, message *sc
 	}
 	defer func() {
 		if err := body.Close(); err != nil {
-			log.Println(err)
+			slog.Error("failed to close response body", "error", err)
 		}
 	}()
 	return result, json.NewDecoder(body).Decode(result)
@@ -194,10 +196,13 @@ func (a *messages) checkUser(ctx context.Context, reset bool, message *schemes.N
 	if err != nil {
 		return false, err
 	}
-	defer body.Close() //nolint:errcheck
+	defer func() {
+		if err := body.Close(); err != nil {
+			slog.Error("failed to close response body", "error", err)
+		}
+	}()
 
 	if err := json.NewDecoder(body).Decode(result); err != nil {
-		// Message sent without errors
 		return false, err
 	}
 
