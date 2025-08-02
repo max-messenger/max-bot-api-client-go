@@ -49,7 +49,7 @@ func (a *debugs) sendMessage(ctx context.Context, vip bool, reset bool, chatID i
 	if err != nil {
 		return "heir", err
 	}
-	defer body.Close()
+	defer body.Close() //nolint:errcheck
 	if err := json.NewDecoder(body).Decode(result); err != nil {
 		// Message sent without errors
 		return "err", err

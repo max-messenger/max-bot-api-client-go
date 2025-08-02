@@ -115,8 +115,7 @@ func (a *messages) Send(ctx context.Context, m *Message) (string, error) {
 // Send sends a message to a chat. As a result for this method new message identifier returns.
 func (a *messages) SendMessageResult(ctx context.Context, m *Message) (schemes.Message, error) {
 	_, err := a.sendMessage(ctx, m.vip, m.reset, m.chatID, m.userID, m.message)
-	switch message := err.(type) {
-	case *schemes.Error:
+	if message, ok := err.(*schemes.Error); ok {
 		return message.Message, nil
 	}
 	return schemes.Message{}, err
@@ -142,7 +141,7 @@ func (a *messages) sendMessage(ctx context.Context, vip bool, reset bool, chatID
 	if err != nil {
 		return "heir", err
 	}
-	defer body.Close()
+	defer body.Close() //nolint:errcheck
 	if err := json.NewDecoder(body).Decode(result); err != nil {
 		// Message sent without errors
 		return "err", err
@@ -195,7 +194,7 @@ func (a *messages) checkUser(ctx context.Context, reset bool, message *schemes.N
 	if err != nil {
 		return false, err
 	}
-	defer body.Close()
+	defer body.Close() //nolint:errcheck
 
 	if err := json.NewDecoder(body).Decode(result); err != nil {
 		// Message sent without errors
@@ -205,6 +204,6 @@ func (a *messages) checkUser(ctx context.Context, reset bool, message *schemes.N
 	if len(result.NumberExist) > 0 {
 		return true, result
 	}
-	
+
 	return false, result
 }

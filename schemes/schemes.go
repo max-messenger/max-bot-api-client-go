@@ -12,6 +12,7 @@ type ActionRequestBody struct {
 
 type AttachmentType string
 
+//nolint:staticcheck
 const (
 	AttachmentImage    AttachmentType = "image"
 	AttachmentVideo                   = "video"

@@ -31,7 +31,7 @@ func (a *uploads) UploadMediaFromFile(ctx context.Context, uploadType schemes.Up
 	if err != nil {
 		return nil, err
 	}
-	defer fh.Close()
+	defer fh.Close() //nolint:errcheck
 	return a.UploadMediaFromReader(ctx, uploadType, fh)
 }
 
@@ -41,7 +41,7 @@ func (a *uploads) UploadMediaFromUrl(ctx context.Context, uploadType schemes.Upl
 	if err != nil {
 		return nil, err
 	}
-	defer respFile.Body.Close()
+	defer respFile.Body.Close() //nolint:errcheck
 	return a.UploadMediaFromReader(ctx, uploadType, respFile.Body)
 }
 
@@ -56,7 +56,7 @@ func (a *uploads) UploadPhotoFromFile(ctx context.Context, fileName string) (*sc
 	if err != nil {
 		return nil, err
 	}
-	defer fh.Close()
+	defer fh.Close() //nolint:errcheck
 	result := new(schemes.PhotoTokens)
 	return result, a.uploadMediaFromReader(ctx, schemes.PHOTO, fh, result)
 }
@@ -74,7 +74,7 @@ func (a *uploads) UploadPhotoFromUrl(ctx context.Context, url string) (*schemes.
 	if err != nil {
 		return nil, err
 	}
-	defer respFile.Body.Close()
+	defer respFile.Body.Close() //nolint:errcheck
 	result := new(schemes.PhotoTokens)
 	return result, a.uploadMediaFromReader(ctx, schemes.PHOTO, respFile.Body, result)
 }
