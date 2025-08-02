@@ -3,13 +3,13 @@ package configservice
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"regexp"
 	"strings"
 
 	"github.com/caarlos0/env/v6"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v2"
 )
@@ -30,14 +30,14 @@ type Config struct {
 }
 
 func (c *Config) SetEnvVariables(str string) string {
-	re, err := regexp.Compile(`(\$\((\w+)\))`)
+	re := regexp.MustCompile(`(\$\((\w+)\))`)
 	res := re.FindAllStringSubmatch(str, -1)
 	for _, v := range res {
 		if len(v) == 3 {
 			if os.Getenv(v[2]) == "" {
-				log.Err(err).Msg("variable " + v[1] + " is not defined!")
+				log.Error().Msg("variable " + v[1] + " is not defined!")
 			}
-			str = strings.Replace(str, v[1], os.Getenv(v[2]), -1)
+			str = strings.ReplaceAll(str, v[1], os.Getenv(v[2]))
 		}
 	}
 	return str
@@ -102,12 +102,15 @@ func (c *Config) readYamlConfigFile(path string) error {
 		}
 	}()
 
-	source, _ := ioutil.ReadAll(filename)
+	source, err := io.ReadAll(filename)
+	if err != nil {
+		return errors.Wrap(err, "failed to read config file")
+	}
 	unsource := source
 
 	err = yaml.Unmarshal(unsource, &c.config)
 	if err != nil {
-		log.Err(err).Msg("readYamlConfigFile yaml.Unmarshal")
+		return errors.Wrap(err, "failed to unmarshal yaml config")
 	}
 
 	return err
