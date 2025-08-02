@@ -1,3 +1,5 @@
+
+![golangci-lint](https://github.com/vadiminshakov/max-bot-api-client-go/actions/workflows/golangci-lint.yml/badge.svg)
 # Max Bot API Client library for Golang
 
 
