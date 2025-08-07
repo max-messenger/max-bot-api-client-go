@@ -18,11 +18,8 @@ jobs:
         with:
           go-version: '1.22'
 
-      - name: Install golangci-lint
+      - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v4
         with:
           version: latest
           args: --timeout=5m
-
-      - name: Run golangci-lint
-        run: golangci-lint run
