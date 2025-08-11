@@ -59,7 +59,7 @@ func (a *subscriptions) Subscribe(ctx context.Context, subscribeURL string, upda
 func (a *subscriptions) Unsubscribe(ctx context.Context, subscriptionURL string) (*schemes.SimpleQueryResult, error) {
 	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}
-	values.Set("url", subscriptionURL)
+	values.Set(paramURL, subscriptionURL)
 	body, err := a.client.request(ctx, http.MethodDelete, "subscriptions", values, false, nil)
 	if err != nil {
 		return result, err

@@ -88,7 +88,7 @@ func (a *uploads) UploadPhotoFromReader(ctx context.Context, reader io.Reader) (
 func (a *uploads) getUploadURL(ctx context.Context, uploadType schemes.UploadType) (*schemes.UploadEndpoint, error) {
 	result := new(schemes.UploadEndpoint)
 	values := url.Values{}
-	values.Set("type", string(uploadType))
+	values.Set(paramType, string(uploadType))
 	body, err := a.client.request(ctx, http.MethodPost, "uploads", values, false, nil)
 	if err != nil {
 		return result, err

@@ -9,7 +9,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"time"
 
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
@@ -75,7 +74,7 @@ func (cl *client) requestReader(ctx context.Context, method, path string, query 
 	u := *cl.baseURL
 	u.Path = path
 	if !reset {
-		query.Set("access_token", cl.key)
+		query.Set(paramAccessToken, cl.key)
 	}
 
 	query.Set("v", cl.version)

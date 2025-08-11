@@ -281,16 +281,16 @@ func (a *Api) getUpdates(ctx context.Context, params *UpdatesParams) (*schemes.U
 	values := url.Values{}
 
 	if params.Limit > 0 {
-		values.Set("limit", strconv.Itoa(params.Limit))
+		values.Set(paramLimit, strconv.Itoa(params.Limit))
 	}
 	if params.Timeout > 0 {
-		values.Set("timeout", strconv.Itoa(int(params.Timeout.Seconds())))
+		values.Set(paramTimeout, strconv.Itoa(int(params.Timeout.Seconds())))
 	}
 	if params.Marker > 0 {
-		values.Set("marker", strconv.FormatInt(params.Marker, 10))
+		values.Set(paramMarker, strconv.FormatInt(params.Marker, 10))
 	}
 	for _, t := range params.Types {
-		values.Add("types", t)
+		values.Add(paramTypes, t)
 	}
 
 	body, err := a.client.request(ctx, http.MethodGet, "updates", values, false, nil)

@@ -26,21 +26,21 @@ func (a *messages) GetMessages(ctx context.Context, chatID int64, messageIDs []s
 	result := new(schemes.MessageList)
 	values := url.Values{}
 	if chatID != 0 {
-		values.Set("chat_id", strconv.Itoa(int(chatID)))
+		values.Set(paramChatID, strconv.Itoa(int(chatID)))
 	}
 	if len(messageIDs) > 0 {
 		for _, mid := range messageIDs {
-			values.Add("message_ids", mid)
+			values.Add(paramMessageIDs, mid)
 		}
 	}
 	if from != 0 {
-		values.Set("from", strconv.Itoa(from))
+		values.Set(paramFrom, strconv.Itoa(from))
 	}
 	if to != 0 {
-		values.Set("to", strconv.Itoa(to))
+		values.Set(paramTo, strconv.Itoa(to))
 	}
 	if count > 0 {
-		values.Set("count", strconv.Itoa(count))
+		values.Set(paramCount, strconv.Itoa(count))
 	}
 	body, err := a.client.request(ctx, http.MethodGet, "messages", values, false, nil)
 	if err != nil {
@@ -70,7 +70,7 @@ func (a *messages) EditMessage(ctx context.Context, messageID int64, message *Me
 func (a *messages) DeleteMessage(ctx context.Context, messageID int64) (*schemes.SimpleQueryResult, error) {
 	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}
-	values.Set("message_id", strconv.Itoa(int(messageID)))
+	values.Set(paramMessageID, strconv.Itoa(int(messageID)))
 	body, err := a.client.request(ctx, http.MethodDelete, "messages", values, false, nil)
 	if err != nil {
 		return result, err
@@ -87,7 +87,7 @@ func (a *messages) DeleteMessage(ctx context.Context, messageID int64) (*schemes
 func (a *messages) AnswerOnCallback(ctx context.Context, callbackID string, callback *schemes.CallbackAnswer) (*schemes.SimpleQueryResult, error) {
 	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}
-	values.Set("callback_id", callbackID)
+	values.Set(paramCallbackID, callbackID)
 	body, err := a.client.request(ctx, http.MethodPost, "answers", values, false, callback)
 	if err != nil {
 		return result, err
@@ -126,13 +126,13 @@ func (a *messages) sendMessage(ctx context.Context, vip bool, reset bool, chatID
 	result := new(schemes.Error)
 	values := url.Values{}
 	if chatID != 0 {
-		values.Set("chat_id", strconv.Itoa(int(chatID)))
+		values.Set(paramChatID, strconv.Itoa(int(chatID)))
 	}
 	if userID != 0 {
-		values.Set("user_id", strconv.Itoa(int(userID)))
+		values.Set(paramUserID, strconv.Itoa(int(userID)))
 	}
 	if reset {
-		values.Set("access_token", message.BotToken)
+		values.Set(paramAccessToken, message.BotToken)
 	}
 	mode := "messages"
 	if vip {
@@ -176,7 +176,7 @@ func (a *messages) editMessage(ctx context.Context, messageID int64, message *sc
 	return result, json.NewDecoder(body).Decode(result)
 }
 
-// Check posiable to send a message to a chat.
+// Check the possibility to send a message to a chat.
 func (a *messages) Check(ctx context.Context, m *Message) (bool, error) {
 	return a.checkUser(ctx, m.reset, m.message)
 }
@@ -185,12 +185,12 @@ func (a *messages) checkUser(ctx context.Context, reset bool, message *schemes.N
 	result := new(schemes.Error)
 	values := url.Values{}
 	if reset {
-		values.Set("access_token", message.BotToken)
+		values.Set(paramAccessToken, message.BotToken)
 	}
 	mode := "notify/exists"
 
 	if message.PhoneNumbers != nil {
-		values.Set("phone_numbers", strings.Join(message.PhoneNumbers, ","))
+		values.Set(paramPhoneNumbers, strings.Join(message.PhoneNumbers, ","))
 	}
 
 	body, err := a.client.request(ctx, http.MethodGet, mode, values, reset, nil)
@@ -210,6 +210,6 @@ func (a *messages) checkUser(ctx context.Context, reset bool, message *schemes.N
 	if len(result.NumberExist) > 0 {
 		return true, result
 	}
-	
+
 	return false, result
 }

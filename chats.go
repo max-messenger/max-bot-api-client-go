@@ -25,10 +25,10 @@ func (a *chats) GetChats(ctx context.Context, count, marker int64) (*schemes.Cha
 	result := new(schemes.ChatList)
 	values := url.Values{}
 	if count > 0 {
-		values.Set("count", strconv.Itoa(int(count)))
+		values.Set(paramCount, strconv.Itoa(int(count)))
 	}
 	if marker > 0 {
-		values.Set("marker", strconv.Itoa(int(marker)))
+		values.Set(paramMarker, strconv.Itoa(int(marker)))
 	}
 	body, err := a.client.request(ctx, http.MethodGet, "chats", values, false, nil)
 	if err != nil {
@@ -79,10 +79,10 @@ func (a *chats) GetChatMembers(ctx context.Context, chatID, count, marker int64)
 	result := new(schemes.ChatMembersList)
 	values := url.Values{}
 	if count > 0 {
-		values.Set("count", strconv.Itoa(int(count)))
+		values.Set(paramCount, strconv.Itoa(int(count)))
 	}
 	if marker > 0 {
-		values.Set("marker", strconv.Itoa(int(marker)))
+		values.Set(paramMarker, strconv.Itoa(int(marker)))
 	}
 	body, err := a.client.request(ctx, http.MethodGet, fmt.Sprintf("chats/%d/members", chatID), values, false, nil)
 	if err != nil {
@@ -148,7 +148,7 @@ func (a *chats) AddMember(ctx context.Context, chatID int64, users schemes.UserI
 func (a *chats) RemoveMember(ctx context.Context, chatID int64, userID int64) (*schemes.SimpleQueryResult, error) {
 	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}
-	values.Set("user_id", strconv.Itoa(int(userID)))
+	values.Set(paramUserID, strconv.Itoa(int(userID)))
 	body, err := a.client.request(ctx, http.MethodDelete, fmt.Sprintf("chats/%d/members", chatID), values, false, nil)
 	if err != nil {
 		return result, err
