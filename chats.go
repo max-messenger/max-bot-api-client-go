@@ -20,7 +20,7 @@ func newChats(client *client) *chats {
 	return &chats{client: client}
 }
 
-// GetChats returns information about chats that bot participated in: a result list and marker points to the next page
+// GetChats returns information about chats that bot participated in: a result list and marker points to the next page.
 func (a *chats) GetChats(ctx context.Context, count, marker int64) (*schemes.ChatList, error) {
 	result := new(schemes.ChatList)
 	values := url.Values{}
@@ -42,7 +42,7 @@ func (a *chats) GetChats(ctx context.Context, count, marker int64) (*schemes.Cha
 	return result, json.NewDecoder(body).Decode(result)
 }
 
-// GetChat returns info about chat
+// GetChat returns info about the chat.
 func (a *chats) GetChat(ctx context.Context, chatID int64) (*schemes.Chat, error) {
 	result := new(schemes.Chat)
 	values := url.Values{}
@@ -58,7 +58,7 @@ func (a *chats) GetChat(ctx context.Context, chatID int64) (*schemes.Chat, error
 	return result, json.NewDecoder(body).Decode(result)
 }
 
-// GetChatMembership returns chat membership info for current bot
+// GetChatMembership returns chat membership info for the current bot.
 func (a *chats) GetChatMembership(ctx context.Context, chatID int64) (*schemes.ChatMember, error) {
 	result := new(schemes.ChatMember)
 	values := url.Values{}
@@ -74,7 +74,7 @@ func (a *chats) GetChatMembership(ctx context.Context, chatID int64) (*schemes.C
 	return result, json.NewDecoder(body).Decode(result)
 }
 
-// GetChatMembers returns users participated in chat
+// GetChatMembers returns users participated in chat.
 func (a *chats) GetChatMembers(ctx context.Context, chatID, count, marker int64) (*schemes.ChatMembersList, error) {
 	result := new(schemes.ChatMembersList)
 	values := url.Values{}
@@ -96,7 +96,7 @@ func (a *chats) GetChatMembers(ctx context.Context, chatID, count, marker int64)
 	return result, json.NewDecoder(body).Decode(result)
 }
 
-// LeaveChat removes bot from chat members
+// LeaveChat removes the bot from the chat members.
 func (a *chats) LeaveChat(ctx context.Context, chatID int64) (*schemes.SimpleQueryResult, error) {
 	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}
@@ -128,7 +128,7 @@ func (a *chats) EditChat(ctx context.Context, chatID int64, update *schemes.Chat
 	return result, json.NewDecoder(body).Decode(result)
 }
 
-// AddMember adds members to chat. Additional permissions may require.
+// AddMember adds members to the chat. Additional permissions may be required.
 func (a *chats) AddMember(ctx context.Context, chatID int64, users schemes.UserIdsList) (*schemes.SimpleQueryResult, error) {
 	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}
@@ -144,7 +144,7 @@ func (a *chats) AddMember(ctx context.Context, chatID int64, users schemes.UserI
 	return result, json.NewDecoder(body).Decode(result)
 }
 
-// RemoveMember removes member from chat. Additional permissions may require.
+// RemoveMember removes a member from the chat. Additional permissions may be required.
 func (a *chats) RemoveMember(ctx context.Context, chatID int64, userID int64) (*schemes.SimpleQueryResult, error) {
 	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}
@@ -161,7 +161,7 @@ func (a *chats) RemoveMember(ctx context.Context, chatID int64, userID int64) (*
 	return result, json.NewDecoder(body).Decode(result)
 }
 
-// SendAction send bot action to chat
+// SendAction send the bot action to the chat.
 func (a *chats) SendAction(ctx context.Context, chatID int64, action schemes.SenderAction) (*schemes.SimpleQueryResult, error) {
 	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}

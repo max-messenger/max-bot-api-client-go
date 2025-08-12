@@ -25,7 +25,7 @@ func newUploads(client *client) *uploads {
 	return &uploads{client: client}
 }
 
-// UploadMedia uploads file to Max server
+// UploadMediaFromFile uploads the file to the Max server.
 func (a *uploads) UploadMediaFromFile(ctx context.Context, uploadType schemes.UploadType, filename string) (*schemes.UploadedInfo, error) {
 	fh, err := os.Open(filename)
 	if err != nil {
@@ -35,7 +35,7 @@ func (a *uploads) UploadMediaFromFile(ctx context.Context, uploadType schemes.Up
 	return a.UploadMediaFromReader(ctx, uploadType, fh)
 }
 
-// UploadMediaFromUrl uploads file from remote server to Max server
+// UploadMediaFromUrl uploads the file from a remote server to the Max server.
 func (a *uploads) UploadMediaFromUrl(ctx context.Context, uploadType schemes.UploadType, u url.URL) (*schemes.UploadedInfo, error) {
 	respFile, err := http.Get(u.String())
 	if err != nil {
@@ -50,7 +50,7 @@ func (a *uploads) UploadMediaFromReader(ctx context.Context, uploadType schemes.
 	return result, a.uploadMediaFromReader(ctx, uploadType, reader, result)
 }
 
-// UploadPhotoFromFile uploads photos to Max server
+// UploadPhotoFromFile uploads photos to the Max server.
 func (a *uploads) UploadPhotoFromFile(ctx context.Context, fileName string) (*schemes.PhotoTokens, error) {
 	fh, err := os.Open(fileName)
 	if err != nil {
@@ -61,14 +61,14 @@ func (a *uploads) UploadPhotoFromFile(ctx context.Context, fileName string) (*sc
 	return result, a.uploadMediaFromReader(ctx, schemes.PHOTO, fh, result)
 }
 
-// UploadPhotoFromFile uploads photos to Max server
+// UploadPhotoFromBase64String uploads photos to the Max server.
 func (a *uploads) UploadPhotoFromBase64String(ctx context.Context, code string) (*schemes.PhotoTokens, error) {
 	decoder := base64.NewDecoder(base64.StdEncoding, strings.NewReader(code))
 	result := new(schemes.PhotoTokens)
 	return result, a.uploadMediaFromReader(ctx, schemes.PHOTO, decoder, result)
 }
 
-// UploadPhotoFromUrl uploads photo from remote server to Max server
+// UploadPhotoFromUrl uploads the photo from a remote server to the Max server.
 func (a *uploads) UploadPhotoFromUrl(ctx context.Context, url string) (*schemes.PhotoTokens, error) {
 	respFile, err := http.Get(url)
 	if err != nil {
@@ -79,7 +79,7 @@ func (a *uploads) UploadPhotoFromUrl(ctx context.Context, url string) (*schemes.
 	return result, a.uploadMediaFromReader(ctx, schemes.PHOTO, respFile.Body, result)
 }
 
-// UploadPhotoFromReader uploads photo from reader
+// UploadPhotoFromReader uploads the photo from a reader.
 func (a *uploads) UploadPhotoFromReader(ctx context.Context, reader io.Reader) (*schemes.PhotoTokens, error) {
 	result := new(schemes.PhotoTokens)
 	return result, a.uploadMediaFromReader(ctx, schemes.PHOTO, reader, result)

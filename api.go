@@ -29,7 +29,7 @@ const (
 	maxRetries = 3
 )
 
-// Api represents the MAX Bot API client
+// Api represents the MAX Bot API client.
 type Api struct {
 	Bots          *bots
 	Chats         *chats
@@ -44,7 +44,7 @@ type Api struct {
 	debug   bool
 }
 
-// New creates a new Max Bot API client with the provided token
+// New creates a new Max Bot API client with the provided token.
 func New(token string) (*Api, error) {
 	if token == "" {
 		return nil, ErrEmptyToken
@@ -77,7 +77,7 @@ func New(token string) (*Api, error) {
 	return api, nil
 }
 
-// NewWithConfig creates a new Max Bot API client from configuration service
+// NewWithConfig creates a new Max Bot API client from the configuration service.
 func NewWithConfig(cfg configservice.ConfigInterface) (*Api, error) {
 	if cfg == nil {
 		return nil, fmt.Errorf("config is nil")
@@ -133,7 +133,7 @@ func NewWithConfig(cfg configservice.ConfigInterface) (*Api, error) {
 	return api, nil
 }
 
-// updateTypeMap maps update types to their corresponding struct constructors
+// updateTypeMap maps update types to their corresponding struct constructors.
 var updateTypeMap = map[schemes.UpdateType]func(debugRaw string) schemes.UpdateInterface{
 	schemes.TypeMessageCallback: func(debugRaw string) schemes.UpdateInterface {
 		return &schemes.MessageCallbackUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
@@ -167,7 +167,7 @@ var updateTypeMap = map[schemes.UpdateType]func(debugRaw string) schemes.UpdateI
 	},
 }
 
-// attachmentTypeMap maps attachment types to their corresponding struct constructors
+// attachmentTypeMap maps attachment types to their corresponding struct constructors.
 var attachmentTypeMap = map[schemes.AttachmentType]func() schemes.AttachmentInterface{
 	schemes.AttachmentAudio:    func() schemes.AttachmentInterface { return new(schemes.AudioAttachment) },
 	schemes.AttachmentContact:  func() schemes.AttachmentInterface { return new(schemes.ContactAttachment) },
@@ -180,7 +180,7 @@ var attachmentTypeMap = map[schemes.AttachmentType]func() schemes.AttachmentInte
 	schemes.AttachmentVideo:    func() schemes.AttachmentInterface { return new(schemes.VideoAttachment) },
 }
 
-// bytesToProperUpdate converts raw JSON bytes to the appropriate update type
+// bytesToProperUpdate converts raw JSON bytes to the appropriate update type.
 func (a *Api) bytesToProperUpdate(data []byte) (schemes.UpdateInterface, error) {
 	baseUpdate := &schemes.Update{}
 	if err := json.Unmarshal(data, baseUpdate); err != nil {
@@ -210,7 +210,7 @@ func (a *Api) bytesToProperUpdate(data []byte) (schemes.UpdateInterface, error) 
 	return update, nil
 }
 
-// processMessageAttachments processes attachments for message-type updates
+// processMessageAttachments processes attachments for message-type updates.
 func (a *Api) processMessageAttachments(update schemes.UpdateInterface) error {
 	switch u := update.(type) {
 	case *schemes.MessageCreatedUpdate:
@@ -242,7 +242,7 @@ func (a *Api) processMessageAttachments(update schemes.UpdateInterface) error {
 	return nil
 }
 
-// bytesToProperAttachment converts raw JSON bytes to the appropriate attachment type
+// bytesToProperAttachment converts raw JSON bytes to the appropriate attachment type.
 func (a *Api) bytesToProperAttachment(data []byte) (schemes.AttachmentInterface, error) {
 	baseAttachment := &schemes.Attachment{}
 	if err := json.Unmarshal(data, baseAttachment); err != nil {
@@ -264,7 +264,7 @@ func (a *Api) bytesToProperAttachment(data []byte) (schemes.AttachmentInterface,
 	return attachment, nil
 }
 
-// UpdatesParams holds parameters for getting updates
+// UpdatesParams holds parameters for getting updates.
 type UpdatesParams struct {
 	Limit   int
 	Timeout time.Duration
@@ -272,7 +272,7 @@ type UpdatesParams struct {
 	Types   []string
 }
 
-// getUpdates fetches updates from the API
+// getUpdates fetches updates from the API.
 func (a *Api) getUpdates(ctx context.Context, params *UpdatesParams) (*schemes.UpdateList, error) {
 	if params == nil {
 		params = &UpdatesParams{}
@@ -348,7 +348,7 @@ func (a *Api) getUpdatesWithRetry(ctx context.Context, params *UpdatesParams) (*
 	return nil, fmt.Errorf("failed after %d attempts: %w", maxRetries, lastErr)
 }
 
-// GetUpdates returns a channel that delivers updates from the API
+// GetUpdates returns a channel that delivers updates from the API.
 func (a *Api) GetUpdates(ctx context.Context) <-chan schemes.UpdateInterface {
 	ch := make(chan schemes.UpdateInterface, 100)
 
@@ -405,7 +405,7 @@ func (a *Api) GetUpdates(ctx context.Context) <-chan schemes.UpdateInterface {
 	return ch
 }
 
-// GetHandler returns an http.HandlerFunc for webhook handling
+// GetHandler returns an http.HandlerFunc for webhook handling.
 func (a *Api) GetHandler(updates chan<- schemes.UpdateInterface) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {

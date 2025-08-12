@@ -18,7 +18,7 @@ func newSubscriptions(client *client) *subscriptions {
 	return &subscriptions{client: client}
 }
 
-// GetSubscriptions returns the list of all subscriptions
+// GetSubscriptions returns the list of all subscriptions.
 func (a *subscriptions) GetSubscriptions(ctx context.Context) (*schemes.GetSubscriptionsResult, error) {
 	result := new(schemes.GetSubscriptionsResult)
 	values := url.Values{}
@@ -34,7 +34,7 @@ func (a *subscriptions) GetSubscriptions(ctx context.Context) (*schemes.GetSubsc
 	return result, json.NewDecoder(body).Decode(result)
 }
 
-// Subscribe subscribes bot to receive updates via WebHook
+// Subscribe subscribes the bot to receive updates via WebHook.
 func (a *subscriptions) Subscribe(ctx context.Context, subscribeURL string, updateTypes []string) (*schemes.SimpleQueryResult, error) {
 	subscription := &schemes.SubscriptionRequestBody{
 		Url:         subscribeURL,
@@ -55,7 +55,7 @@ func (a *subscriptions) Subscribe(ctx context.Context, subscribeURL string, upda
 	return result, json.NewDecoder(body).Decode(result)
 }
 
-// Unsubscribe unsubscribes bot from receiving updates via WebHook
+// Unsubscribe unsubscribes the bot from receiving updates via WebHook.
 func (a *subscriptions) Unsubscribe(ctx context.Context, subscriptionURL string) (*schemes.SimpleQueryResult, error) {
 	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}

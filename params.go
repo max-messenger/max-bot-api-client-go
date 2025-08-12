@@ -7,6 +7,7 @@ const (
 	paramType         = "type"
 	paramTypes        = "types"
 	paramURL          = "url"
+	paramVersion      = "v"
 
 	paramCallbackID = "callback_id"
 	paramChatID     = "chat_id"

@@ -21,7 +21,8 @@ func newMessages(client *client) *messages {
 	return &messages{client: client}
 }
 
-// GetMessages returns messages in chat: result page and marker referencing to the next page. Messages traversed in reverse direction so the latest message in chat will be first in result array. Therefore if you use from and to parameters, to must be less than from
+// GetMessages returns messages in chat: result page and marker referencing to the next page.
+// Messages traversed in reverse direction, so the latest message in chat will be the first in the result array.
 func (a *messages) GetMessages(ctx context.Context, chatID int64, messageIDs []string, from int, to int, count int) (*schemes.MessageList, error) {
 	result := new(schemes.MessageList)
 	values := url.Values{}
@@ -32,6 +33,10 @@ func (a *messages) GetMessages(ctx context.Context, chatID int64, messageIDs []s
 		for _, mid := range messageIDs {
 			values.Add(paramMessageIDs, mid)
 		}
+	}
+	// If you use 'from' and 'to' parameters, 'to' must be less than 'from'.
+	if from > to {
+		to, from = from, to
 	}
 	if from != 0 {
 		values.Set(paramFrom, strconv.Itoa(from))
@@ -54,7 +59,7 @@ func (a *messages) GetMessages(ctx context.Context, chatID int64, messageIDs []s
 	return result, json.NewDecoder(body).Decode(result)
 }
 
-// EditMessage updates message by id
+// EditMessage updates the message by id.
 func (a *messages) EditMessage(ctx context.Context, messageID int64, message *Message) error {
 	s, err := a.editMessage(ctx, messageID, message.message)
 	if err != nil {
@@ -66,7 +71,7 @@ func (a *messages) EditMessage(ctx context.Context, messageID int64, message *Me
 	return nil
 }
 
-// DeleteMessage deletes message by id
+// DeleteMessage deletes the message by id.
 func (a *messages) DeleteMessage(ctx context.Context, messageID int64) (*schemes.SimpleQueryResult, error) {
 	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}
@@ -83,7 +88,8 @@ func (a *messages) DeleteMessage(ctx context.Context, messageID int64) (*schemes
 	return result, json.NewDecoder(body).Decode(result)
 }
 
-// AnswerOnCallback should be called to send an answer after a user has clicked the button. The answer may be an updated message or/and a one-time user notification.
+// AnswerOnCallback should be called to send an answer after a user has clicked the button.
+// The answer may be an updated message or/and a one-time user notification.
 func (a *messages) AnswerOnCallback(ctx context.Context, callbackID string, callback *schemes.CallbackAnswer) (*schemes.SimpleQueryResult, error) {
 	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}
@@ -100,14 +106,14 @@ func (a *messages) AnswerOnCallback(ctx context.Context, callbackID string, call
 	return result, json.NewDecoder(body).Decode(result)
 }
 
-// NewKeyboardBuilder returns new keyboard builder helper
+// NewKeyboardBuilder returns a new keyboard builder helper.
 func (a *messages) NewKeyboardBuilder() *Keyboard {
 	return &Keyboard{
 		rows: make([]*KeyboardRow, 0),
 	}
 }
 
-// Send sends a message to a chat. As a result for this method new message identifier returns.
+// Send sends a message to the chat. A new message identifier returns if no error.
 func (a *messages) Send(ctx context.Context, m *Message) (string, error) {
 	return a.sendMessage(ctx, m.vip, m.reset, m.chatID, m.userID, m.message)
 }

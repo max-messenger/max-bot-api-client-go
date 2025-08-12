@@ -18,7 +18,8 @@ func newBots(client *client) *bots {
 	return &bots{client: client}
 }
 
-// GetBot returns info about current bot. Current bot can be identified by access token. Method returns bot identifier, name and avatar (if any)
+// GetBot returns info about the current bot. Access token can identify the current bot.
+// Method returns bot identifier, name and avatar (if any).
 func (a *bots) GetBot(ctx context.Context) (*schemes.BotInfo, error) {
 	result := new(schemes.BotInfo)
 	values := url.Values{}
@@ -34,7 +35,7 @@ func (a *bots) GetBot(ctx context.Context) (*schemes.BotInfo, error) {
 	return result, json.NewDecoder(body).Decode(result)
 }
 
-// PatchBot edits current bot info. Fill only the fields you want to update. All remaining fields will stay untouched
+// PatchBot edits current bot info. Fill only the fields you want to update. All remaining fields will stay untouched.
 func (a *bots) PatchBot(ctx context.Context, patch *schemes.BotPatch) (*schemes.BotInfo, error) {
 	result := new(schemes.BotInfo)
 	values := url.Values{}

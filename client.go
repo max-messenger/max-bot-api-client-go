@@ -77,7 +77,7 @@ func (cl *client) requestReader(ctx context.Context, method, path string, query 
 		query.Set(paramAccessToken, cl.key)
 	}
 
-	query.Set("v", cl.version)
+	query.Set(paramVersion, cl.version)
 	u.RawQuery = query.Encode()
 
 	req, err := http.NewRequestWithContext(ctx, method, u.String(), body)
@@ -128,7 +128,7 @@ func (cl *client) requestReader(ctx context.Context, method, path string, query 
 	return resp.Body, nil
 }
 
-// Close closes the HTTP client
+// Close closes the HTTP client.
 func (cl *client) Close() error {
 	if transport, ok := cl.httpClient.Transport.(*http.Transport); ok {
 		transport.CloseIdleConnections()

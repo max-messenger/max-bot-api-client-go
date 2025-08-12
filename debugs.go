@@ -24,7 +24,7 @@ func (a *debugs) Send(ctx context.Context, upd schemes.UpdateInterface) (string,
 	return a.sendMessage(ctx, false, false, a.chat, 0, &schemes.NewMessageBody{Text: upd.GetDebugRaw()})
 }
 
-// Send sends a message to a chat. As a result for this method new message identifier returns.
+// SendErr sends a message to a chat. As a result for this method new message identifier returns.
 func (a *debugs) SendErr(ctx context.Context, err error) (string, error) {
 	return a.sendMessage(ctx, false, false, a.chat, 0, &schemes.NewMessageBody{Text: err.Error()})
 }
