@@ -152,9 +152,9 @@ func (a *messages) sendMessage(ctx context.Context, vip bool, reset bool, chatID
 	}
 	if result.Code == "" {
 		if mode == "notify" {
-			return "ok", result
+			return "ok", nil
 		} else {
-			return result.Message.Body.Mid, result
+			return result.Message.Body.Mid, nil
 		}
 	}
 	return "", result
