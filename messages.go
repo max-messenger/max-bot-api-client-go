@@ -109,7 +109,11 @@ func (a *messages) NewKeyboardBuilder() *Keyboard {
 
 // Send sends a message to a chat. As a result for this method new message identifier returns.
 func (a *messages) Send(ctx context.Context, m *Message) (string, error) {
-	return a.sendMessage(ctx, m.vip, m.reset, m.chatID, m.userID, m.message)
+	id, err := a.sendMessage(ctx, m.vip, m.reset, m.chatID, m.userID, m.message)
+	if err != nil && err.Error() != "" {
+		return "", err
+	}
+	return id, nil
 }
 
 // SendMessageResult sends a message to a chat and returns the message result.
@@ -210,6 +214,6 @@ func (a *messages) checkUser(ctx context.Context, reset bool, message *schemes.N
 	if len(result.NumberExist) > 0 {
 		return true, result
 	}
-	
+
 	return false, result
 }
