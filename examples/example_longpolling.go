@@ -1,5 +1,4 @@
 //go:build ignore
-// +build ignore
 
 /**
  * Updates loop example
@@ -15,45 +14,36 @@ import (
 	"syscall"
 
 	maxbot "github.com/max-messenger/max-bot-api-client-go"
-
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
 
 func main() {
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, os.Interrupt)
+	defer stop()
+
 	// Initialisation
-	api := maxbot.New(os.Getenv("TOKEN"))
+	api, _ := maxbot.New(os.Getenv("TOKEN"))
 
 	// Some methods demo:
-	info, err := api.Bots.GetBot()
+	info, err := api.Bots.GetBot(ctx)
 	log.Printf("Get me: %#v %#v", info, err)
 
-	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
 		for upd := range api.GetUpdates(ctx) {
 			log.Printf("Received: %#v", upd)
 			switch upd := upd.(type) {
 			case *schemes.MessageCreatedUpdate:
-				_, err := api.Messages.Send(
-					maxbot.NewMessage().
-						SetUser(upd.Message.Sender.UserId).
-						SetText(fmt.Sprintf("Hello, %s! Your message: %s", upd.Message.Sender.Name, upd.Message.Body.Text)),
-				)
+				message := maxbot.NewMessage().
+					SetUser(upd.Message.Sender.UserId).
+					SetText(fmt.Sprintf("Hello, %s! Your message: %s", upd.Message.Sender.Name, upd.Message.Body.Text))
+
+				_, err := api.Messages.Send(ctx, message)
 				if err != nil {
 					log.Printf("Error: %#v", err)
 				}
 			default:
 				log.Printf("Unknown type: %#v", upd)
 			}
-		}
-	}()
-	go func() {
-		exit := make(chan os.Signal, 1)
-		signal.Notify(exit, syscall.SIGTERM, os.Interrupt)
-		select {
-		case <-exit:
-			cancel()
-		case <-ctx.Done():
-			return
 		}
 	}()
 	<-ctx.Done()
