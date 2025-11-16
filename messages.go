@@ -83,6 +83,23 @@ func (a *messages) DeleteMessage(ctx context.Context, messageID int64) (*schemes
 	return result, json.NewDecoder(body).Decode(result)
 }
 
+// DeleteMessageByStringID deletes message by string message_id (Mid)
+func (a *messages) DeleteMessageByStringID(ctx context.Context, messageID string) (*schemes.SimpleQueryResult, error) {
+	result := new(schemes.SimpleQueryResult)
+	values := url.Values{}
+	values.Set("message_id", messageID)
+	body, err := a.client.request(ctx, http.MethodDelete, "messages", values, false, nil)
+	if err != nil {
+		return result, err
+	}
+	defer func() {
+		if err := body.Close(); err != nil {
+			slog.Error("failed to close response body", "error", err)
+		}
+	}()
+	return result, json.NewDecoder(body).Decode(result)
+}
+
 // AnswerOnCallback should be called to send an answer after a user has clicked the button. The answer may be an updated message or/and a one-time user notification.
 func (a *messages) AnswerOnCallback(ctx context.Context, callbackID string, callback *schemes.CallbackAnswer) (*schemes.SimpleQueryResult, error) {
 	result := new(schemes.SimpleQueryResult)
@@ -210,6 +227,6 @@ func (a *messages) checkUser(ctx context.Context, reset bool, message *schemes.N
 	if len(result.NumberExist) > 0 {
 		return true, result
 	}
-	
+
 	return false, result
 }
