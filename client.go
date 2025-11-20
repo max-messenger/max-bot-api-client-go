@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/max-messenger/max-bot-api-client-go/schemes"
+	"github.com/kpechenenko/max-bot-api-client-go/schemes"
 )
 
 var (

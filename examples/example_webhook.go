@@ -12,9 +12,9 @@ import (
 	"net/http"
 	"os"
 
-	maxbot "github.com/max-messenger/max-bot-api-client-go"
+	maxbot "github.com/kpechenenko/max-bot-api-client-go"
 
-	"github.com/max-messenger/max-bot-api-client-go/schemes"
+	"github.com/kpechenenko/max-bot-api-client-go/schemes"
 )
 
 func main() {
