@@ -5,6 +5,7 @@ package maxbot
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -295,8 +296,14 @@ func (a *Api) getUpdates(ctx context.Context, params *UpdatesParams) (*schemes.U
 
 	body, err := a.client.request(ctx, http.MethodGet, "updates", values, false, nil)
 	if err != nil {
-		if err == errLongPollTimeout {
+		var te *TimeoutError
+		// Обрабатывать timeout как пустую страницу (ожидается при длительном опросе)
+		if errors.As(err, &te) {
 			return &schemes.UpdateList{}, nil
+		}
+		// Учитывать отмену контекста/истечение срока
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			return nil, ctx.Err()
 		}
 		return nil, fmt.Errorf("failed to get updates: %w", err)
 	}
@@ -332,6 +339,11 @@ func (a *Api) getUpdatesWithRetry(ctx context.Context, params *UpdatesParams) (*
 		result, lastErr = a.getUpdates(ctx, params)
 		if lastErr == nil {
 			return result, nil
+		}
+
+		// Остановить retry если context отменен/истек
+		if errors.Is(lastErr, context.Canceled) || errors.Is(lastErr, context.DeadlineExceeded) {
+			return nil, lastErr
 		}
 
 		if attempt < maxRetries-1 {

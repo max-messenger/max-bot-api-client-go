@@ -205,8 +205,8 @@ type ContactAttachment struct {
 }
 
 type ContactAttachmentPayload struct {
-	VcfInfo string `json:"vcfInfo,omitempty"` // User info in VCF format
-	TamInfo *User  `json:"tamInfo"`           // User info
+	VcfInfo string `json:"vcf_info,omitempty"` // User info in VCF format
+	TamInfo *User  `json:"max_info"`           // User info
 }
 
 // Request to attach contact card to message. MUST be the only attachment in message
@@ -220,10 +220,10 @@ func NewContactAttachmentRequest(payload ContactAttachmentRequestPayload) *Conta
 }
 
 type ContactAttachmentRequestPayload struct {
-	Name      string `json:"name,omitempty"`      // Contact name
-	ContactId int64  `json:"contactId,omitempty"` // Contact identifier
-	VcfInfo   string `json:"vcfInfo,omitempty"`   // Full information about contact in VCF format
-	VcfPhone  string `json:"vcfPhone,omitempty"`  // Contact phone in VCF format
+	Name      string `json:"name,omitempty"`       // Contact name
+	ContactId int64  `json:"contact_id,omitempty"` // Contact identifier
+	VcfInfo   string `json:"vcf_info,omitempty"`   // Full information about contact in VCF format
+	VcfPhone  string `json:"vcf_phone,omitempty"`  // Contact phone in VCF format
 }
 
 // Server returns this if there was an exception to your request
