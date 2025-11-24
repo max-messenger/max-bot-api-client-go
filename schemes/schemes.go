@@ -369,7 +369,8 @@ type MessageBody struct {
 	Text           string            `json:"text,omitempty"` // Message text
 	RawAttachments []json.RawMessage `json:"attachments"`    // Message attachments. Could be one of `Attachment` type. See description of this schema
 	Attachments    []interface{}
-	ReplyTo        string `json:"reply_to,omitempty"` // In case this message is reply to another, it is the unique identifier of the replied message
+	ReplyTo        string   `json:"reply_to,omitempty"` // In case this message is reply to another, it is the unique identifier of the replied message
+	Markups        []MarkUp `json:"markup,omitempty"`   // Message markup
 }
 
 type UpdateType string
@@ -401,8 +402,14 @@ type MarkupType string
 
 // List of MarkupType
 const (
-	MarkupUser MarkupType = "user_mention"
-	MarkupBot  MarkupType = "bot_mention"
+	MarkupUser          MarkupType = "user_mention"
+	MarkupBot           MarkupType = "bot_mention"
+	MarkupStrong        MarkupType = "strong"
+	MarkupEmphasized    MarkupType = "emphasized"
+	MarkupMonospaced    MarkupType = "monospaced"
+	MarkupLink          MarkupType = "link"
+	MarkupStrikethrough MarkupType = "strikethrough"
+	MarkupUnderline     MarkupType = "underline"
 )
 
 // Paginated list of messages
