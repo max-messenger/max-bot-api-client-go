@@ -3,7 +3,6 @@ package configservice
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"regexp"
@@ -85,8 +84,8 @@ func (c *Config) WriteJSON(w io.Writer) error {
 	return err
 }
 
-func (s *Config) loadConfigFromEnv() error {
-	return env.Parse(&s.config, env.Options{TagName: "yaml"})
+func (c *Config) loadConfigFromEnv() error {
+	return env.Parse(&c.config, env.Options{TagName: "yaml"})
 }
 
 func (c *Config) readYamlConfigFile(path string) error {
@@ -102,7 +101,7 @@ func (c *Config) readYamlConfigFile(path string) error {
 		}
 	}()
 
-	source, _ := ioutil.ReadAll(filename)
+	source, _ := io.ReadAll(filename)
 	unsource := source
 
 	err = yaml.Unmarshal(unsource, &c.config)

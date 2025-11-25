@@ -24,7 +24,7 @@ func (a *debugs) Send(ctx context.Context, upd schemes.UpdateInterface) (string,
 	return a.sendMessage(ctx, false, false, a.chat, 0, &schemes.NewMessageBody{Text: upd.GetDebugRaw()})
 }
 
-// Send sends a message to a chat. As a result for this method new message identifier returns.
+// SendErr sends a message to a chat. As a result for this method new message identifier returns.
 func (a *debugs) SendErr(ctx context.Context, err error) (string, error) {
 	return a.sendMessage(ctx, false, false, a.chat, 0, &schemes.NewMessageBody{Text: err.Error()})
 }
@@ -33,13 +33,13 @@ func (a *debugs) sendMessage(ctx context.Context, vip bool, reset bool, chatID i
 	result := new(schemes.Error)
 	values := url.Values{}
 	if chatID != 0 {
-		values.Set("chat_id", strconv.Itoa(int(chatID)))
+		values.Set(paramChatID, strconv.Itoa(int(chatID)))
 	}
 	if userID != 0 {
-		values.Set("user_id", strconv.Itoa(int(userID)))
+		values.Set(paramUserID, strconv.Itoa(int(userID)))
 	}
 	if reset {
-		values.Set("access_token", message.BotToken)
+		values.Set(paramAccessToken, message.BotToken)
 	}
 	mode := "messages"
 	if vip {
