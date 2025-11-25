@@ -616,7 +616,7 @@ type UploadType string
 
 // List of UploadType
 const (
-	PHOTO UploadType = "photo"
+	PHOTO UploadType = "image"
 	VIDEO UploadType = "video"
 	AUDIO UploadType = "audio"
 	FILE  UploadType = "file"
