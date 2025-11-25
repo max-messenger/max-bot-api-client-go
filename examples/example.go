@@ -38,9 +38,9 @@ func main() {
 
 	if maxenv != "" {
 		configPath = "/go/bin/config/app-" + maxenv + ".yaml"
-		//zerolog.SetGlobalLevel(zerolog.InfoLevel)
+		// zerolog.SetGlobalLevel(zerolog.InfoLevel)
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
-		//		log.Logger = log.Output(consoleWriter).With().Caller().Logger()
+		// log.Logger = log.Output(consoleWriter).With().Caller().Logger()
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, NoColor: true}).With().Timestamp().Caller().Logger()
 	} else if 2 <= len(os.Args) {
 		configPath = os.Args[1]
@@ -63,13 +63,8 @@ func main() {
 		log.Fatal().Err(err).Msg("NewWithConfig failed. Stop.")
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	go func() {
-		exit := make(chan os.Signal, 1)
-		signal.Notify(exit, syscall.SIGTERM, os.Interrupt)
-		<-exit
-		cancel()
-	}()
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, os.Interrupt)
+	defer stop()
 
 	info, err := api.Bots.GetBot(ctx) // Простой метод
 	log.Printf("Get me: %#v %#v", info, err)
@@ -126,7 +121,7 @@ func main() {
 				AddContact("Прислать контакт")
 			keyboard.
 				AddRow().
-				AddLink("Cсылка", schemes.POSITIVE, "https://max.ru").
+				AddLink("Ссылка", schemes.POSITIVE, "https://max.ru").
 				AddCallback("Аудио", schemes.NEGATIVE, "audio").
 				AddCallback("Видео", schemes.NEGATIVE, "video")
 			keyboard.
@@ -135,13 +130,13 @@ func main() {
 
 			mes, _ := api.Messages.SendMessageResult(ctx, maxbot.NewMessage().SetUser(upd.Message.Sender.UserId).SetReply("И вам привет!(в личку!)", upd.Message.Body.Mid))
 			api.Messages.SendMessageResult(ctx, maxbot.NewMessage().SetUser(upd.Message.Sender.UserId).SetReply("И вам привет!(в личку!)", mes.Body.Mid))
-			reply_id, err := api.Messages.Send(ctx, maxbot.NewMessage().SetChat(upd.Message.Recipient.ChatId).SetReply("И вам привет! (в чат)", upd.Message.Body.Mid))
-			api.Messages.Send(ctx, maxbot.NewMessage().SetChat(upd.Message.Recipient.ChatId).SetReply("И вам привет! (в чат) на rep", reply_id))
+			replyId, err := api.Messages.Send(ctx, maxbot.NewMessage().SetChat(upd.Message.Recipient.ChatId).SetReply("И вам привет! (в чат)", upd.Message.Body.Mid))
+			api.Messages.Send(ctx, maxbot.NewMessage().SetChat(upd.Message.Recipient.ChatId).SetReply("И вам привет! (в чат) на rep", replyId))
 			// Отправка сообщения с клавиатурой
 			id, err := api.Messages.Send(ctx, maxbot.NewMessage().SetChat(upd.Message.Recipient.ChatId).AddKeyboard(keyboard).SetText(out))
-			mes_rep, _ := api.Messages.SendMessageResult(ctx, maxbot.NewMessage().Reply("**Reply** univesal", upd.Message).SetFormat("markdown"))
-			api.Messages.SendMessageResult(ctx, maxbot.NewMessage().Reply("<b>Привет!</b> <i>Добро пожаловать</i>", mes_rep).SetFormat("html"))
-			fmt.Printf("Answer:%v : %v", id, err)
+			mesRep, _ := api.Messages.SendMessageResult(ctx, maxbot.NewMessage().Reply("**Reply** universal", upd.Message).SetFormat("markdown"))
+			api.Messages.SendMessageResult(ctx, maxbot.NewMessage().Reply("<b>Привет!</b> <i>Добро пожаловать</i>", mesRep).SetFormat("html"))
+			fmt.Printf("Answer: %v : %v", id, err)
 
 		case *schemes.MessageCallbackUpdate:
 			// Ответ на коллбек
@@ -158,14 +153,14 @@ func main() {
 					log.Err(err).Msg("Uploads.UploadPhotoFromFile")
 					break
 				}
-				msg.AddPhoto(photo) // прикрипляем к сообщению изображение
+				msg.AddPhoto(photo) // прикрепляем к сообщению изображение
 				if _, err := api.Messages.SendMessageResult(ctx, msg); err != nil {
 					log.Err(err).Msg("Messages.Send")
 				}
 			}
 			if upd.Callback.Payload == "audio" {
 				if audio, err := api.Uploads.UploadMediaFromFile(ctx, schemes.AUDIO, "./music.mp3"); err == nil {
-					msg.AddAudio(audio) // прикрипляем к сообщению mp3
+					msg.AddAudio(audio) // прикрепляем к сообщению mp3
 				} else {
 					log.Err(err).Msg("Uploads.UploadPhotoFromFile")
 					break
@@ -176,7 +171,7 @@ func main() {
 			}
 			if upd.Callback.Payload == "video" {
 				if video, err := api.Uploads.UploadMediaFromFile(ctx, schemes.VIDEO, "./video.mp4"); err == nil {
-					msg.AddVideo(video) // прикрипляем к сообщению mp4
+					msg.AddVideo(video) // прикрепляем к сообщению mp4
 				} else {
 					log.Err(err).Msg("Uploads.UploadPhotoFromFile")
 					break
@@ -187,7 +182,7 @@ func main() {
 			}
 			if upd.Callback.Payload == "file" {
 				if doc, err := api.Uploads.UploadMediaFromFile(ctx, schemes.FILE, "./max.pdf"); err == nil {
-					msg.AddFile(doc) // прикрипляем к сообщению pdf file
+					msg.AddFile(doc) // прикрепляем к сообщению pdf file
 				} else {
 					log.Err(err).Msg("Uploads.UploadPhotoFromFile")
 					break
