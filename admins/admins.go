@@ -1,4 +1,4 @@
-package adimns
+package admins
 
 // ChatAdminPermission : Chat admin permissions
 type ChatAdminPermission string
