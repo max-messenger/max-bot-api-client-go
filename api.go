@@ -23,7 +23,7 @@ const (
 	version = "1.2.5"
 
 	defaultTimeout  = 30 * time.Second
-	defaultAPIURL   = "https://botapi.max.ru/"
+	defaultAPIURL   = "https://platform-api.max.ru/"
 	defaultPause    = 1 * time.Second
 	maxUpdatesLimit = 50
 
