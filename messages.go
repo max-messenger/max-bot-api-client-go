@@ -54,6 +54,21 @@ func (a *messages) GetMessages(ctx context.Context, chatID int64, messageIDs []s
 	return result, json.NewDecoder(body).Decode(result)
 }
 
+func (a *messages) GetMessage(ctx context.Context, messageID string) (*schemes.Message, error) {
+	result := new(schemes.Message)
+	path := "messages/" + url.PathEscape(messageID)
+	body, err := a.client.request(ctx, http.MethodGet, path, nil, false, nil)
+	if err != nil {
+		return result, err
+	}
+	defer func() {
+		if err := body.Close(); err != nil {
+			slog.Error("failed to close response body", "error", err)
+		}
+	}()
+	return result, json.NewDecoder(body).Decode(result)
+}
+
 // EditMessage updates message by id
 func (a *messages) EditMessage(ctx context.Context, messageID string, message *Message) error {
 	s, err := a.editMessage(ctx, messageID, message.message)
@@ -212,4 +227,36 @@ func (a *messages) checkUser(ctx context.Context, reset bool, message *schemes.N
 	}
 
 	return false, result
+}
+
+// Check posiable to send a message to a chat.
+func (a *messages) ListExist(ctx context.Context, m *Message) ([]string, error) {
+	return a.checkNumberExist(ctx, m.reset, m.message)
+}
+
+func (a *messages) checkNumberExist(ctx context.Context, reset bool, message *schemes.NewMessageBody) ([]string, error) {
+	result := new(schemes.Error)
+	values := url.Values{}
+	if reset {
+		values.Set("access_token", message.BotToken)
+	}
+	mode := "notify/exists"
+
+	if message.PhoneNumbers != nil {
+		values.Set("phone_numbers", strings.Join(message.PhoneNumbers, ","))
+	}
+
+	body, err := a.client.request(ctx, http.MethodGet, mode, values, reset, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer body.Close()
+	if err := json.NewDecoder(body).Decode(result); err != nil {
+		// Message sent without errors
+		return nil, err
+	}
+	if len(result.NumberExist) > 0 {
+		return result.NumberExist, result
+	}
+	return nil, result
 }

@@ -33,6 +33,11 @@ func (k *KeyboardRow) Build() []schemes.ButtonInterface {
 	return k.cols
 }
 
+func (k *KeyboardRow) AddButton(b schemes.ButtonInterface) *KeyboardRow {
+	k.cols = append(k.cols, b)
+	return k
+}
+
 // AddLink button
 func (k *KeyboardRow) AddLink(text string, intent schemes.Intent, url string) *KeyboardRow {
 	b := schemes.LinkButton{
@@ -79,6 +84,20 @@ func (k *KeyboardRow) AddGeolocation(text string, quick bool) *KeyboardRow {
 		Button: schemes.Button{
 			Text: text,
 			Type: schemes.GEOLOCATION,
+		},
+	}
+	k.cols = append(k.cols, b)
+	return k
+}
+
+func (k *KeyboardRow) AddOpenApp(text string, app, payload string, contactId int64) *KeyboardRow {
+	b := schemes.OpenAppButton{
+		WebApp:    app,
+		Payload:   payload,
+		ContactId: contactId,
+		Button: schemes.Button{
+			Text: text,
+			Type: schemes.OPEN_APP,
 		},
 	}
 	k.cols = append(k.cols, b)

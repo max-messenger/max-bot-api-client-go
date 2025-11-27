@@ -216,25 +216,35 @@ func (a *Api) processMessageAttachments(update schemes.UpdateInterface) error {
 	switch u := update.(type) {
 	case *schemes.MessageCreatedUpdate:
 		if u.Message.Body.RawAttachments != nil {
-			for _, rawAttachment := range u.Message.Body.RawAttachments {
-				attachment, err := a.bytesToProperAttachment([]byte(rawAttachment))
-				if err != nil {
-					return fmt.Errorf("failed to process attachment: %w", err)
-				}
-
-				u.Message.Body.Attachments = append(u.Message.Body.Attachments, attachment)
+			attachments, err := a.convertRawAttachments(u.Message.Body.RawAttachments)
+			if err != nil {
+				return err
 			}
+
+			u.Message.Body.Attachments = append(u.Message.Body.Attachments, attachments...)
+		} else if u.Message.Link != nil && u.Message.Link.Message.RawAttachments != nil {
+			attachments, err := a.convertRawAttachments(u.Message.Link.Message.RawAttachments)
+			if err != nil {
+				return err
+			}
+
+			u.Message.Link.Message.Attachments = append(u.Message.Link.Message.Attachments, attachments...)
 		}
 	case *schemes.MessageEditedUpdate:
 		if u.Message.Body.RawAttachments != nil {
-			for _, rawAttachment := range u.Message.Body.RawAttachments {
-				attachment, err := a.bytesToProperAttachment([]byte(rawAttachment))
-				if err != nil {
-					return fmt.Errorf("failed to process attachment: %w", err)
-				}
-
-				u.Message.Body.Attachments = append(u.Message.Body.Attachments, attachment)
+			attachments, err := a.convertRawAttachments(u.Message.Body.RawAttachments)
+			if err != nil {
+				return err
 			}
+
+			u.Message.Body.Attachments = append(u.Message.Body.Attachments, attachments...)
+		} else if u.Message.Link != nil && u.Message.Link.Message.RawAttachments != nil {
+			attachments, err := a.convertRawAttachments(u.Message.Link.Message.RawAttachments)
+			if err != nil {
+				return err
+			}
+
+			u.Message.Link.Message.Attachments = append(u.Message.Link.Message.Attachments, attachments...)
 		}
 	default:
 		return nil // No attachments to process
@@ -263,6 +273,20 @@ func (a *Api) bytesToProperAttachment(data []byte) (schemes.AttachmentInterface,
 	}
 
 	return attachment, nil
+}
+
+func (a *Api) convertRawAttachments(rawAttachments []json.RawMessage) ([]any, error) {
+	result := make([]any, 0, len(rawAttachments))
+	for _, rawAttachment := range rawAttachments {
+		attachment, err := a.bytesToProperAttachment([]byte(rawAttachment))
+		if err != nil {
+			return nil, fmt.Errorf("failed to process attachment: %w", err)
+		}
+
+		result = append(result, attachment)
+	}
+
+	return result, nil
 }
 
 // UpdatesParams holds parameters for getting updates
