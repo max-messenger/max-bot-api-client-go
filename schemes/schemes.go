@@ -14,14 +14,14 @@ type AttachmentType string
 
 const (
 	AttachmentImage    AttachmentType = "image"
-	AttachmentVideo                   = "video"
-	AttachmentAudio                   = "audio"
-	AttachmentFile                    = "file"
-	AttachmentContact                 = "contact"
-	AttachmentSticker                 = "sticker"
-	AttachmentShare                   = "share"
-	AttachmentLocation                = "location"
-	AttachmentKeyboard                = "inline_keyboard"
+	AttachmentVideo    AttachmentType = "video"
+	AttachmentAudio    AttachmentType = "audio"
+	AttachmentFile     AttachmentType = "file"
+	AttachmentContact  AttachmentType = "contact"
+	AttachmentSticker  AttachmentType = "sticker"
+	AttachmentShare    AttachmentType = "share"
+	AttachmentLocation AttachmentType = "location"
+	AttachmentKeyboard AttachmentType = "inline_keyboard"
 )
 
 // Generic schema representing message attachment
@@ -121,6 +121,13 @@ type CallbackButtonAllOf struct {
 	Intent  Intent `json:"intent,omitempty"` // Intent of button. Affects clients representation
 }
 
+type OpenAppButton struct {
+	Button
+	WebApp    string `json:"web_app,omitempty"`
+	Payload   string `json:"payload,omitempty"`
+	ContactId int64  `json:"contact_id,omitempty"`
+}
+
 type Chat struct {
 	ChatId            int64           `json:"chat_id"`                // Chats identifier
 	Type              ChatType        `json:"type"`                   // Type of chat. One of: dialog, chat, channel
@@ -151,7 +158,7 @@ const (
 
 type ChatList struct {
 	Chats  []Chat `json:"chats"`  // List of requested chats
-	Marker *int   `json:"marker"` // Reference to the next page of requested chats
+	Marker *int64 `json:"marker"` // Reference to the next page of requested chats
 }
 
 type ChatMember struct {
@@ -163,6 +170,7 @@ type ChatMember struct {
 	LastAccessTime int                   `json:"last_access_time"`
 	IsOwner        bool                  `json:"is_owner"`
 	IsAdmin        bool                  `json:"is_admin"`
+	IsBot          bool                  `json:"is_bot"`
 	JoinTime       int                   `json:"join_time"`
 	Permissions    []ChatAdminPermission `json:"permissions,omitempty"` // Permissions in chat if member is admin. `null` otherwise
 }
@@ -300,6 +308,8 @@ const (
 	CALLBACK    ButtonType = "callback"
 	CONTACT     ButtonType = "request_contact"
 	GEOLOCATION ButtonType = "request_geo_location"
+	OPEN_APP    ButtonType = "open_app"
+	MESSAGE     ButtonType = "message"
 )
 
 // Intent : Intent of button
@@ -360,6 +370,7 @@ type Message struct {
 	Link      *LinkedMessage `json:"link,omitempty"`   // Forwarder or replied message
 	Body      MessageBody    `json:"body"`             // Body of created message. Text + attachments. Could be null if message contains only forwarded message
 	Stat      *MessageStat   `json:"stat,omitempty"`   // Message statistics. Available only for channels in [GET:/messages](#operation/getMessages) context
+	Url       string         `json:"url,omitempty"`
 }
 
 // Schema representing body of message
@@ -425,7 +436,7 @@ type MessageStat struct {
 type NewMessageBody struct {
 	BotToken     string          `json:"bot_token,omitempty"`     // bot
 	Text         string          `json:"text,omitempty"`          // Message text
-	Attachments  []interface{}   `json:"attachments,omitempty"`   // Message attachments. See `AttachmentRequest` and it's inheritors for full information
+	Attachments  []interface{}   `json:"attachments"`             // Message attachments. See `AttachmentRequest` and it's inheritors for full information
 	Link         *NewMessageLink `json:"link,omitempty"`          // Link to Message
 	Format       string          `json:"format,omitempty"`        // Format to Message
 	PhoneNumbers []string        `json:"phone_numbers,omitempty"` // PhoneNumber to Message
@@ -590,6 +601,7 @@ type StickerAttachmentRequestPayload struct {
 
 // Schema to describe WebHook subscription
 type Subscription struct {
+	Secret      string   `json:"secret,omitempty"`
 	Url         string   `json:"url"`                    // Webhook URL
 	Time        int64    `json:"time"`                   // Unix-time when subscription was created
 	UpdateTypes []string `json:"update_types,omitempty"` // Update types bots subscribed for

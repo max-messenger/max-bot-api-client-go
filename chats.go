@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
@@ -81,10 +82,44 @@ func (a *chats) GetChatMembers(ctx context.Context, chatID, count, marker int64)
 	if count > 0 {
 		values.Set("count", strconv.Itoa(int(count)))
 	}
-	if marker > 0 {
+	if marker != 0 {
 		values.Set("marker", strconv.Itoa(int(marker)))
 	}
 	body, err := a.client.request(ctx, http.MethodGet, fmt.Sprintf("chats/%d/members", chatID), values, false, nil)
+	if err != nil {
+		return result, err
+	}
+	defer func() {
+		if err := body.Close(); err != nil {
+			log.Println(err)
+		}
+	}()
+	return result, json.NewDecoder(body).Decode(result)
+}
+
+func (a *chats) GetSpecificChatMembers(ctx context.Context, chatID int64, userIDs []int64) (*schemes.ChatMembersList, error) {
+	result := new(schemes.ChatMembersList)
+	ids := make([]string, len(userIDs))
+	for i, id := range userIDs {
+		ids[i] = strconv.FormatInt(id, 10)
+	}
+	values := url.Values{}
+	values.Set("user_ids", strings.Join(ids, ","))
+	body, err := a.client.request(ctx, http.MethodGet, fmt.Sprintf("chats/%d/members", chatID), values, false, nil)
+	if err != nil {
+		return result, err
+	}
+	defer func() {
+		if err := body.Close(); err != nil {
+			log.Println(err)
+		}
+	}()
+	return result, json.NewDecoder(body).Decode(result)
+}
+
+func (a *chats) GetChatAdmins(ctx context.Context, chatID int64) (*schemes.ChatMembersList, error) {
+	result := new(schemes.ChatMembersList)
+	body, err := a.client.request(ctx, http.MethodGet, fmt.Sprintf("chats/%d/members/admins", chatID), nil, false, nil)
 	if err != nil {
 		return result, err
 	}

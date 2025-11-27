@@ -73,9 +73,12 @@ func (cl *client) requestReader(ctx context.Context, method, path string, query 
 
 	u := *cl.baseURL
 	u.Path = path
+
+	/* DEPRECATED
 	if !reset {
 		query.Set("access_token", cl.key)
 	}
+	*/
 
 	query.Set("v", cl.version)
 	u.RawQuery = query.Encode()
@@ -86,6 +89,9 @@ func (cl *client) requestReader(ctx context.Context, method, path string, query 
 	}
 
 	req.Header.Set("User-Agent", fmt.Sprintf("max-bot-api-client-go/%s", cl.version))
+	if !reset {
+		req.Header.Set("Authorization", cl.key)
+	}
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}

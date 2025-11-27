@@ -35,8 +35,9 @@ func (a *subscriptions) GetSubscriptions(ctx context.Context) (*schemes.GetSubsc
 }
 
 // Subscribe subscribes bot to receive updates via WebHook
-func (a *subscriptions) Subscribe(ctx context.Context, subscribeURL string, updateTypes []string) (*schemes.SimpleQueryResult, error) {
+func (a *subscriptions) Subscribe(ctx context.Context, subscribeURL string, updateTypes []string, secret string) (*schemes.SimpleQueryResult, error) {
 	subscription := &schemes.SubscriptionRequestBody{
+		Secret:      secret,
 		Url:         subscribeURL,
 		UpdateTypes: updateTypes,
 		Version:     a.client.version,
