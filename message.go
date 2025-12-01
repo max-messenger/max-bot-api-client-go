@@ -5,7 +5,6 @@ import "github.com/max-messenger/max-bot-api-client-go/schemes"
 type Message struct {
 	userID  int64
 	chatID  int64
-	vip     bool
 	reset   bool
 	message *schemes.NewMessageBody
 }
@@ -26,18 +25,6 @@ func (m *Message) SetChat(chatID int64) *Message {
 
 func (m *Message) SetReset(reset bool) *Message {
 	m.reset = reset
-	return m
-}
-
-func (m *Message) SetPhoneNumbers(phoneNumbers []string) *Message {
-	m.vip = true
-	m.message.PhoneNumbers = phoneNumbers
-	return m
-}
-
-func (m *Message) SetBot(token string) *Message {
-	m.vip = true
-	m.message.BotToken = token
 	return m
 }
 
