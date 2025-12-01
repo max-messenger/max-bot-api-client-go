@@ -3,6 +3,7 @@ package maxbot
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -20,16 +21,16 @@ func newDebugs(client *client, chat int64) *debugs {
 }
 
 // Send sends a message to a chat. As a result for this method new message identifier returns.
-func (a *debugs) Send(ctx context.Context, upd schemes.UpdateInterface) (string, error) {
-	return a.sendMessage(ctx, false, false, a.chat, 0, &schemes.NewMessageBody{Text: upd.GetDebugRaw()})
+func (a *debugs) Send(ctx context.Context, upd schemes.UpdateInterface) error {
+	return a.sendMessage(ctx, false, a.chat, 0, &schemes.NewMessageBody{Text: upd.GetDebugRaw()})
 }
 
 // Send sends a message to a chat. As a result for this method new message identifier returns.
-func (a *debugs) SendErr(ctx context.Context, err error) (string, error) {
-	return a.sendMessage(ctx, false, false, a.chat, 0, &schemes.NewMessageBody{Text: err.Error()})
+func (a *debugs) SendErr(ctx context.Context, err error) error {
+	return a.sendMessage(ctx, false, a.chat, 0, &schemes.NewMessageBody{Text: err.Error()})
 }
 
-func (a *debugs) sendMessage(ctx context.Context, vip bool, reset bool, chatID int64, userID int64, message *schemes.NewMessageBody) (string, error) {
+func (a *debugs) sendMessage(ctx context.Context, reset bool, chatID int64, userID int64, message *schemes.NewMessageBody) error {
 	result := new(schemes.Error)
 	values := url.Values{}
 	if chatID != 0 {
@@ -38,29 +39,22 @@ func (a *debugs) sendMessage(ctx context.Context, vip bool, reset bool, chatID i
 	if userID != 0 {
 		values.Set("user_id", strconv.Itoa(int(userID)))
 	}
-	if reset {
-		values.Set("access_token", message.BotToken)
-	}
-	mode := "messages"
-	if vip {
-		mode = "notify"
-	}
-	body, err := a.client.request(ctx, http.MethodPost, mode, values, reset, message)
+
+	body, err := a.client.request(ctx, http.MethodPost, "messages", values, reset, message)
 	if err != nil {
-		return "heir", err
+		return err
 	}
-	defer body.Close()
+	defer func() {
+		if err := body.Close(); err != nil {
+			slog.Error("failed to close response body", "error", err)
+		}
+	}()
+
 	if err := json.NewDecoder(body).Decode(result); err != nil {
-		// Message sent without errors
-		return "err", err
+		return nil
 	}
 	if result.Code == "" {
-		if mode == "notify" {
-			return "ok", result
-		} else {
-			return "", nil
-		}
-
+		return nil
 	}
-	return "", result
+	return result
 }

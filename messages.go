@@ -123,21 +123,11 @@ func (a *messages) NewKeyboardBuilder() *Keyboard {
 }
 
 // Send sends a message to a chat. As a result for this method new message identifier returns.
-func (a *messages) Send(ctx context.Context, m *Message) (string, error) {
-	return a.sendMessage(ctx, m.vip, m.reset, m.chatID, m.userID, m.message)
+func (a *messages) Send(ctx context.Context, m *Message) error {
+	return a.sendMessage(ctx, m.reset, m.chatID, m.userID, m.message)
 }
 
-// SendMessageResult sends a message to a chat and returns the message result.
-func (a *messages) SendMessageResult(ctx context.Context, m *Message) (schemes.Message, error) {
-	_, err := a.sendMessage(ctx, m.vip, m.reset, m.chatID, m.userID, m.message)
-	switch message := err.(type) {
-	case *schemes.Error:
-		return message.Message, nil
-	}
-	return schemes.Message{}, err
-}
-
-func (a *messages) sendMessage(ctx context.Context, vip bool, reset bool, chatID int64, userID int64, message *schemes.NewMessageBody) (string, error) {
+func (a *messages) sendMessage(ctx context.Context, reset bool, chatID int64, userID int64, message *schemes.NewMessageBody) error {
 	result := new(schemes.Error)
 	values := url.Values{}
 	if chatID != 0 {
@@ -146,33 +136,24 @@ func (a *messages) sendMessage(ctx context.Context, vip bool, reset bool, chatID
 	if userID != 0 {
 		values.Set("user_id", strconv.Itoa(int(userID)))
 	}
-	if reset {
-		values.Set("access_token", message.BotToken)
-	}
-	mode := "messages"
-	if vip {
-		mode = "notify"
-	}
-	body, err := a.client.request(ctx, http.MethodPost, mode, values, reset, message)
+
+	body, err := a.client.request(ctx, http.MethodPost, "messages", values, reset, message)
 	if err != nil {
-		return "", err
+		return err
 	}
 	defer func() {
 		if err := body.Close(); err != nil {
 			slog.Error("failed to close response body", "error", err)
 		}
 	}()
+
 	if err := json.NewDecoder(body).Decode(result); err != nil {
-		return "", err
+		return nil
 	}
 	if result.Code == "" {
-		if mode == "notify" {
-			return "ok", result
-		} else {
-			return result.Message.Body.Mid, result
-		}
+		return nil
 	}
-	return "", result
+	return result
 }
 
 func (a *messages) editMessage(ctx context.Context, messageID string, message *schemes.NewMessageBody) (*schemes.SimpleQueryResult, error) {

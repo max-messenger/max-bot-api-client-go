@@ -1,14 +1,10 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"encoding/base64"
-	"encoding/binary"
 	"fmt"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 
 	maxbot "github.com/max-messenger/max-bot-api-client-go"
@@ -18,18 +14,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
-
-func url(user int64) string {
-	buf := new(bytes.Buffer)
-	byteOrder := binary.BigEndian
-
-	binary.Write(buf, byteOrder, int64(user))
-	fmt.Printf("uint64: %v\n", buf.Bytes())
-	fmt.Printf("uint64: %v\n", string(buf.Bytes()))
-	fmt.Printf("uint64b: %v\n", base64.StdEncoding.EncodeToString(buf.Bytes()))
-	fmt.Printf("uint64bt: %v\n", strings.Trim(base64.StdEncoding.EncodeToString(buf.Bytes()), "="))
-	return "https://max.ru/u/" + strings.Trim(base64.StdEncoding.EncodeToString(buf.Bytes()), "=")
-}
 
 func main() {
 	var configPath string
@@ -86,10 +70,11 @@ func main() {
 		switch upd := upd.(type) { // Определение типа пришедшего обновления
 		case *schemes.MessageCreatedUpdate:
 			out := "bot прочитал текст: " + upd.Message.Body.Text
+
 			switch upd.GetCommand() {
 			case "/chats":
 				out = "команда : " + upd.GetCommand()
-				_, err = api.Messages.Send(ctx, maxbot.NewMessage().SetChat(upd.Message.Recipient.ChatId).SetText(out))
+				err = api.Messages.Send(ctx, maxbot.NewMessage().SetChat(upd.Message.Recipient.ChatId).SetText(out))
 				log.Printf("Answer: %#v", err)
 				continue
 			case "/chats_full":
@@ -97,6 +82,7 @@ func main() {
 				if err != nil {
 					log.Printf("Unknown type: %#v", err)
 				}
+
 				out := "List of chats\n"
 				for _, chat := range chatList.Chats {
 					out += fmt.Sprintf(" 	   title: %#v\n", chat.Title)
@@ -107,13 +93,13 @@ func main() {
 					out += fmt.Sprintf("   	  status: %#v\n", chat.Status)
 					out += fmt.Sprintf("       owner: %#v\n", chat.OwnerId)
 					out += fmt.Sprintf("       type: %#v\n", chat.Type)
-					out += fmt.Sprintf("______\n")
+					out += "______\n"
 				}
-				api.Messages.SendMessageResult(ctx, maxbot.NewMessage().SetReply("И вам привет!", upd.Message.Body.Mid))
-				mes, err := api.Messages.SendMessageResult(ctx, maxbot.NewMessage().SetChat(upd.Message.Recipient.ChatId).SetText(out))
-				fmt.Printf("Answer: %v", mes.Body.Mid)
+
+				api.Messages.Send(ctx, maxbot.NewMessage().SetReply("И вам привет!", upd.Message.Body.Mid))
 				continue
 			}
+
 			keyboard := api.Messages.NewKeyboardBuilder()
 			keyboard.
 				AddRow().
@@ -128,15 +114,13 @@ func main() {
 				AddRow().
 				AddCallback("Картинка", schemes.POSITIVE, "picture")
 
-			mes, _ := api.Messages.SendMessageResult(ctx, maxbot.NewMessage().SetUser(upd.Message.Sender.UserId).SetReply("И вам привет!(в личку!)", upd.Message.Body.Mid))
-			api.Messages.SendMessageResult(ctx, maxbot.NewMessage().SetUser(upd.Message.Sender.UserId).SetReply("И вам привет!(в личку!)", mes.Body.Mid))
-			replyId, err := api.Messages.Send(ctx, maxbot.NewMessage().SetChat(upd.Message.Recipient.ChatId).SetReply("И вам привет! (в чат)", upd.Message.Body.Mid))
-			api.Messages.Send(ctx, maxbot.NewMessage().SetChat(upd.Message.Recipient.ChatId).SetReply("И вам привет! (в чат) на rep", replyId))
+			api.Messages.Send(ctx, maxbot.NewMessage().SetUser(upd.Message.Sender.UserId).SetReply("И вам привет!(в личку!)", upd.Message.Body.Mid))
+
+			api.Messages.Send(ctx, maxbot.NewMessage().SetChat(upd.Message.Recipient.ChatId).SetReply("И вам привет! (в чат)", upd.Message.Body.Mid))
+
 			// Отправка сообщения с клавиатурой
-			id, err := api.Messages.Send(ctx, maxbot.NewMessage().SetChat(upd.Message.Recipient.ChatId).AddKeyboard(keyboard).SetText(out))
-			mesRep, _ := api.Messages.SendMessageResult(ctx, maxbot.NewMessage().Reply("**Reply** universal", upd.Message).SetFormat("markdown"))
-			api.Messages.SendMessageResult(ctx, maxbot.NewMessage().Reply("<b>Привет!</b> <i>Добро пожаловать</i>", mesRep).SetFormat("html"))
-			fmt.Printf("Answer: %v : %v", id, err)
+			api.Messages.Send(ctx, maxbot.NewMessage().SetChat(upd.Message.Recipient.ChatId).AddKeyboard(keyboard).SetText(out))
+			api.Messages.Send(ctx, maxbot.NewMessage().Reply("**Reply** universal", upd.Message).SetFormat("markdown"))
 
 		case *schemes.MessageCallbackUpdate:
 			// Ответ на коллбек
@@ -154,7 +138,7 @@ func main() {
 					break
 				}
 				msg.AddPhoto(photo) // прикрепляем к сообщению изображение
-				if _, err := api.Messages.SendMessageResult(ctx, msg); err != nil {
+				if err := api.Messages.Send(ctx, msg); err != nil {
 					log.Err(err).Msg("Messages.Send")
 				}
 			}
@@ -165,7 +149,7 @@ func main() {
 					log.Err(err).Msg("Uploads.UploadPhotoFromFile")
 					break
 				}
-				if _, err := api.Messages.SendMessageResult(ctx, msg); err != nil {
+				if err := api.Messages.Send(ctx, msg); err != nil {
 					log.Err(err).Msg("Messages.Send")
 				}
 			}
@@ -176,7 +160,7 @@ func main() {
 					log.Err(err).Msg("Uploads.UploadPhotoFromFile")
 					break
 				}
-				if _, err := api.Messages.SendMessageResult(ctx, msg); err != nil {
+				if err := api.Messages.Send(ctx, msg); err != nil {
 					log.Err(err).Msg("Messages.Send")
 				}
 			}
@@ -187,7 +171,7 @@ func main() {
 					log.Err(err).Msg("Uploads.UploadPhotoFromFile")
 					break
 				}
-				if _, err := api.Messages.SendMessageResult(ctx, msg); err != nil {
+				if err := api.Messages.Send(ctx, msg); err != nil {
 					log.Err(err).Msg("Messages.Send")
 				}
 			}
