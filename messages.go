@@ -124,11 +124,17 @@ func (a *messages) NewKeyboardBuilder() *Keyboard {
 
 // Send sends a message to a chat. As a result for this method new message identifier returns.
 func (a *messages) Send(ctx context.Context, m *Message) error {
+	_, err := a.sendMessage(ctx, m.reset, m.chatID, m.userID, m.message)
+	return err
+}
+
+// SendWithResult sends a message to a chat and returns the created message along with any error.
+func (a *messages) SendWithResult(ctx context.Context, m *Message) (*schemes.Message, error) {
 	return a.sendMessage(ctx, m.reset, m.chatID, m.userID, m.message)
 }
 
-func (a *messages) sendMessage(ctx context.Context, reset bool, chatID int64, userID int64, message *schemes.NewMessageBody) error {
-	result := new(schemes.Error)
+func (a *messages) sendMessage(ctx context.Context, reset bool, chatID int64, userID int64, message *schemes.NewMessageBody) (*schemes.Message, error) {
+	result := new(schemes.Message)
 	values := url.Values{}
 	if chatID != 0 {
 		values.Set("chat_id", strconv.Itoa(int(chatID)))
@@ -139,7 +145,7 @@ func (a *messages) sendMessage(ctx context.Context, reset bool, chatID int64, us
 
 	body, err := a.client.request(ctx, http.MethodPost, "messages", values, reset, message)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer func() {
 		if err := body.Close(); err != nil {
@@ -148,12 +154,10 @@ func (a *messages) sendMessage(ctx context.Context, reset bool, chatID int64, us
 	}()
 
 	if err := json.NewDecoder(body).Decode(result); err != nil {
-		return nil
+		return nil, err
 	}
-	if result.Code == "" {
-		return nil
-	}
-	return result
+
+	return result, nil
 }
 
 func (a *messages) editMessage(ctx context.Context, messageID string, message *schemes.NewMessageBody) (*schemes.SimpleQueryResult, error) {
