@@ -21,6 +21,11 @@ func newMessages(client *client) *messages {
 	return &messages{client: client}
 }
 
+// MessageResponse represents the response wrapper when a message is sent
+type MessageResponse struct {
+	Message schemes.Message `json:"message"`
+}
+
 // GetMessages returns messages in chat: result page and marker referencing to the next page. Messages traversed in reverse direction so the latest message in chat will be first in result array. Therefore if you use from and to parameters, to must be less than from
 func (a *messages) GetMessages(ctx context.Context, chatID int64, messageIDs []string, from int, to int, count int) (*schemes.MessageList, error) {
 	result := new(schemes.MessageList)
@@ -134,7 +139,7 @@ func (a *messages) SendWithResult(ctx context.Context, m *Message) (*schemes.Mes
 }
 
 func (a *messages) sendMessage(ctx context.Context, reset bool, chatID int64, userID int64, message *schemes.NewMessageBody) (*schemes.Message, error) {
-	result := new(schemes.Message)
+	wrapper := new(MessageResponse)
 	values := url.Values{}
 	if chatID != 0 {
 		values.Set("chat_id", strconv.Itoa(int(chatID)))
@@ -153,11 +158,11 @@ func (a *messages) sendMessage(ctx context.Context, reset bool, chatID int64, us
 		}
 	}()
 
-	if err := json.NewDecoder(body).Decode(result); err != nil {
+	if err := json.NewDecoder(body).Decode(wrapper); err != nil {
 		return nil, err
 	}
 
-	return result, nil
+	return &wrapper.Message, nil
 }
 
 func (a *messages) editMessage(ctx context.Context, messageID string, message *schemes.NewMessageBody) (*schemes.SimpleQueryResult, error) {
