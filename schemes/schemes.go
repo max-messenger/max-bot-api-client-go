@@ -24,6 +24,13 @@ const (
 	AttachmentKeyboard AttachmentType = "inline_keyboard"
 )
 
+// Constants for retry logic when processing files
+const (
+	MaxAttachmentRetries = 5
+	InitialRetryDelay    = 300 * time.Millisecond
+	MaxRetryDelay        = 3 * time.Second
+)
+
 // Generic schema representing message attachment
 type Attachment struct {
 	Type AttachmentType `json:"type"`
