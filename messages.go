@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
@@ -24,6 +26,37 @@ func newMessages(client *client) *messages {
 // MessageResponse represents the response wrapper when a message is sent
 type MessageResponse struct {
 	Message schemes.Message `json:"message"`
+}
+
+// isAttachmentNotReadyError checks whether the error is "attachment.not.ready"
+// According to the MAX API documentation, files are processed on the server after downloading
+// and may not be available immediately for sending in a message
+func (a *messages) isAttachmentNotReadyError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	// Check if error is typed APIError (from client.go)
+	var apiErr *APIError
+	if errors.As(err, &apiErr) {
+		return strings.Contains(apiErr.Message, "attachment.not.ready") ||
+			strings.Contains(apiErr.Message, "attachment.file.not.processed") ||
+			strings.Contains(apiErr.Message, "errors.process.attachment.file.not.processed")
+	}
+
+	// Check if error is typed schemes.Error
+	var schemesErr *schemes.Error
+	if errors.As(err, &schemesErr) {
+		return schemesErr.Code == "attachment.not.ready" ||
+			schemesErr.Code == "attachment.file.not.processed" ||
+			schemesErr.Code == "errors.process.attachment.file.not.processed"
+	}
+
+	// Fallback to string matching for non-typed errors
+	errText := err.Error()
+	return strings.Contains(errText, "attachment.not.ready") ||
+		strings.Contains(errText, "attachment.file.not.processed") ||
+		strings.Contains(errText, "errors.process.attachment.file.not.processed")
 }
 
 // GetMessages returns messages in chat: result page and marker referencing to the next page. Messages traversed in reverse direction so the latest message in chat will be first in result array. Therefore if you use from and to parameters, to must be less than from
@@ -75,15 +108,10 @@ func (a *messages) GetMessage(ctx context.Context, messageID string) (*schemes.M
 }
 
 // EditMessage updates message by id
+// Returns error if the operation fails
 func (a *messages) EditMessage(ctx context.Context, messageID string, message *Message) error {
-	s, err := a.editMessage(ctx, messageID, message.message)
-	if err != nil {
-		return err
-	}
-	if !s.Success {
-		return errors.New(s.Message)
-	}
-	return nil
+	_, err := a.editMessage(ctx, messageID, message.message)
+	return err
 }
 
 // DeleteMessage deletes message by id
@@ -138,8 +166,11 @@ func (a *messages) SendWithResult(ctx context.Context, m *Message) (*schemes.Mes
 	return a.sendMessage(ctx, m.reset, m.chatID, m.userID, m.message)
 }
 
+// sendMessage sends a message with automatic retry on attachment.not.ready error
+// According to the MAX API documentation (https://dev.max.ru/), after uploading a file
+// the server processes it for some time, and sending a message immediately may result in an error.
+// This method automatically retries with exponential backoff.
 func (a *messages) sendMessage(ctx context.Context, reset bool, chatID int64, userID int64, message *schemes.NewMessageBody) (*schemes.Message, error) {
-	wrapper := new(MessageResponse)
 	values := url.Values{}
 	if chatID != 0 {
 		values.Set("chat_id", strconv.Itoa(int(chatID)))
@@ -148,37 +179,160 @@ func (a *messages) sendMessage(ctx context.Context, reset bool, chatID int64, us
 		values.Set("user_id", strconv.Itoa(int(userID)))
 	}
 
-	body, err := a.client.request(ctx, http.MethodPost, "messages", values, reset, message)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			slog.Error("failed to close response body", "error", err)
+	var lastErr error
+	retryDelay := schemes.InitialRetryDelay
+
+	// Main attempt + retry on attachment.not.ready
+	for attempt := 0; attempt <= schemes.MaxAttachmentRetries; attempt++ {
+		body, err := a.client.request(ctx, http.MethodPost, "messages", values, reset, message)
+
+		// Handle error case
+		if err != nil {
+			// body might still be available even on error - try to read it
+			if body != nil {
+				// Try to decode as SimpleQueryResult first
+				result := new(schemes.SimpleQueryResult)
+				if decodeErr := json.NewDecoder(body).Decode(result); decodeErr == nil && !result.Success {
+					body.Close()
+					lastErr = errors.New(result.Message)
+
+					// Check if error message contains attachment.not.ready
+					if a.isAttachmentNotReadyError(lastErr) && attempt < schemes.MaxAttachmentRetries {
+						// Wait before next attempt
+						select {
+						case <-ctx.Done():
+							return nil, fmt.Errorf("context cancelled while waiting for attachment: %w", ctx.Err())
+						case <-time.After(retryDelay):
+							// Increase delay exponentially (300ms -> 600ms -> 1200ms -> 2400ms -> 3000ms)
+							retryDelay *= 2
+							if retryDelay > schemes.MaxRetryDelay {
+								retryDelay = schemes.MaxRetryDelay
+							}
+							continue
+						}
+					}
+					// Not attachment error - return immediately
+					return nil, lastErr
+				}
+				body.Close()
+			}
+
+			// Check if the error itself contains attachment.not.ready
+			lastErr = err
+			if a.isAttachmentNotReadyError(err) && attempt < schemes.MaxAttachmentRetries {
+				// Wait before next attempt
+				select {
+				case <-ctx.Done():
+					return nil, fmt.Errorf("context cancelled while waiting for attachment: %w", ctx.Err())
+				case <-time.After(retryDelay):
+					// Increase delay exponentially (300ms -> 600ms -> 1200ms -> 2400ms -> 3000ms)
+					retryDelay *= 2
+					if retryDelay > schemes.MaxRetryDelay {
+						retryDelay = schemes.MaxRetryDelay
+					}
+					continue
+				}
+			}
+
+			// For other errors or when attempts exhausted - return error
+			return nil, err
 		}
-	}()
 
-	if err := json.NewDecoder(body).Decode(wrapper); err != nil {
-		return nil, err
+		// Successful HTTP request - decode response
+		defer func() {
+			if err := body.Close(); err != nil {
+				slog.Error("failed to close response body", "error", err)
+			}
+		}()
+
+		wrapper := new(MessageResponse)
+		if err := json.NewDecoder(body).Decode(wrapper); err != nil {
+			return nil, err
+		}
+
+		return &wrapper.Message, nil
 	}
 
-	return &wrapper.Message, nil
+	return nil, fmt.Errorf("failed to send message after %d retries: %w", schemes.MaxAttachmentRetries, lastErr)
 }
 
+// editMessage updates message by id with automatic retry on attachment.not.ready error
+// Note: MAX API has inconsistent behavior - Send returns HTTP 400 on attachment.not.ready,
+// while EditMessage returns HTTP 200 with success=false
 func (a *messages) editMessage(ctx context.Context, messageID string, message *schemes.NewMessageBody) (*schemes.SimpleQueryResult, error) {
-	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}
 	values.Set("message_id", messageID)
-	body, err := a.client.request(ctx, http.MethodPut, "messages", values, false, message)
-	if err != nil {
-		return result, err
-	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			slog.Error("failed to close response body", "error", err)
+
+	var lastErr error
+	retryDelay := schemes.InitialRetryDelay
+
+	// Main attempt + retry on attachment.not.ready
+	for attempt := 0; attempt <= schemes.MaxAttachmentRetries; attempt++ {
+		body, err := a.client.request(ctx, http.MethodPut, "messages", values, false, message)
+
+		// Handle error case
+		if err != nil {
+			// Check if the error itself contains attachment.not.ready
+			lastErr = err
+			if a.isAttachmentNotReadyError(err) && attempt < schemes.MaxAttachmentRetries {
+				// Wait before next attempt
+				select {
+				case <-ctx.Done():
+					return nil, fmt.Errorf("context cancelled while waiting for attachment: %w", ctx.Err())
+				case <-time.After(retryDelay):
+					// Increase delay exponentially
+					retryDelay *= 2
+					if retryDelay > schemes.MaxRetryDelay {
+						retryDelay = schemes.MaxRetryDelay
+					}
+					continue
+				}
+			}
+
+			// For other errors or when attempts exhausted - return error
+			return nil, err
 		}
-	}()
-	return result, json.NewDecoder(body).Decode(result)
+
+		// Successful HTTP request - decode response
+		defer func() {
+			if err := body.Close(); err != nil {
+				slog.Error("failed to close response body", "error", err)
+			}
+		}()
+
+		result := new(schemes.SimpleQueryResult)
+		if err := json.NewDecoder(body).Decode(result); err != nil {
+			return nil, err
+		}
+
+		// If response indicates failure, check if it's attachment.not.ready
+		if !result.Success {
+			err := errors.New(result.Message)
+
+			// Check if error is attachment.not.ready
+			if a.isAttachmentNotReadyError(err) && attempt < schemes.MaxAttachmentRetries {
+				// Wait before next attempt
+				select {
+				case <-ctx.Done():
+					return nil, fmt.Errorf("context cancelled while waiting for attachment: %w", ctx.Err())
+				case <-time.After(retryDelay):
+					// Increase delay exponentially
+					retryDelay *= 2
+					if retryDelay > schemes.MaxRetryDelay {
+						retryDelay = schemes.MaxRetryDelay
+					}
+					continue
+				}
+			}
+
+			// Not attachment error - return immediately
+			return result, err
+		}
+
+		return result, nil
+	}
+
+	return nil, fmt.Errorf("failed to edit message after %d retries: %w", schemes.MaxAttachmentRetries, lastErr)
 }
 
 // Check posiable to send a message to a chat.
