@@ -1,4 +1,4 @@
-module github.com/max-messenger/max-bot-api-client-go
+module github.com/postal-tg/max-bot-api-client-go
 
 go 1.23.4
 
