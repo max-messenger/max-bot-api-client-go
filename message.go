@@ -77,6 +77,13 @@ func (m *Message) AddPhoto(photo *schemes.PhotoTokens) *Message {
 	return m
 }
 
+func (m *Message) AddPhotoToken(token string) *Message {
+	m.message.Attachments = append(m.message.Attachments, schemes.NewPhotoAttachmentRequest(schemes.PhotoAttachmentRequestPayload{
+		Token: token,
+	}))
+	return m
+}
+
 func (m *Message) AddAudio(audio *schemes.UploadedInfo) *Message {
 	m.message.Attachments = append(m.message.Attachments, schemes.NewAudioAttachmentRequest(*audio))
 	return m
