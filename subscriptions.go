@@ -42,33 +42,37 @@ func (a *subscriptions) Subscribe(ctx context.Context, subscribeURL string, upda
 		UpdateTypes: updateTypes,
 		Version:     a.client.version,
 	}
-	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}
 	body, err := a.client.request(ctx, http.MethodPost, "subscriptions", values, false, subscription)
 	if err != nil {
-		return result, err
+		return nil, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
-	return result, json.NewDecoder(body).Decode(result)
+	res, raw, err := decodeSimpleQueryResult(body)
+	if err != nil {
+		return res, err
+	}
+	if apiErr := newSimpleQueryAPIError("subscribe", res, raw); apiErr != nil {
+		return res, apiErr
+	}
+	return res, nil
 }
+
 
 // Unsubscribe unsubscribes bot from receiving updates via WebHook
 func (a *subscriptions) Unsubscribe(ctx context.Context, subscriptionURL string) (*schemes.SimpleQueryResult, error) {
-	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}
 	values.Set("url", subscriptionURL)
 	body, err := a.client.request(ctx, http.MethodDelete, "subscriptions", values, false, nil)
 	if err != nil {
-		return result, err
+		return nil, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
-	return result, json.NewDecoder(body).Decode(result)
+	res, raw, err := decodeSimpleQueryResult(body)
+	if err != nil {
+		return res, err
+	}
+	if apiErr := newSimpleQueryAPIError("unsubscribe", res, raw); apiErr != nil {
+		return res, apiErr
+	}
+	return res, nil
 }
+

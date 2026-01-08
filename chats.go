@@ -133,19 +133,21 @@ func (a *chats) GetChatAdmins(ctx context.Context, chatID int64) (*schemes.ChatM
 
 // LeaveChat removes bot from chat members
 func (a *chats) LeaveChat(ctx context.Context, chatID int64) (*schemes.SimpleQueryResult, error) {
-	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}
 	body, err := a.client.request(ctx, http.MethodDelete, fmt.Sprintf("chats/%d/members/me", chatID), values, false, nil)
 	if err != nil {
-		return result, err
+		return nil, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
-	return result, json.NewDecoder(body).Decode(result)
+	res, raw, err := decodeSimpleQueryResult(body)
+	if err != nil {
+		return res, err
+	}
+	if apiErr := newSimpleQueryAPIError("leave chat", res, raw); apiErr != nil {
+		return res, apiErr
+	}
+	return res, nil
 }
+
 
 // EditChat edits chat info: title, icon, etc…
 func (a *chats) EditChat(ctx context.Context, chatID int64, update *schemes.ChatPatch) (*schemes.Chat, error) {
@@ -165,49 +167,55 @@ func (a *chats) EditChat(ctx context.Context, chatID int64, update *schemes.Chat
 
 // AddMember adds members to chat. Additional permissions may require.
 func (a *chats) AddMember(ctx context.Context, chatID int64, users schemes.UserIdsList) (*schemes.SimpleQueryResult, error) {
-	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}
 	body, err := a.client.request(ctx, http.MethodPost, fmt.Sprintf("chats/%d/members", chatID), values, false, users)
 	if err != nil {
-		return result, err
+		return nil, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
-	return result, json.NewDecoder(body).Decode(result)
+	res, raw, err := decodeSimpleQueryResult(body)
+	if err != nil {
+		return res, err
+	}
+	if apiErr := newSimpleQueryAPIError("add member", res, raw); apiErr != nil {
+		return res, apiErr
+	}
+	return res, nil
 }
+
 
 // RemoveMember removes member from chat. Additional permissions may require.
 func (a *chats) RemoveMember(ctx context.Context, chatID int64, userID int64) (*schemes.SimpleQueryResult, error) {
-	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}
 	values.Set("user_id", strconv.Itoa(int(userID)))
 	body, err := a.client.request(ctx, http.MethodDelete, fmt.Sprintf("chats/%d/members", chatID), values, false, nil)
 	if err != nil {
-		return result, err
+		return nil, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
-	return result, json.NewDecoder(body).Decode(result)
+	res, raw, err := decodeSimpleQueryResult(body)
+	if err != nil {
+		return res, err
+	}
+	if apiErr := newSimpleQueryAPIError("remove member", res, raw); apiErr != nil {
+		return res, apiErr
+	}
+	return res, nil
 }
+
 
 // SendAction send bot action to chat
 func (a *chats) SendAction(ctx context.Context, chatID int64, action schemes.SenderAction) (*schemes.SimpleQueryResult, error) {
-	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}
 	body, err := a.client.request(ctx, http.MethodPost, fmt.Sprintf("chats/%d/actions", chatID), values, false, schemes.ActionRequestBody{Action: action})
 	if err != nil {
-		return result, err
+		return nil, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
-	return result, json.NewDecoder(body).Decode(result)
+	res, raw, err := decodeSimpleQueryResult(body)
+	if err != nil {
+		return res, err
+	}
+	if apiErr := newSimpleQueryAPIError("send action", res, raw); apiErr != nil {
+		return res, apiErr
+	}
+	return res, nil
 }
+

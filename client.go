@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
@@ -114,20 +115,23 @@ func (cl *client) requestReader(ctx context.Context, method, path string, query 
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		defer func() {
-			if closeErr := resp.Body.Close(); closeErr != nil {
-				log.Println(closeErr)
-			}
-		}()
+		// Read the whole response body so we can include it into the error.
+		raw, _ := io.ReadAll(resp.Body)
+		_ = resp.Body.Close()
 
-		apiErr := &schemes.Error{}
-		if decodeErr := json.NewDecoder(resp.Body).Decode(apiErr); decodeErr != nil {
-			return nil, fmt.Errorf("HTTP %d: %s", resp.StatusCode, http.StatusText(resp.StatusCode))
+		msg, details := parseMAXErrorPayload(raw)
+		if msg == "" {
+			msg = http.StatusText(resp.StatusCode)
 		}
 
 		return nil, &APIError{
-			Code:    resp.StatusCode,
-			Message: apiErr.Error(),
+			Code:       resp.StatusCode,
+			HTTPStatus: resp.Status,
+			Method:     method,
+			URL:        req.URL.String(),
+			Message:    msg,
+			Details:    details,
+			RawBody:    string(raw),
 		}
 	}
 

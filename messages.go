@@ -3,7 +3,6 @@ package maxbot
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -76,49 +75,52 @@ func (a *messages) GetMessage(ctx context.Context, messageID string) (*schemes.M
 
 // EditMessage updates message by id
 func (a *messages) EditMessage(ctx context.Context, messageID string, message *Message) error {
-	s, err := a.editMessage(ctx, messageID, message.message)
+	res, raw, err := a.editMessage(ctx, messageID, message.message)
 	if err != nil {
 		return err
 	}
-	if !s.Success {
-		return errors.New(s.Message)
+	if apiErr := newSimpleQueryAPIError("edit message", res, raw); apiErr != nil {
+		return apiErr
 	}
 	return nil
 }
 
 // DeleteMessage deletes message by id
 func (a *messages) DeleteMessage(ctx context.Context, messageID string) (*schemes.SimpleQueryResult, error) {
-	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}
 	values.Set("message_id", messageID)
 	body, err := a.client.request(ctx, http.MethodDelete, "messages", values, false, nil)
 	if err != nil {
-		return result, err
+		return nil, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			slog.Error("failed to close response body", "error", err)
-		}
-	}()
-	return result, json.NewDecoder(body).Decode(result)
+	res, raw, err := decodeSimpleQueryResult(body)
+	if err != nil {
+		return res, err
+	}
+	if apiErr := newSimpleQueryAPIError("delete message", res, raw); apiErr != nil {
+		return res, apiErr
+	}
+	return res, nil
 }
 
 // AnswerOnCallback should be called to send an answer after a user has clicked the button. The answer may be an updated message or/and a one-time user notification.
 func (a *messages) AnswerOnCallback(ctx context.Context, callbackID string, callback *schemes.CallbackAnswer) (*schemes.SimpleQueryResult, error) {
-	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}
 	values.Set("callback_id", callbackID)
 	body, err := a.client.request(ctx, http.MethodPost, "answers", values, false, callback)
 	if err != nil {
-		return result, err
+		return nil, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			slog.Error("failed to close response body", "error", err)
-		}
-	}()
-	return result, json.NewDecoder(body).Decode(result)
+	res, raw, err := decodeSimpleQueryResult(body)
+	if err != nil {
+		return res, err
+	}
+	if apiErr := newSimpleQueryAPIError("answer on callback", res, raw); apiErr != nil {
+		return res, apiErr
+	}
+	return res, nil
 }
+
 
 // NewKeyboardBuilder returns new keyboard builder helper
 func (a *messages) NewKeyboardBuilder() *Keyboard {
@@ -165,20 +167,15 @@ func (a *messages) sendMessage(ctx context.Context, reset bool, chatID int64, us
 	return &wrapper.Message, nil
 }
 
-func (a *messages) editMessage(ctx context.Context, messageID string, message *schemes.NewMessageBody) (*schemes.SimpleQueryResult, error) {
-	result := new(schemes.SimpleQueryResult)
+func (a *messages) editMessage(ctx context.Context, messageID string, message *schemes.NewMessageBody) (*schemes.SimpleQueryResult, []byte, error) {
 	values := url.Values{}
 	values.Set("message_id", messageID)
 	body, err := a.client.request(ctx, http.MethodPut, "messages", values, false, message)
 	if err != nil {
-		return result, err
+		return nil, nil, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			slog.Error("failed to close response body", "error", err)
-		}
-	}()
-	return result, json.NewDecoder(body).Decode(result)
+	res, raw, err := decodeSimpleQueryResult(body)
+	return res, raw, err
 }
 
 // Check posiable to send a message to a chat.

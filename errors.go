@@ -3,6 +3,7 @@ package maxbot
 import (
 	"errors"
 	"fmt"
+	"strings"
 )
 
 var (
@@ -14,13 +15,52 @@ type APIError struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
 	Details string `json:"details,omitempty"`
+
+	// Extra context (filled by client; not part of API schema)
+	HTTPStatus string `json:"-"`
+	Method     string `json:"-"`
+	URL        string `json:"-"`
+	RawBody    string `json:"-"`
 }
 
 func (e *APIError) Error() string {
-	if e.Details != "" {
-		return fmt.Sprintf("API error %d: %s (%s)", e.Code, e.Message, e.Details)
+	// Human-friendly error message that keeps MAX API details.
+	base := ""
+	if e.HTTPStatus != "" {
+		base = fmt.Sprintf("HTTP %d: %s", e.Code, e.HTTPStatus)
+	} else {
+		base = fmt.Sprintf("HTTP %d", e.Code)
 	}
-	return fmt.Sprintf("API error %d: %s", e.Code, e.Message)
+
+	msg := e.Message
+	if msg == "" {
+		msg = "request failed"
+	}
+
+	parts := []string{base, msg}
+
+	if e.Details != "" {
+		parts = append(parts, "("+e.Details+")")
+	}
+
+	if e.Method != "" || e.URL != "" {
+		mu := strings.TrimSpace(strings.TrimSpace(e.Method) + " " + strings.TrimSpace(e.URL))
+		if mu != "" {
+			parts = append(parts, "["+mu+"]")
+		}
+	}
+
+	if e.RawBody != "" {
+		raw := strings.TrimSpace(e.RawBody)
+		raw = strings.ReplaceAll(raw, "\n", " ")
+		raw = strings.ReplaceAll(raw, "\r", " ")
+		if len(raw) > 500 {
+			raw = raw[:500] + "…"
+		}
+		parts = append(parts, "body="+raw)
+	}
+
+	return strings.Join(parts, " ")
 }
 
 func (e *APIError) Is(target error) bool {
