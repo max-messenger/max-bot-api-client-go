@@ -34,7 +34,7 @@ func main() {
 	for _, s := range subs.Subscriptions {
 		_, _ = api.Subscriptions.Unsubscribe(ctx, s.Url)
 	}
-	subscriptionResp, err := api.Subscriptions.Subscribe(ctx, host+"/webhook", []string{})
+	subscriptionResp, err := api.Subscriptions.Subscribe(ctx, host+"/webhook", []string{}, "my-secret-phrase")
 	log.Printf("Subscription: %#v %#v", subscriptionResp, err)
 
 	ch := make(chan schemes.UpdateInterface) // Channel with updates from Max
