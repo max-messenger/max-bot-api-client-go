@@ -50,7 +50,7 @@ func main() {
 					SetUser(upd.Message.Sender.UserId).
 					SetText(fmt.Sprintf("Hello, %s! Your message: %s", upd.Message.Sender.Name, upd.Message.Body.Text))
 
-				_, err := api.Messages.Send(ctx, message)
+				err := api.Messages.Send(ctx, message)
 				log.Printf("Answer: %#v", err)
 			default:
 				log.Printf("Unknown type: %#v", upd)

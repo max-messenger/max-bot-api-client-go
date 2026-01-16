@@ -64,7 +64,7 @@ message := maxbot.NewMessage().
 	SetChat(upd.Message.Recipient.ChatId).
 	AddKeyboard(keyboard).
 	SetText(out)
-id, err := api.Messages.Send(ctx, message)
+err := api.Messages.Send(ctx, message)
 ```
 
 Отправляет сообщение в чат с текстом out и клавиатурой `keyboard := api.Messages.NewKeyboardBuilder()`. При нажатии на неё будет создано событие `schemes.MessageCallbackUpdate`.
