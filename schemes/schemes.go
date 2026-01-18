@@ -470,6 +470,7 @@ type MarkUp struct {
 	Length int        `json:"length"`            // length of marker message
 	UserId int64      `json:"user_id,omitempty"` // User identifier, if message was sent to user
 	Type   MarkupType `json:"type"`              // Type of markup
+	URL    string     `json:"url,omitempty"`     // URL for link type markup
 }
 
 type NewMessageLink struct {
