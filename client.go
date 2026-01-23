@@ -6,11 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
-
-	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
 
 var (
@@ -114,20 +111,28 @@ func (cl *client) requestReader(ctx context.Context, method, path string, query 
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		defer func() {
-			if closeErr := resp.Body.Close(); closeErr != nil {
-				log.Println(closeErr)
-			}
-		}()
+		// Read body into buffer to decode error
+		bodyBytes, readErr := io.ReadAll(resp.Body)
+		resp.Body.Close()
 
-		apiErr := &schemes.Error{}
-		if decodeErr := json.NewDecoder(resp.Body).Decode(apiErr); decodeErr != nil {
+		if readErr != nil {
+			return nil, fmt.Errorf("HTTP %d: failed to read error body: %w", resp.StatusCode, readErr)
+		}
+
+		// Use simplified structure as schemes.Error.Message expects Message type, not string
+		type SimpleError struct {
+			Code    string `json:"code"`
+			Message string `json:"message"`
+		}
+
+		simpleErr := &SimpleError{}
+		if decodeErr := json.Unmarshal(bodyBytes, simpleErr); decodeErr != nil {
 			return nil, fmt.Errorf("HTTP %d: %s", resp.StatusCode, http.StatusText(resp.StatusCode))
 		}
 
 		return nil, &APIError{
 			Code:    resp.StatusCode,
-			Message: apiErr.Error(),
+			Message: fmt.Sprintf("%s: %s", simpleErr.Code, simpleErr.Message),
 		}
 	}
 
