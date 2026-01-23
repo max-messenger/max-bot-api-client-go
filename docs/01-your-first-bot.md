@@ -96,7 +96,7 @@ func main() {
 				SetChat(upd.Message.Recipient.ChatId).
 				SetText("Hello from Bot")
 
-			_, err := api.Messages.Send(ctx, message)
+			err := api.Messages.Send(ctx, message)
 			if err != nil {
 				/* ... */
 			}

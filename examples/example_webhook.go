@@ -34,7 +34,7 @@ func main() {
 	for _, s := range subs.Subscriptions {
 		_, _ = api.Subscriptions.Unsubscribe(ctx, s.Url)
 	}
-	subscriptionResp, err := api.Subscriptions.Subscribe(ctx, host+"/webhook", []string{})
+	subscriptionResp, err := api.Subscriptions.Subscribe(ctx, host+"/webhook", []string{}, "my-secret-phrase")
 	log.Printf("Subscription: %#v %#v", subscriptionResp, err)
 
 	ch := make(chan schemes.UpdateInterface) // Channel with updates from Max
@@ -50,7 +50,7 @@ func main() {
 					SetUser(upd.Message.Sender.UserId).
 					SetText(fmt.Sprintf("Hello, %s! Your message: %s", upd.Message.Sender.Name, upd.Message.Body.Text))
 
-				_, err := api.Messages.Send(ctx, message)
+				err := api.Messages.Send(ctx, message)
 				log.Printf("Answer: %#v", err)
 			default:
 				log.Printf("Unknown type: %#v", upd)
