@@ -821,13 +821,17 @@ func (b MessageCreatedUpdate) GetText() string {
 }
 
 func (b MessageCreatedUpdate) GetCommand() string {
-	if strings.Index(b.Message.Body.Text, "/") == 0 {
-		if strings.Contains(b.Message.Body.Text, ":") {
-			return strings.Split(b.Message.Body.Text, ":")[0]
-		}
-		return b.Message.Body.Text
+	if !strings.HasPrefix(b.Message.Body.Text, "/") {
+		return "undefened"
 	}
-	return "undefened"
+
+	firstLine := strings.SplitN(b.Message.Body.Text, "\n", 2)[0]
+
+	if strings.Contains(firstLine, ":") {
+		return strings.SplitN(firstLine, ":", 2)[0]
+	}
+
+	return strings.SplitN(firstLine, " ", 2)[0]
 }
 
 func (b MessageCreatedUpdate) GetParam() string {
