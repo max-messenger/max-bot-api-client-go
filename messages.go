@@ -34,9 +34,7 @@ func (a *messages) GetMessages(ctx context.Context, chatID int64, messageIDs []s
 		values.Set("chat_id", strconv.Itoa(int(chatID)))
 	}
 	if len(messageIDs) > 0 {
-		for _, mid := range messageIDs {
-			values.Add("message_ids", mid)
-		}
+        values.Set("message_ids", strings.Join(messageIDs, ","))
 	}
 	if from != 0 {
 		values.Set("from", strconv.Itoa(from))
