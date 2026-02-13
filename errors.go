@@ -27,6 +27,7 @@ func (e *APIError) Is(target error) bool {
 	if t, ok := target.(*APIError); ok {
 		return e.Code == t.Code
 	}
+
 	return false
 }
 
@@ -38,6 +39,7 @@ type NetworkError struct {
 func (e *NetworkError) Error() string {
 	return fmt.Sprintf("network error during %s: %v", e.Op, e.Err)
 }
+
 func (e *NetworkError) Unwrap() error {
 	return e.Err
 }
