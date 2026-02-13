@@ -743,8 +743,9 @@ func (b BotRemovedFromChatUpdate) GetChatID() int64 {
 // Bot gets this type of update as soon as user pressed `Start` button
 type BotStartedUpdate struct {
 	Update
-	ChatId int64 `json:"chat_id"` // Dialog identifier where event has occurred
-	User   User  `json:"user"`    // User pressed the 'Start' button
+	ChatId  int64  `json:"chat_id"`           // Dialog identifier where event has occurred
+	User    User   `json:"user"`              // User pressed the 'Start' button
+	Payload string `json:"payload,omitempty"` // Deeplink payload
 }
 
 func (b BotStartedUpdate) GetUserID() int64 {
