@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+const CommandUndefined = "undefined"
+
 type ActionRequestBody struct {
 	Action SenderAction `json:"action"`
 }
@@ -24,7 +26,7 @@ const (
 	AttachmentKeyboard AttachmentType = "inline_keyboard"
 )
 
-// Generic schema representing message attachment
+// Attachment represents a generic schema for message attachment
 type Attachment struct {
 	Type AttachmentType `json:"type"`
 }
@@ -42,7 +44,7 @@ type AttachmentPayload struct {
 	Url string `json:"url"`
 }
 
-// Request to attach some data to message
+// AttachmentRequest represents a request to attach data to a message
 type AttachmentRequest struct {
 	Type AttachmentType `json:"type"`
 }
@@ -52,7 +54,7 @@ type AudioAttachment struct {
 	Payload MediaAttachmentPayload `json:"payload"`
 }
 
-// Request to attach audio to message. MUST be the only attachment in message
+// AudioAttachmentRequest represents Request to attach audio to message. MUST be the only attachment in message
 type AudioAttachmentRequest struct {
 	AttachmentRequest
 	Payload UploadedInfo `json:"payload"`
@@ -70,7 +72,7 @@ type BotCommand struct {
 type BotInfo struct {
 	UserId        int64        `json:"user_id"`                   // Users identifier
 	Name          string       `json:"name"`                      // Users visible name
-	Username      string       `json:"username,omitempty"`        // Unique public user name. Can be `null` if user is not accessible or it is not set
+	Username      string       `json:"username,omitempty"`        // Unique public username. Can be `null` if user is not accessible or, it is not set
 	AvatarUrl     string       `json:"avatar_url,omitempty"`      // URL of avatar
 	FullAvatarUrl string       `json:"full_avatar_url,omitempty"` // URL of avatar of a bigger size
 	Commands      []BotCommand `json:"commands,omitempty"`        // Commands supported by bots
@@ -103,13 +105,14 @@ type ButtonInterface interface {
 	GetText() string
 }
 
-// Send this object when your bots wants to react to when a button is pressed
+// CallbackAnswer represents send this object when your bots wants to react to when a button is pressed
 type CallbackAnswer struct {
 	Message      *NewMessageBody `json:"message,omitempty"`      // Fill this if you want to modify current message
 	Notification string          `json:"notification,omitempty"` // Fill this if you just want to send one-time notification to user
 }
 
-// After pressing this type of button client sends to server payload it contains
+// CallbackButton represents a button that sends a payload to the server when pressed.
+// It extends the base Button with payload data and intent information.
 type CallbackButton struct {
 	Button
 	Payload string `json:"payload"`          // Button payload
@@ -164,7 +167,7 @@ type ChatList struct {
 type ChatMember struct {
 	UserId         int64                 `json:"user_id"`                   // Users identifier
 	Name           string                `json:"name"`                      // Users visible name
-	Username       string                `json:"username,omitempty"`        // Unique public user name. Can be `null` if user is not accessible or it is not set
+	Username       string                `json:"username,omitempty"`        // Unique public username. Can be `null` if user is not accessible or, it is not set
 	AvatarUrl      string                `json:"avatar_url,omitempty"`      // URL of avatar
 	FullAvatarUrl  string                `json:"full_avatar_url,omitempty"` // URL of avatar of a bigger size
 	LastAccessTime int                   `json:"last_access_time"`
@@ -217,7 +220,8 @@ type ContactAttachmentPayload struct {
 	TamInfo *User  `json:"max_info"`           // User info
 }
 
-// Request to attach contact card to message. MUST be the only attachment in message
+// ContactAttachmentRequest attaches a contact card.
+// Restriction: Cannot be combined with other attachments in the same message.
 type ContactAttachmentRequest struct {
 	AttachmentRequest
 	Payload ContactAttachmentRequestPayload `json:"payload"`
@@ -234,13 +238,13 @@ type ContactAttachmentRequestPayload struct {
 	VcfPhone  string `json:"vcf_phone,omitempty"`  // Contact phone in VCF format
 }
 
-// Server returns this if there was an exception to your request
+// Error represents an exception returned by the server in response to an invalid request
 type Error struct {
 	ErrorText   string    `json:"error,omitempty"`                  // Error
 	Code        string    `json:"code,omitempty"`                   // Error code
 	Message     Message   `json:"message,omitempty"`                // Human-readable description
 	Results     []Results `json:"results,omitempty"`                // phones
-	NumberExist []string  `json:"existing_phone_numbers,omitempty"` // extistphones
+	NumberExist []string  `json:"existing_phone_numbers,omitempty"` // exists phones
 
 }
 
@@ -265,7 +269,8 @@ type FileAttachmentPayload struct {
 	Token string `json:"token"` // Use `token` in case when you are trying to reuse the same attachment in other message
 }
 
-// Request to attach file to message. MUST be the only attachment in message
+// FileAttachmentRequest represents a request to attach a file to a message.
+// This attachment must be the only one in the message.
 type FileAttachmentRequest struct {
 	AttachmentRequest
 	Payload UploadedInfo `json:"payload"`
@@ -275,23 +280,23 @@ func NewFileAttachmentRequest(payload UploadedInfo) *FileAttachmentRequest {
 	return &FileAttachmentRequest{Payload: payload, AttachmentRequest: AttachmentRequest{Type: AttachmentFile}}
 }
 
-// List of all WebHook subscriptions
+// GetSubscriptionsResult contains a list of all WebHook subscriptions.
 type GetSubscriptionsResult struct {
 	Subscriptions []Subscription `json:"subscriptions"` // Current subscriptions
 }
 
-// Generic schema describing image object
+// Image is a generic schema for an image object.
 type Image struct {
 	Url string `json:"url"` // URL of image
 }
 
-// Buttons in messages
+// InlineKeyboardAttachment defines interactive buttons embedded in message content
 type InlineKeyboardAttachment struct {
 	Attachment
 	Payload Keyboard `json:"payload"`
 }
 
-// Request to attach keyboard to message
+// InlineKeyboardAttachmentRequest represents a request to attach an inline keyboard to a message.
 type InlineKeyboardAttachmentRequest struct {
 	AttachmentRequest
 	Payload Keyboard `json:"payload"`
@@ -327,7 +332,7 @@ type Keyboard struct {
 	Buttons [][]ButtonInterface `json:"buttons"`
 }
 
-// After pressing this type of button user follows the link it contains
+// LinkButton is a button that, when clicked, follows the contained link.
 type LinkButton struct {
 	Button
 	Url string `json:"url"`
@@ -346,7 +351,7 @@ type LocationAttachment struct {
 	Longitude float64 `json:"longitude"`
 }
 
-// Request to attach keyboard to message
+// LocationAttachmentRequest represents a request to attach a location to a message.
 type LocationAttachmentRequest struct {
 	AttachmentRequest
 	Latitude  float64 `json:"latitude"`
@@ -373,7 +378,7 @@ type Message struct {
 	Url       string         `json:"url,omitempty"`
 }
 
-// Schema representing body of message
+// MessageBody represents the body of a message
 type MessageBody struct {
 	Mid            string            `json:"mid"`            // Unique identifier of message
 	Seq            int64             `json:"seq"`            // Sequence identifier of message in chat
@@ -423,12 +428,12 @@ const (
 	MarkupUnderline     MarkupType = "underline"
 )
 
-// Paginated list of messages
+// MessageList represents a paginated list of messages
 type MessageList struct {
 	Messages []Message `json:"messages"` // List of messages
 }
 
-// Message statistics
+// MessageStat contains statistics about messages.
 type MessageStat struct {
 	Views int `json:"views"`
 }
@@ -444,7 +449,7 @@ type NewMessageBody struct {
 	Markups      []MarkUp        `json:"markup,omitempty"`        // mention users
 }
 
-// Generic schema representing message markup
+// Markup represents a generic message formatting schema
 type Markup struct {
 	Type MarkupType `json:"type"` // Type of markup
 }
@@ -464,7 +469,7 @@ type MarkUpUser struct {
 	UserId int64 `json:"user_id,omitempty"` // User identifier, if message was sent to user
 }
 
-// old
+// MarkUp old
 type MarkUp struct {
 	From   int        `json:"from"`              // where starts
 	Length int        `json:"length"`            // length of marker message
@@ -478,7 +483,7 @@ type NewMessageLink struct {
 	Mid  string          `json:"mid"`  // Message identifier of original message
 }
 
-// Image attachment
+// PhotoAttachment describes a model for an image attachment in a message.
 type PhotoAttachment struct {
 	Attachment
 	Payload PhotoAttachmentPayload `json:"payload"`
@@ -503,7 +508,9 @@ type PhotoAttachmentRequestAllOf struct {
 	Payload PhotoAttachmentRequestPayload `json:"payload"`
 }
 
-// Request to attach image. All fields are mutually exclusive
+// PhotoAttachmentRequestPayload represents a request to attach an image.
+// All fields within this struct are mutually exclusive, meaning only one
+// of them should be provided in a single request.
 type PhotoAttachmentRequestPayload struct {
 	Url    string                `json:"url,omitempty"`    // Any external image URL you want to attach
 	Token  string                `json:"token,omitempty"`  // Token of any existing attachment
@@ -514,7 +521,7 @@ type PhotoToken struct {
 	Token string `json:"token"` // Encoded information of uploaded image
 }
 
-// This is information you will receive as soon as an image uploaded
+// PhotoTokens contains the data returned immediately after an image is uploaded.
 type PhotoTokens struct {
 	Photos map[string]PhotoToken `json:"photos"`
 }
@@ -535,12 +542,13 @@ type Recipient struct {
 	UserId   int64    `json:"user_id,omitempty"` // User identifier, if message was sent to user
 }
 
-// After pressing this type of button client sends new message with attachment of current user contact
+// RequestContactButton represents a button that, when pressed by the client sends new message with attachment of current user contact
 type RequestContactButton struct {
 	Button
 }
 
-// After pressing this type of button client sends new message with attachment of current user geo location
+// RequestGeoLocationButton initiates the sharing of the user's current geographic location.
+// Upon pressing this button, the client automatically sends a message containing the location as an attachment.
 type RequestGeoLocationButton struct {
 	Button
 	Quick bool `json:"quick,omitempty"` // If *true*, sends location without asking user's confirmation
@@ -568,7 +576,7 @@ type ShareAttachment struct {
 	Payload AttachmentPayload `json:"payload"`
 }
 
-// Simple response to request
+// SimpleQueryResult is an empty struct for simple query responses
 type SimpleQueryResult struct {
 	Success bool   `json:"success"`           // `true` if request was successful. `false` otherwise
 	Message string `json:"message,omitempty"` // Explanatory message if the result is not successful
@@ -586,7 +594,8 @@ type StickerAttachmentPayload struct {
 	Code string `json:"code"` // Sticker identifier
 }
 
-// Request to attach sticker. MUST be the only attachment request in message
+// StickerAttachmentRequest represents a request to attach a sticker.
+// MUST be the only attachment request in the message.
 type StickerAttachmentRequest struct {
 	AttachmentRequest
 	Payload StickerAttachmentRequestPayload `json:"payload"`
@@ -600,7 +609,8 @@ type StickerAttachmentRequestPayload struct {
 	Code string `json:"code"` // Sticker code
 }
 
-// Schema to describe WebHook subscription
+// Subscription represents a data schema for webhook subscriptions
+// Contains information about notification recipient settings and parameters
 type Subscription struct {
 	Secret      string   `json:"secret,omitempty"`
 	Url         string   `json:"url"`                    // Webhook URL
@@ -609,7 +619,7 @@ type Subscription struct {
 	Version     string   `json:"version,omitempty"`
 }
 
-// Request to set up WebHook subscription
+// SubscriptionRequestBody represents the request body for configuring a WebHook subscription.
 type SubscriptionRequestBody struct {
 	// Secret A secret to be sent in a header “X-Max-Bot-Api-Secret” in every webhook request, 5-256 characters. Only characters A-Z, a-z, 0-9, _ and - are allowed. The header is useful to ensure that the request comes from a webhook set by you.
 	Secret      string   `json:"secret,omitempty"`
@@ -618,13 +628,13 @@ type SubscriptionRequestBody struct {
 	Version     string   `json:"version,omitempty"`      // Version of API. Affects model representation
 }
 
-// List of all updates in chats your bots participated in
+// UpdateList represents a collection of bot updates from chats.
 type UpdateList struct {
 	Updates []json.RawMessage `json:"updates"` // Page of updates
 	Marker  *int64            `json:"marker"`  // Pointer to the next data page
 }
 
-// Endpoint you should upload to your binaries
+// UploadEndpoint is the endpoint where you should upload your compiled binaries.
 type UploadEndpoint struct {
 	// Token Video or audio token for send message
 	Token string `json:"token,omitempty"`
@@ -642,16 +652,18 @@ const (
 	FILE  UploadType = "file"
 )
 
-// This is information you will receive as soon as audio/video is uploaded
+// UploadedInfo contains metadata and details about an uploaded audio or video file.
+// This structure is populated immediately after the file is successfully uploaded
+// to the server and is available for further processing or retrieval.
 type UploadedInfo struct {
 	FileID int64  `json:"file_id,omitempty"`
-	Token  string `json:"token,omitempty"` // Token is unique uploaded media identfier
+	Token  string `json:"token,omitempty"` // Token is unique uploaded media identifier
 }
 
 type User struct {
 	UserId                int64         `json:"user_id"`            // Users identifier
 	Name                  string        `json:"name"`               // Users visible name
-	Username              string        `json:"username,omitempty"` // Unique public user name. Can be `null` if user is not accessible or it is not set
+	Username              string        `json:"username,omitempty"` // Unique public username. Can be `null` if user is not accessible or, it is not set
 	FirstName             string        `json:"first_name,omitempty"`
 	LastName              string        `json:"last_name,omitempty"`
 	IsBot                 bool          `json:"is_bot,omitempty"`
@@ -673,7 +685,7 @@ type VideoAttachment struct {
 	Payload MediaAttachmentPayload `json:"payload"`
 }
 
-// Request to attach video to message
+// VideoAttachmentRequest represents a request to attach a video to a message.
 type VideoAttachmentRequest struct {
 	AttachmentRequest
 	Payload UploadedInfo `json:"payload"`
@@ -683,7 +695,8 @@ func NewVideoAttachmentRequest(payload UploadedInfo) *VideoAttachmentRequest {
 	return &VideoAttachmentRequest{Payload: payload, AttachmentRequest: AttachmentRequest{Type: AttachmentVideo}}
 }
 
-// `Update` object represents different types of events that happened in chat. See its inheritors
+// Update represents different types of events that occurred in the chat.
+// See its inheritors for specific event types.
 type Update struct {
 	UpdateType UpdateType `json:"update_type"`
 	Timestamp  int        `json:"timestamp"` // Unix-time when event has occurred
@@ -710,7 +723,7 @@ type UpdateInterface interface {
 	GetChatID() int64
 }
 
-// You will receive this update when bots has been added to chat
+// BotAddedToChatUpdate represents an update received when one or more bots are added to the chat.
 type BotAddedToChatUpdate struct {
 	Update
 	ChatId int64 `json:"chat_id"` // Chat id where bots was added
@@ -725,7 +738,7 @@ func (b BotAddedToChatUpdate) GetChatID() int64 {
 	return b.ChatId
 }
 
-// You will receive this update when bots has been removed from chat
+// BotRemovedFromChatUpdate is sent when the bot has been removed from a chat
 type BotRemovedFromChatUpdate struct {
 	Update
 	ChatId int64 `json:"chat_id"` // Chat identifier bots removed from
@@ -740,12 +753,11 @@ func (b BotRemovedFromChatUpdate) GetChatID() int64 {
 	return b.ChatId
 }
 
-// Bot gets this type of update as soon as user pressed `Start` button
+// BotStartedUpdate is triggered when a user starts a conversation with the bot by pressing the "Start" button.
 type BotStartedUpdate struct {
 	Update
-	ChatId  int64  `json:"chat_id"`           // Dialog identifier where event has occurred
-	User    User   `json:"user"`              // User pressed the 'Start' button
-	Payload string `json:"payload,omitempty"` // Deeplink payload
+	ChatId int64 `json:"chat_id"` // Dialog identifier where event has occurred
+	User   User  `json:"user"`    // User pressed the 'Start' button
 }
 
 func (b BotStartedUpdate) GetUserID() int64 {
@@ -756,7 +768,7 @@ func (b BotStartedUpdate) GetChatID() int64 {
 	return b.ChatId
 }
 
-// Object sent to bots when user presses button
+// Callback is an object sent to bots when a user presses a button.
 type Callback struct {
 	Timestamp  int64  `json:"timestamp"` // Unix-time when event has occurred
 	CallbackID string `json:"callback_id"`
@@ -772,7 +784,7 @@ func (b Callback) GetChatID() int64 {
 	return 0
 }
 
-// Bot gets this type of update as soon as title has been changed in chat
+// ChatTitleChangedUpdate is sent to the bot when a chat's title is updated.
 type ChatTitleChangedUpdate struct {
 	Update
 	ChatId int64  `json:"chat_id"` // Chat identifier where event has occurred
@@ -788,7 +800,7 @@ func (b ChatTitleChangedUpdate) GetChatID() int64 {
 	return b.ChatId
 }
 
-// You will get this `update` as soon as user presses button
+// MessageCallbackUpdate is triggered when a user presses a button
 type MessageCallbackUpdate struct {
 	Update
 	Callback Callback `json:"callback"`
@@ -803,7 +815,7 @@ func (b MessageCallbackUpdate) GetChatID() int64 {
 	return 0
 }
 
-// You will get this `update` as soon as message is created
+// MessageCreatedUpdate represents an update that is received as soon as a message is created
 type MessageCreatedUpdate struct {
 	Update
 	Message Message `json:"message"` // Newly created message
@@ -828,7 +840,8 @@ func (b MessageCreatedUpdate) GetCommand() string {
 		}
 		return b.Message.Body.Text
 	}
-	return "undefened"
+
+	return CommandUndefined
 }
 
 func (b MessageCreatedUpdate) GetParam() string {
@@ -838,10 +851,12 @@ func (b MessageCreatedUpdate) GetParam() string {
 		}
 		return ""
 	}
+
 	return ""
 }
 
-// You will get this `update` as soon as message is edited
+// MessageEditedUpdate represents an update that occurs when a message is edited.
+// Contains the edited message and inherits base Update fields.
 type MessageEditedUpdate struct {
 	Update
 	Message Message `json:"message"` // Edited message
@@ -855,7 +870,8 @@ func (b MessageEditedUpdate) GetChatID() int64 {
 	return b.Message.Recipient.ChatId
 }
 
-// You will get this `update` as soon as message is removed
+// MessageRemovedUpdate represents an update that occurs when a message is removed.
+// You will receive this update as soon as a message is deleted.
 type MessageRemovedUpdate struct {
 	Update
 	MessageId string `json:"message_id"` // Identifier of removed message
@@ -869,7 +885,8 @@ func (b MessageRemovedUpdate) GetChatID() int64 {
 	return 0
 }
 
-// You will receive this update when user has been added to chat where bots is administrator
+// UserAddedToChatUpdate represents an update that occurs when a user has been added to a chat
+// where the bot is an administrator.
 type UserAddedToChatUpdate struct {
 	Update
 	ChatId    int64 `json:"chat_id"`    // Chat identifier where event has occurred
@@ -885,7 +902,8 @@ func (b UserAddedToChatUpdate) GetChatID() int64 {
 	return b.ChatId
 }
 
-// You will receive this update when user has been removed from chat where bots is administrator
+// UserRemovedFromChatUpdate represents an update when a user is removed from a chat where the bot is an administrator.
+// The bot must be an administrator in the chat to receive this update.
 type UserRemovedFromChatUpdate struct {
 	Update
 	ChatId  int64 `json:"chat_id"`  // Chat identifier where event has occurred

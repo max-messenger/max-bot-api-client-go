@@ -3,3 +3,4 @@
 *.exe
 /.vscode/
 /.idea/
+/vendor
