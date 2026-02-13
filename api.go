@@ -123,51 +123,76 @@ func NewWithConfig(cfg configservice.ConfigInterface) (*Api, error) {
 	return api, nil
 }
 
-// updateTypeMap maps update types to their corresponding struct constructors.
-var updateTypeMap = map[schemes.UpdateType]func(debugRaw string) schemes.UpdateInterface{
-	schemes.TypeMessageCallback: func(debugRaw string) schemes.UpdateInterface {
-		return &schemes.MessageCallbackUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
-	},
-	schemes.TypeMessageCreated: func(debugRaw string) schemes.UpdateInterface {
-		return &schemes.MessageCreatedUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
-	},
-	schemes.TypeMessageRemoved: func(debugRaw string) schemes.UpdateInterface {
-		return &schemes.MessageRemovedUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
-	},
-	schemes.TypeMessageEdited: func(debugRaw string) schemes.UpdateInterface {
-		return &schemes.MessageEditedUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
-	},
-	schemes.TypeBotAdded: func(debugRaw string) schemes.UpdateInterface {
-		return &schemes.BotAddedToChatUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
-	},
-	schemes.TypeBotRemoved: func(debugRaw string) schemes.UpdateInterface {
-		return &schemes.BotRemovedFromChatUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
-	},
-	schemes.TypeUserAdded: func(debugRaw string) schemes.UpdateInterface {
-		return &schemes.UserAddedToChatUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
-	},
-	schemes.TypeUserRemoved: func(debugRaw string) schemes.UpdateInterface {
-		return &schemes.UserRemovedFromChatUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
-	},
-	schemes.TypeBotStarted: func(debugRaw string) schemes.UpdateInterface {
-		return &schemes.BotStartedUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
-	},
-	schemes.TypeChatTitleChanged: func(debugRaw string) schemes.UpdateInterface {
-		return &schemes.ChatTitleChangedUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
-	},
+func getUpdateType(updateType schemes.UpdateType) func(debugRaw string) schemes.UpdateInterface {
+	switch updateType {
+	case schemes.TypeMessageCallback:
+		return func(debugRaw string) schemes.UpdateInterface {
+			return &schemes.MessageCallbackUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
+		}
+	case schemes.TypeMessageCreated:
+		return func(debugRaw string) schemes.UpdateInterface {
+			return &schemes.MessageCreatedUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
+		}
+	case schemes.TypeMessageRemoved:
+		return func(debugRaw string) schemes.UpdateInterface {
+			return &schemes.MessageRemovedUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
+		}
+	case schemes.TypeMessageEdited:
+		return func(debugRaw string) schemes.UpdateInterface {
+			return &schemes.MessageEditedUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
+		}
+	case schemes.TypeBotAdded:
+		return func(debugRaw string) schemes.UpdateInterface {
+			return &schemes.BotAddedToChatUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
+		}
+	case schemes.TypeBotRemoved:
+		return func(debugRaw string) schemes.UpdateInterface {
+			return &schemes.BotRemovedFromChatUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
+		}
+	case schemes.TypeUserAdded:
+		return func(debugRaw string) schemes.UpdateInterface {
+			return &schemes.UserAddedToChatUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
+		}
+	case schemes.TypeUserRemoved:
+		return func(debugRaw string) schemes.UpdateInterface {
+			return &schemes.UserRemovedFromChatUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
+		}
+	case schemes.TypeBotStarted:
+		return func(debugRaw string) schemes.UpdateInterface {
+			return &schemes.BotStartedUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
+		}
+	case schemes.TypeChatTitleChanged:
+		return func(debugRaw string) schemes.UpdateInterface {
+			return &schemes.ChatTitleChangedUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
+		}
+	}
+
+	return nil
 }
 
-// attachmentTypeMap maps attachment types to their corresponding struct constructors.
-var attachmentTypeMap = map[schemes.AttachmentType]func() schemes.AttachmentInterface{
-	schemes.AttachmentAudio:    func() schemes.AttachmentInterface { return new(schemes.AudioAttachment) },
-	schemes.AttachmentContact:  func() schemes.AttachmentInterface { return new(schemes.ContactAttachment) },
-	schemes.AttachmentFile:     func() schemes.AttachmentInterface { return new(schemes.FileAttachment) },
-	schemes.AttachmentImage:    func() schemes.AttachmentInterface { return new(schemes.PhotoAttachment) },
-	schemes.AttachmentKeyboard: func() schemes.AttachmentInterface { return new(schemes.InlineKeyboardAttachment) },
-	schemes.AttachmentLocation: func() schemes.AttachmentInterface { return new(schemes.LocationAttachment) },
-	schemes.AttachmentShare:    func() schemes.AttachmentInterface { return new(schemes.ShareAttachment) },
-	schemes.AttachmentSticker:  func() schemes.AttachmentInterface { return new(schemes.StickerAttachment) },
-	schemes.AttachmentVideo:    func() schemes.AttachmentInterface { return new(schemes.VideoAttachment) },
+func getAttachmentType(attachmentType schemes.AttachmentType) func() schemes.AttachmentInterface {
+	switch attachmentType {
+	case schemes.AttachmentAudio:
+		return func() schemes.AttachmentInterface { return new(schemes.AudioAttachment) }
+	case schemes.AttachmentContact:
+		return func() schemes.AttachmentInterface { return new(schemes.ContactAttachment) }
+	case schemes.AttachmentFile:
+		return func() schemes.AttachmentInterface { return new(schemes.FileAttachment) }
+	case schemes.AttachmentImage:
+		return func() schemes.AttachmentInterface { return new(schemes.PhotoAttachment) }
+	case schemes.AttachmentKeyboard:
+		return func() schemes.AttachmentInterface { return new(schemes.InlineKeyboardAttachment) }
+	case schemes.AttachmentLocation:
+		return func() schemes.AttachmentInterface { return new(schemes.LocationAttachment) }
+	case schemes.AttachmentShare:
+		return func() schemes.AttachmentInterface { return new(schemes.ShareAttachment) }
+	case schemes.AttachmentSticker:
+		return func() schemes.AttachmentInterface { return new(schemes.StickerAttachment) }
+	case schemes.AttachmentVideo:
+		return func() schemes.AttachmentInterface { return new(schemes.VideoAttachment) }
+	}
+
+	return nil
 }
 
 // bytesToProperUpdate converts raw JSON bytes to the appropriate update type.
@@ -183,8 +208,8 @@ func (a *Api) bytesToProperUpdate(data []byte) (schemes.UpdateInterface, error) 
 	}
 
 	updateType := baseUpdate.GetUpdateType()
-	constructor, exists := updateTypeMap[updateType]
-	if !exists {
+	constructor := getUpdateType(updateType)
+	if constructor == nil {
 		return nil, fmt.Errorf("unknown update type: %s", updateType)
 	}
 
@@ -250,8 +275,8 @@ func (a *Api) bytesToProperAttachment(data []byte) (schemes.AttachmentInterface,
 	}
 
 	attachmentType := baseAttachment.GetAttachmentType()
-	constructor, exists := attachmentTypeMap[attachmentType]
-	if !exists {
+	constructor := getAttachmentType(attachmentType)
+	if constructor == nil {
 		// Return base attachment for unknown types
 		return baseAttachment, nil
 	}
