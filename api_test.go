@@ -221,7 +221,7 @@ func TestGetUpdates(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		require.Equal(t, "/updates", r.URL.Path)
 
-		markerStr := r.URL.Query().Get("marker")
+		markerStr := r.URL.Query().Get(paramMarker)
 		marker, _ := strconv.ParseInt(markerStr, 10, 64)
 
 		var updateList schemes.UpdateList
