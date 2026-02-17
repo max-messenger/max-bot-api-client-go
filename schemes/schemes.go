@@ -242,7 +242,7 @@ type ContactAttachmentRequestPayload struct {
 type Error struct {
 	ErrorText   string    `json:"error,omitempty"`                  // Error
 	Code        string    `json:"code,omitempty"`                   // Error code
-	Message     string   `json:"message,omitempty"`                // Human-readable description
+	Message     string    `json:"message,omitempty"`                // Human-readable description
 	Results     []Results `json:"results,omitempty"`                // phones
 	NumberExist []string  `json:"existing_phone_numbers,omitempty"` // exists phones
 
