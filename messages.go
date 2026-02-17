@@ -26,26 +26,32 @@ type MessageResponse struct {
 	Message schemes.Message `json:"message"`
 }
 
-// GetMessages returns messages in chat: result page and marker referencing to the next page. Messages traversed in reverse direction so the latest message in chat will be first in result array. Therefore if you use from and to parameters, to must be less than from
+// GetMessages returns messages in chat: result page and marker referencing to the next page.
+// Messages traversed in reverse direction so the latest message in chat will be first in result array.
+// Therefore, if you use from and to parameters, to must be less than from
 func (a *messages) GetMessages(ctx context.Context, chatID int64, messageIDs []string, from int, to int, count int) (*schemes.MessageList, error) {
 	result := new(schemes.MessageList)
 	values := url.Values{}
 	if chatID != 0 {
-		values.Set("chat_id", strconv.Itoa(int(chatID)))
+		values.Set(paramChatID, strconv.Itoa(int(chatID)))
 	}
 	if len(messageIDs) > 0 {
-        values.Set("message_ids", strings.Join(messageIDs, ","))
+        values.Set(paramMessageIDs, strings.Join(messageIDs, ","))
+	}
+	// If you use 'from' and 'to' parameters, 'to' must be less than 'from'.
+	if from > to {
+		to, from = from, to
 	}
 	if from != 0 {
-		values.Set("from", strconv.Itoa(from))
+		values.Set(paramFrom, strconv.Itoa(from))
 	}
 	if to != 0 {
-		values.Set("to", strconv.Itoa(to))
+		values.Set(paramTo, strconv.Itoa(to))
 	}
 	if count > 0 {
-		values.Set("count", strconv.Itoa(count))
+		values.Set(paramCount, strconv.Itoa(count))
 	}
-	body, err := a.client.request(ctx, http.MethodGet, "messages", values, false, nil)
+	body, err := a.client.request(ctx, http.MethodGet, pathMessages, values, false, nil)
 	if err != nil {
 		return result, err
 	}
@@ -54,6 +60,7 @@ func (a *messages) GetMessages(ctx context.Context, chatID int64, messageIDs []s
 			slog.Error("failed to close response body", "error", err)
 		}
 	}()
+
 	return result, json.NewDecoder(body).Decode(result)
 }
 
@@ -69,10 +76,11 @@ func (a *messages) GetMessage(ctx context.Context, messageID string) (*schemes.M
 			slog.Error("failed to close response body", "error", err)
 		}
 	}()
+
 	return result, json.NewDecoder(body).Decode(result)
 }
 
-// EditMessage updates message by id
+// EditMessage updates the message by id.
 func (a *messages) EditMessage(ctx context.Context, messageID string, message *Message) error {
 	s, err := a.editMessage(ctx, messageID, message.message)
 	if err != nil {
@@ -81,15 +89,16 @@ func (a *messages) EditMessage(ctx context.Context, messageID string, message *M
 	if !s.Success {
 		return errors.New(s.Message)
 	}
+
 	return nil
 }
 
-// DeleteMessage deletes message by id
+// DeleteMessage deletes the message by id.
 func (a *messages) DeleteMessage(ctx context.Context, messageID string) (*schemes.SimpleQueryResult, error) {
 	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}
-	values.Set("message_id", messageID)
-	body, err := a.client.request(ctx, http.MethodDelete, "messages", values, false, nil)
+	values.Set(paramMessageID, messageID)
+	body, err := a.client.request(ctx, http.MethodDelete, pathMessages, values, false, nil)
 	if err != nil {
 		return result, err
 	}
@@ -98,15 +107,17 @@ func (a *messages) DeleteMessage(ctx context.Context, messageID string) (*scheme
 			slog.Error("failed to close response body", "error", err)
 		}
 	}()
+
 	return result, json.NewDecoder(body).Decode(result)
 }
 
-// AnswerOnCallback should be called to send an answer after a user has clicked the button. The answer may be an updated message or/and a one-time user notification.
+// AnswerOnCallback should be called to send an answer after a user has clicked the button.
+// The answer may be an updated message or/and a one-time user notification.
 func (a *messages) AnswerOnCallback(ctx context.Context, callbackID string, callback *schemes.CallbackAnswer) (*schemes.SimpleQueryResult, error) {
 	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}
-	values.Set("callback_id", callbackID)
-	body, err := a.client.request(ctx, http.MethodPost, "answers", values, false, callback)
+	values.Set(paramCallbackID, callbackID)
+	body, err := a.client.request(ctx, http.MethodPost, pathAnswers, values, false, callback)
 	if err != nil {
 		return result, err
 	}
@@ -115,19 +126,21 @@ func (a *messages) AnswerOnCallback(ctx context.Context, callbackID string, call
 			slog.Error("failed to close response body", "error", err)
 		}
 	}()
+
 	return result, json.NewDecoder(body).Decode(result)
 }
 
-// NewKeyboardBuilder returns new keyboard builder helper
+// NewKeyboardBuilder returns a new keyboard builder helper.
 func (a *messages) NewKeyboardBuilder() *Keyboard {
 	return &Keyboard{
 		rows: make([]*KeyboardRow, 0),
 	}
 }
 
-// Send sends a message to a chat. As a result for this method new message identifier returns.
+// Send sends a message to the chat. A new message identifier returns if no error.
 func (a *messages) Send(ctx context.Context, m *Message) error {
 	_, err := a.sendMessage(ctx, m.reset, m.chatID, m.userID, m.message)
+
 	return err
 }
 
@@ -140,13 +153,13 @@ func (a *messages) sendMessage(ctx context.Context, reset bool, chatID int64, us
 	wrapper := new(MessageResponse)
 	values := url.Values{}
 	if chatID != 0 {
-		values.Set("chat_id", strconv.Itoa(int(chatID)))
+		values.Set(paramChatID, strconv.Itoa(int(chatID)))
 	}
 	if userID != 0 {
-		values.Set("user_id", strconv.Itoa(int(userID)))
+		values.Set(paramUserID, strconv.Itoa(int(userID)))
 	}
 
-	body, err := a.client.request(ctx, http.MethodPost, "messages", values, reset, message)
+	body, err := a.client.request(ctx, http.MethodPost, pathMessages, values, reset, message)
 	if err != nil {
 		return nil, err
 	}
@@ -166,8 +179,8 @@ func (a *messages) sendMessage(ctx context.Context, reset bool, chatID int64, us
 func (a *messages) editMessage(ctx context.Context, messageID string, message *schemes.NewMessageBody) (*schemes.SimpleQueryResult, error) {
 	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}
-	values.Set("message_id", messageID)
-	body, err := a.client.request(ctx, http.MethodPut, "messages", values, false, message)
+	values.Set(paramMessageID, messageID)
+	body, err := a.client.request(ctx, http.MethodPut, pathMessages, values, false, message)
 	if err != nil {
 		return result, err
 	}
@@ -176,6 +189,7 @@ func (a *messages) editMessage(ctx context.Context, messageID string, message *s
 			slog.Error("failed to close response body", "error", err)
 		}
 	}()
+
 	return result, json.NewDecoder(body).Decode(result)
 }
 
@@ -188,15 +202,14 @@ func (a *messages) checkUser(ctx context.Context, reset bool, message *schemes.N
 	result := new(schemes.Error)
 	values := url.Values{}
 	if reset {
-		values.Set("access_token", message.BotToken)
+		values.Set(paramAccessToken, message.BotToken)
 	}
-	mode := "notify/exists"
 
 	if message.PhoneNumbers != nil {
-		values.Set("phone_numbers", strings.Join(message.PhoneNumbers, ","))
+		values.Set(paramPhoneNumbers, strings.Join(message.PhoneNumbers, ","))
 	}
 
-	body, err := a.client.request(ctx, http.MethodGet, mode, values, reset, nil)
+	body, err := a.client.request(ctx, http.MethodGet, notifyExists, values, reset, nil)
 	if err != nil {
 		return false, err
 	}
@@ -217,7 +230,7 @@ func (a *messages) checkUser(ctx context.Context, reset bool, message *schemes.N
 	return false, result
 }
 
-// Check posiable to send a message to a chat.
+// ListExist possible to send a message to a chat.
 func (a *messages) ListExist(ctx context.Context, m *Message) ([]string, error) {
 	return a.checkNumberExist(ctx, m.reset, m.message)
 }
@@ -226,15 +239,14 @@ func (a *messages) checkNumberExist(ctx context.Context, reset bool, message *sc
 	result := new(schemes.Error)
 	values := url.Values{}
 	if reset {
-		values.Set("access_token", message.BotToken)
+		values.Set(paramAccessToken, message.BotToken)
 	}
-	mode := "notify/exists"
 
 	if message.PhoneNumbers != nil {
-		values.Set("phone_numbers", strings.Join(message.PhoneNumbers, ","))
+		values.Set(paramPhoneNumbers, strings.Join(message.PhoneNumbers, ","))
 	}
 
-	body, err := a.client.request(ctx, http.MethodGet, mode, values, reset, nil)
+	body, err := a.client.request(ctx, http.MethodGet, notifyExists, values, reset, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -246,5 +258,6 @@ func (a *messages) checkNumberExist(ctx context.Context, reset bool, message *sc
 	if len(result.NumberExist) > 0 {
 		return result.NumberExist, result
 	}
+
 	return nil, result
 }

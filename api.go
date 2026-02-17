@@ -19,18 +19,7 @@ import (
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
 
-const (
-	version = "1.2.5"
-
-	defaultTimeout  = 30 * time.Second
-	defaultAPIURL   = "https://platform-api.max.ru/"
-	defaultPause    = 1 * time.Second
-	maxUpdatesLimit = 50
-
-	maxRetries = 3
-)
-
-// Api represents the MAX Bot API client
+// Api represents the MAX Bot API client.
 type Api struct {
 	Bots          *bots
 	Chats         *chats
@@ -45,7 +34,7 @@ type Api struct {
 	debug   bool
 }
 
-// New creates a new Max Bot API client with the provided token
+// New creates a new Max Bot API client with the provided token.
 func New(token string) (*Api, error) {
 	if token == "" {
 		return nil, ErrEmptyToken
@@ -78,7 +67,7 @@ func New(token string) (*Api, error) {
 	return api, nil
 }
 
-// NewWithConfig creates a new Max Bot API client from configuration service
+// NewWithConfig creates a new Max Bot API client from the configuration service.
 func NewWithConfig(cfg configservice.ConfigInterface) (*Api, error) {
 	if cfg == nil {
 		return nil, fmt.Errorf("config is nil")
@@ -86,7 +75,7 @@ func NewWithConfig(cfg configservice.ConfigInterface) (*Api, error) {
 
 	token := cfg.BotTokenCheckString()
 	if token == "" {
-		token = os.Getenv("TOKEN")
+		token = os.Getenv(envToken)
 		if token == "" {
 			return nil, ErrEmptyToken
 		}
@@ -134,54 +123,79 @@ func NewWithConfig(cfg configservice.ConfigInterface) (*Api, error) {
 	return api, nil
 }
 
-// updateTypeMap maps update types to their corresponding struct constructors
-var updateTypeMap = map[schemes.UpdateType]func(debugRaw string) schemes.UpdateInterface{
-	schemes.TypeMessageCallback: func(debugRaw string) schemes.UpdateInterface {
-		return &schemes.MessageCallbackUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
-	},
-	schemes.TypeMessageCreated: func(debugRaw string) schemes.UpdateInterface {
-		return &schemes.MessageCreatedUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
-	},
-	schemes.TypeMessageRemoved: func(debugRaw string) schemes.UpdateInterface {
-		return &schemes.MessageRemovedUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
-	},
-	schemes.TypeMessageEdited: func(debugRaw string) schemes.UpdateInterface {
-		return &schemes.MessageEditedUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
-	},
-	schemes.TypeBotAdded: func(debugRaw string) schemes.UpdateInterface {
-		return &schemes.BotAddedToChatUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
-	},
-	schemes.TypeBotRemoved: func(debugRaw string) schemes.UpdateInterface {
-		return &schemes.BotRemovedFromChatUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
-	},
-	schemes.TypeUserAdded: func(debugRaw string) schemes.UpdateInterface {
-		return &schemes.UserAddedToChatUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
-	},
-	schemes.TypeUserRemoved: func(debugRaw string) schemes.UpdateInterface {
-		return &schemes.UserRemovedFromChatUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
-	},
-	schemes.TypeBotStarted: func(debugRaw string) schemes.UpdateInterface {
-		return &schemes.BotStartedUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
-	},
-	schemes.TypeChatTitleChanged: func(debugRaw string) schemes.UpdateInterface {
-		return &schemes.ChatTitleChangedUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
-	},
+func getUpdateType(updateType schemes.UpdateType) func(debugRaw string) schemes.UpdateInterface {
+	switch updateType {
+	case schemes.TypeMessageCallback:
+		return func(debugRaw string) schemes.UpdateInterface {
+			return &schemes.MessageCallbackUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
+		}
+	case schemes.TypeMessageCreated:
+		return func(debugRaw string) schemes.UpdateInterface {
+			return &schemes.MessageCreatedUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
+		}
+	case schemes.TypeMessageRemoved:
+		return func(debugRaw string) schemes.UpdateInterface {
+			return &schemes.MessageRemovedUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
+		}
+	case schemes.TypeMessageEdited:
+		return func(debugRaw string) schemes.UpdateInterface {
+			return &schemes.MessageEditedUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
+		}
+	case schemes.TypeBotAdded:
+		return func(debugRaw string) schemes.UpdateInterface {
+			return &schemes.BotAddedToChatUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
+		}
+	case schemes.TypeBotRemoved:
+		return func(debugRaw string) schemes.UpdateInterface {
+			return &schemes.BotRemovedFromChatUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
+		}
+	case schemes.TypeUserAdded:
+		return func(debugRaw string) schemes.UpdateInterface {
+			return &schemes.UserAddedToChatUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
+		}
+	case schemes.TypeUserRemoved:
+		return func(debugRaw string) schemes.UpdateInterface {
+			return &schemes.UserRemovedFromChatUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
+		}
+	case schemes.TypeBotStarted:
+		return func(debugRaw string) schemes.UpdateInterface {
+			return &schemes.BotStartedUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
+		}
+	case schemes.TypeChatTitleChanged:
+		return func(debugRaw string) schemes.UpdateInterface {
+			return &schemes.ChatTitleChangedUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
+		}
+	}
+
+	return nil
 }
 
-// attachmentTypeMap maps attachment types to their corresponding struct constructors
-var attachmentTypeMap = map[schemes.AttachmentType]func() schemes.AttachmentInterface{
-	schemes.AttachmentAudio:    func() schemes.AttachmentInterface { return new(schemes.AudioAttachment) },
-	schemes.AttachmentContact:  func() schemes.AttachmentInterface { return new(schemes.ContactAttachment) },
-	schemes.AttachmentFile:     func() schemes.AttachmentInterface { return new(schemes.FileAttachment) },
-	schemes.AttachmentImage:    func() schemes.AttachmentInterface { return new(schemes.PhotoAttachment) },
-	schemes.AttachmentKeyboard: func() schemes.AttachmentInterface { return new(schemes.InlineKeyboardAttachment) },
-	schemes.AttachmentLocation: func() schemes.AttachmentInterface { return new(schemes.LocationAttachment) },
-	schemes.AttachmentShare:    func() schemes.AttachmentInterface { return new(schemes.ShareAttachment) },
-	schemes.AttachmentSticker:  func() schemes.AttachmentInterface { return new(schemes.StickerAttachment) },
-	schemes.AttachmentVideo:    func() schemes.AttachmentInterface { return new(schemes.VideoAttachment) },
+func getAttachmentType(attachmentType schemes.AttachmentType) func() schemes.AttachmentInterface {
+	switch attachmentType {
+	case schemes.AttachmentAudio:
+		return func() schemes.AttachmentInterface { return new(schemes.AudioAttachment) }
+	case schemes.AttachmentContact:
+		return func() schemes.AttachmentInterface { return new(schemes.ContactAttachment) }
+	case schemes.AttachmentFile:
+		return func() schemes.AttachmentInterface { return new(schemes.FileAttachment) }
+	case schemes.AttachmentImage:
+		return func() schemes.AttachmentInterface { return new(schemes.PhotoAttachment) }
+	case schemes.AttachmentKeyboard:
+		return func() schemes.AttachmentInterface { return new(schemes.InlineKeyboardAttachment) }
+	case schemes.AttachmentLocation:
+		return func() schemes.AttachmentInterface { return new(schemes.LocationAttachment) }
+	case schemes.AttachmentShare:
+		return func() schemes.AttachmentInterface { return new(schemes.ShareAttachment) }
+	case schemes.AttachmentSticker:
+		return func() schemes.AttachmentInterface { return new(schemes.StickerAttachment) }
+	case schemes.AttachmentVideo:
+		return func() schemes.AttachmentInterface { return new(schemes.VideoAttachment) }
+	}
+
+	return nil
 }
 
-// bytesToProperUpdate converts raw JSON bytes to the appropriate update type
+// bytesToProperUpdate converts raw JSON bytes to the appropriate update type.
 func (a *Api) bytesToProperUpdate(data []byte) (schemes.UpdateInterface, error) {
 	baseUpdate := &schemes.Update{}
 	if err := json.Unmarshal(data, baseUpdate); err != nil {
@@ -194,8 +208,8 @@ func (a *Api) bytesToProperUpdate(data []byte) (schemes.UpdateInterface, error) 
 	}
 
 	updateType := baseUpdate.GetUpdateType()
-	constructor, exists := updateTypeMap[updateType]
-	if !exists {
+	constructor := getUpdateType(updateType)
+	if constructor == nil {
 		return nil, fmt.Errorf("unknown update type: %s", updateType)
 	}
 
@@ -211,7 +225,7 @@ func (a *Api) bytesToProperUpdate(data []byte) (schemes.UpdateInterface, error) 
 	return update, nil
 }
 
-// processMessageAttachments processes attachments for message-type updates
+// processMessageAttachments processes attachments for message-type updates.
 func (a *Api) processMessageAttachments(update schemes.UpdateInterface) error {
 	switch u := update.(type) {
 	case *schemes.MessageCreatedUpdate:
@@ -253,7 +267,7 @@ func (a *Api) processMessageAttachments(update schemes.UpdateInterface) error {
 	return nil
 }
 
-// bytesToProperAttachment converts raw JSON bytes to the appropriate attachment type
+// bytesToProperAttachment converts raw JSON bytes to the appropriate attachment type.
 func (a *Api) bytesToProperAttachment(data []byte) (schemes.AttachmentInterface, error) {
 	baseAttachment := &schemes.Attachment{}
 	if err := json.Unmarshal(data, baseAttachment); err != nil {
@@ -261,8 +275,8 @@ func (a *Api) bytesToProperAttachment(data []byte) (schemes.AttachmentInterface,
 	}
 
 	attachmentType := baseAttachment.GetAttachmentType()
-	constructor, exists := attachmentTypeMap[attachmentType]
-	if !exists {
+	constructor := getAttachmentType(attachmentType)
+	if constructor == nil {
 		// Return base attachment for unknown types
 		return baseAttachment, nil
 	}
@@ -289,7 +303,7 @@ func (a *Api) convertRawAttachments(rawAttachments []json.RawMessage) ([]any, er
 	return result, nil
 }
 
-// UpdatesParams holds parameters for getting updates
+// UpdatesParams holds parameters for getting updates.
 type UpdatesParams struct {
 	Limit   int
 	Timeout time.Duration
@@ -297,7 +311,7 @@ type UpdatesParams struct {
 	Types   []string
 }
 
-// getUpdates fetches updates from the API
+// getUpdates fetches updates from the API.
 func (a *Api) getUpdates(ctx context.Context, params *UpdatesParams) (*schemes.UpdateList, error) {
 	if params == nil {
 		params = &UpdatesParams{}
@@ -306,19 +320,19 @@ func (a *Api) getUpdates(ctx context.Context, params *UpdatesParams) (*schemes.U
 	values := url.Values{}
 
 	if params.Limit > 0 {
-		values.Set("limit", strconv.Itoa(params.Limit))
+		values.Set(paramLimit, strconv.Itoa(params.Limit))
 	}
 	if params.Timeout > 0 {
-		values.Set("timeout", strconv.Itoa(int(params.Timeout.Seconds())))
+		values.Set(paramTimeout, strconv.Itoa(int(params.Timeout.Seconds())))
 	}
 	if params.Marker > 0 {
-		values.Set("marker", strconv.FormatInt(params.Marker, 10))
+		values.Set(paramMarker, strconv.FormatInt(params.Marker, 10))
 	}
 	for _, t := range params.Types {
-		values.Add("types", t)
+		values.Add(paramTypes, t)
 	}
 
-	body, err := a.client.request(ctx, http.MethodGet, "updates", values, false, nil)
+	body, err := a.client.request(ctx, http.MethodGet, pathUpdates, values, false, nil)
 	if err != nil {
 		var te *TimeoutError
 		// Обрабатывать timeout как пустую страницу (ожидается при длительном опросе)
@@ -384,7 +398,7 @@ func (a *Api) getUpdatesWithRetry(ctx context.Context, params *UpdatesParams) (*
 	return nil, fmt.Errorf("failed after %d attempts: %w", maxRetries, lastErr)
 }
 
-// GetUpdates returns a channel that delivers updates from the API
+// GetUpdates returns a channel that delivers updates from the API.
 func (a *Api) GetUpdates(ctx context.Context) <-chan schemes.UpdateInterface {
 	ch := make(chan schemes.UpdateInterface, 100)
 
@@ -441,7 +455,7 @@ func (a *Api) GetUpdates(ctx context.Context) <-chan schemes.UpdateInterface {
 	return ch
 }
 
-// GetHandler returns an http.HandlerFunc for webhook handling
+// GetHandler returns an http.HandlerFunc for webhook handling.
 func (a *Api) GetHandler(updates chan<- schemes.UpdateInterface) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
