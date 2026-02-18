@@ -1,6 +1,11 @@
 *.sum
 *.txt
 *.exe
+/debug
+
+.DS_Store
+**/.DS_Store
+
 /.vscode/
 /.idea/
 /vendor
