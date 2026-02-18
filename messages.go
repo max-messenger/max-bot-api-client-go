@@ -36,9 +36,7 @@ func (a *messages) GetMessages(ctx context.Context, chatID int64, messageIDs []s
 		values.Set(paramChatID, strconv.Itoa(int(chatID)))
 	}
 	if len(messageIDs) > 0 {
-		for _, mid := range messageIDs {
-			values.Add(paramMessageIDs, mid)
-		}
+        values.Set(paramMessageIDs, strings.Join(messageIDs, ","))
 	}
 	// If you use 'from' and 'to' parameters, 'to' must be less than 'from'.
 	if from > to {
