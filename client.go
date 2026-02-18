@@ -121,7 +121,8 @@ func (cl *client) requestReader(ctx context.Context, method, path string, query 
 
 		return nil, &APIError{
 			Code:    resp.StatusCode,
-			Message: apiErr.Error(),
+			Message: apiErr.Code,
+			Details: apiErr.Message,
 		}
 	}
 
