@@ -1,14 +1,10 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"encoding/base64"
-	"encoding/binary"
 	"fmt"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 
 	maxbot "github.com/max-messenger/max-bot-api-client-go"
@@ -19,18 +15,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func url(user int64) string {
-	buf := new(bytes.Buffer)
-	byteOrder := binary.BigEndian
-
-	binary.Write(buf, byteOrder, int64(user))
-	fmt.Printf("uint64: %v\n", buf.Bytes())
-	fmt.Printf("uint64: %v\n", string(buf.Bytes()))
-	fmt.Printf("uint64b: %v\n", base64.StdEncoding.EncodeToString(buf.Bytes()))
-	fmt.Printf("uint64bt: %v\n", strings.Trim(base64.StdEncoding.EncodeToString(buf.Bytes()), "="))
-	return "https://max.ru/u/" + strings.Trim(base64.StdEncoding.EncodeToString(buf.Bytes()), "=")
-}
-
 func main() {
 	var configPath string
 	var maxenv = os.Getenv("MAXBOT_ENV")
@@ -38,9 +22,9 @@ func main() {
 
 	if maxenv != "" {
 		configPath = "/go/bin/config/app-" + maxenv + ".yaml"
-		//zerolog.SetGlobalLevel(zerolog.InfoLevel)
+		// zerolog.SetGlobalLevel(zerolog.InfoLevel)
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
-		//		log.Logger = log.Output(consoleWriter).With().Caller().Logger()
+		// log.Logger = log.Output(consoleWriter).With().Caller().Logger()
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, NoColor: true}).With().Timestamp().Caller().Logger()
 	} else if 2 <= len(os.Args) {
 		configPath = os.Args[1]
@@ -63,13 +47,8 @@ func main() {
 		log.Fatal().Err(err).Msg("NewWithConfig failed. Stop.")
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	go func() {
-		exit := make(chan os.Signal, 1)
-		signal.Notify(exit, syscall.SIGTERM, os.Interrupt)
-		<-exit
-		cancel()
-	}()
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, os.Interrupt)
+	defer stop()
 
 	info, err := api.Bots.GetBot(ctx) // Простой метод
 	log.Printf("Get me: %#v %#v", info, err)
@@ -91,10 +70,11 @@ func main() {
 		switch upd := upd.(type) { // Определение типа пришедшего обновления
 		case *schemes.MessageCreatedUpdate:
 			out := "bot прочитал текст: " + upd.Message.Body.Text
+
 			switch upd.GetCommand() {
 			case "/chats":
 				out = "команда : " + upd.GetCommand()
-				_, err = api.Messages.Send(ctx, maxbot.NewMessage().SetChat(upd.Message.Recipient.ChatId).SetText(out))
+				err = api.Messages.Send(ctx, maxbot.NewMessage().SetChat(upd.Message.Recipient.ChatId).SetText(out))
 				log.Printf("Answer: %#v", err)
 				continue
 			case "/chats_full":
@@ -102,6 +82,7 @@ func main() {
 				if err != nil {
 					log.Printf("Unknown type: %#v", err)
 				}
+
 				out := "List of chats\n"
 				for _, chat := range chatList.Chats {
 					out += fmt.Sprintf(" 	   title: %#v\n", chat.Title)
@@ -112,13 +93,13 @@ func main() {
 					out += fmt.Sprintf("   	  status: %#v\n", chat.Status)
 					out += fmt.Sprintf("       owner: %#v\n", chat.OwnerId)
 					out += fmt.Sprintf("       type: %#v\n", chat.Type)
-					out += fmt.Sprintf("______\n")
+					out += "______\n"
 				}
-				api.Messages.SendMessageResult(ctx, maxbot.NewMessage().SetReply("И вам привет!", upd.Message.Body.Mid))
-				mes, err := api.Messages.SendMessageResult(ctx, maxbot.NewMessage().SetChat(upd.Message.Recipient.ChatId).SetText(out))
-				fmt.Printf("Answer: %v", mes.Body.Mid)
+
+				api.Messages.Send(ctx, maxbot.NewMessage().SetReply("И вам привет!", upd.Message.Body.Mid))
 				continue
 			}
+
 			keyboard := api.Messages.NewKeyboardBuilder()
 			keyboard.
 				AddRow().
@@ -126,22 +107,20 @@ func main() {
 				AddContact("Прислать контакт")
 			keyboard.
 				AddRow().
-				AddLink("Cсылка", schemes.POSITIVE, "https://max.ru").
+				AddLink("Ссылка", schemes.POSITIVE, "https://max.ru").
 				AddCallback("Аудио", schemes.NEGATIVE, "audio").
 				AddCallback("Видео", schemes.NEGATIVE, "video")
 			keyboard.
 				AddRow().
 				AddCallback("Картинка", schemes.POSITIVE, "picture")
 
-			mes, _ := api.Messages.SendMessageResult(ctx, maxbot.NewMessage().SetUser(upd.Message.Sender.UserId).SetReply("И вам привет!(в личку!)", upd.Message.Body.Mid))
-			api.Messages.SendMessageResult(ctx, maxbot.NewMessage().SetUser(upd.Message.Sender.UserId).SetReply("И вам привет!(в личку!)", mes.Body.Mid))
-			reply_id, err := api.Messages.Send(ctx, maxbot.NewMessage().SetChat(upd.Message.Recipient.ChatId).SetReply("И вам привет! (в чат)", upd.Message.Body.Mid))
-			api.Messages.Send(ctx, maxbot.NewMessage().SetChat(upd.Message.Recipient.ChatId).SetReply("И вам привет! (в чат) на rep", reply_id))
+			api.Messages.Send(ctx, maxbot.NewMessage().SetUser(upd.Message.Sender.UserId).SetReply("И вам привет!(в личку!)", upd.Message.Body.Mid))
+
+			api.Messages.Send(ctx, maxbot.NewMessage().SetChat(upd.Message.Recipient.ChatId).SetReply("И вам привет! (в чат)", upd.Message.Body.Mid))
+
 			// Отправка сообщения с клавиатурой
-			id, err := api.Messages.Send(ctx, maxbot.NewMessage().SetChat(upd.Message.Recipient.ChatId).AddKeyboard(keyboard).SetText(out))
-			mes_rep, _ := api.Messages.SendMessageResult(ctx, maxbot.NewMessage().Reply("**Reply** univesal", upd.Message).SetFormat("markdown"))
-			api.Messages.SendMessageResult(ctx, maxbot.NewMessage().Reply("<b>Привет!</b> <i>Добро пожаловать</i>", mes_rep).SetFormat("html"))
-			fmt.Printf("Answer:%v : %v", id, err)
+			api.Messages.Send(ctx, maxbot.NewMessage().SetChat(upd.Message.Recipient.ChatId).AddKeyboard(keyboard).SetText(out))
+			api.Messages.Send(ctx, maxbot.NewMessage().Reply("**Reply** universal", upd.Message).SetFormat("markdown"))
 
 		case *schemes.MessageCallbackUpdate:
 			// Ответ на коллбек
@@ -158,41 +137,41 @@ func main() {
 					log.Err(err).Msg("Uploads.UploadPhotoFromFile")
 					break
 				}
-				msg.AddPhoto(photo) // прикрипляем к сообщению изображение
-				if _, err := api.Messages.SendMessageResult(ctx, msg); err != nil {
+				msg.AddPhoto(photo) // прикрепляем к сообщению изображение
+				if err := api.Messages.Send(ctx, msg); err != nil {
 					log.Err(err).Msg("Messages.Send")
 				}
 			}
 			if upd.Callback.Payload == "audio" {
 				if audio, err := api.Uploads.UploadMediaFromFile(ctx, schemes.AUDIO, "./music.mp3"); err == nil {
-					msg.AddAudio(audio) // прикрипляем к сообщению mp3
+					msg.AddAudio(audio) // прикрепляем к сообщению mp3
 				} else {
 					log.Err(err).Msg("Uploads.UploadPhotoFromFile")
 					break
 				}
-				if _, err := api.Messages.SendMessageResult(ctx, msg); err != nil {
+				if err := api.Messages.Send(ctx, msg); err != nil {
 					log.Err(err).Msg("Messages.Send")
 				}
 			}
 			if upd.Callback.Payload == "video" {
 				if video, err := api.Uploads.UploadMediaFromFile(ctx, schemes.VIDEO, "./video.mp4"); err == nil {
-					msg.AddVideo(video) // прикрипляем к сообщению mp4
+					msg.AddVideo(video) // прикрепляем к сообщению mp4
 				} else {
 					log.Err(err).Msg("Uploads.UploadPhotoFromFile")
 					break
 				}
-				if _, err := api.Messages.SendMessageResult(ctx, msg); err != nil {
+				if err := api.Messages.Send(ctx, msg); err != nil {
 					log.Err(err).Msg("Messages.Send")
 				}
 			}
 			if upd.Callback.Payload == "file" {
 				if doc, err := api.Uploads.UploadMediaFromFile(ctx, schemes.FILE, "./max.pdf"); err == nil {
-					msg.AddFile(doc) // прикрипляем к сообщению pdf file
+					msg.AddFile(doc) // прикрепляем к сообщению pdf file
 				} else {
 					log.Err(err).Msg("Uploads.UploadPhotoFromFile")
 					break
 				}
-				if _, err := api.Messages.SendMessageResult(ctx, msg); err != nil {
+				if err := api.Messages.Send(ctx, msg); err != nil {
 					log.Err(err).Msg("Messages.Send")
 				}
 			}

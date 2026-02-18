@@ -5,9 +5,9 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
+	"mime"
 	"mime/multipart"
 	"net/http"
 	"net/url"
@@ -25,32 +25,42 @@ func newUploads(client *client) *uploads {
 	return &uploads{client: client}
 }
 
-// UploadMedia uploads file to Max server
+// UploadMediaFromFile uploads the file to the Max server.
 func (a *uploads) UploadMediaFromFile(ctx context.Context, uploadType schemes.UploadType, filename string) (*schemes.UploadedInfo, error) {
 	fh, err := os.Open(filename)
 	if err != nil {
 		return nil, err
 	}
 	defer fh.Close()
-	return a.UploadMediaFromReader(ctx, uploadType, fh)
+
+	return a.UploadMediaFromReaderWithName(ctx, uploadType, fh, filename)
 }
 
-// UploadMediaFromUrl uploads file from remote server to Max server
+// UploadMediaFromUrl uploads the file from a remote server to the Max server.
 func (a *uploads) UploadMediaFromUrl(ctx context.Context, uploadType schemes.UploadType, u url.URL) (*schemes.UploadedInfo, error) {
 	respFile, err := http.Get(u.String())
 	if err != nil {
 		return nil, err
 	}
 	defer respFile.Body.Close()
-	return a.UploadMediaFromReader(ctx, uploadType, respFile.Body)
+	name := a.attachmentName(respFile)
+
+	return a.UploadMediaFromReaderWithName(ctx, uploadType, respFile.Body, name)
 }
 
 func (a *uploads) UploadMediaFromReader(ctx context.Context, uploadType schemes.UploadType, reader io.Reader) (*schemes.UploadedInfo, error) {
 	result := new(schemes.UploadedInfo)
-	return result, a.uploadMediaFromReader(ctx, uploadType, reader, result)
+
+	return result, a.uploadMediaFromReader(ctx, uploadType, reader, "", result)
 }
 
-// UploadPhotoFromFile uploads photos to Max server
+func (a *uploads) UploadMediaFromReaderWithName(ctx context.Context, uploadType schemes.UploadType, reader io.Reader, name string) (*schemes.UploadedInfo, error) {
+	result := new(schemes.UploadedInfo)
+
+	return result, a.uploadMediaFromReader(ctx, uploadType, reader, name, result)
+}
+
+// UploadPhotoFromFile uploads photos to the Max server.
 func (a *uploads) UploadPhotoFromFile(ctx context.Context, fileName string) (*schemes.PhotoTokens, error) {
 	fh, err := os.Open(fileName)
 	if err != nil {
@@ -58,17 +68,19 @@ func (a *uploads) UploadPhotoFromFile(ctx context.Context, fileName string) (*sc
 	}
 	defer fh.Close()
 	result := new(schemes.PhotoTokens)
-	return result, a.uploadMediaFromReader(ctx, schemes.PHOTO, fh, result)
+
+	return result, a.uploadMediaFromReader(ctx, schemes.PHOTO, fh, fileName, result)
 }
 
-// UploadPhotoFromFile uploads photos to Max server
+// UploadPhotoFromBase64String uploads photos to the Max server.
 func (a *uploads) UploadPhotoFromBase64String(ctx context.Context, code string) (*schemes.PhotoTokens, error) {
 	decoder := base64.NewDecoder(base64.StdEncoding, strings.NewReader(code))
 	result := new(schemes.PhotoTokens)
-	return result, a.uploadMediaFromReader(ctx, schemes.PHOTO, decoder, result)
+
+	return result, a.uploadMediaFromReader(ctx, schemes.PHOTO, decoder, "", result)
 }
 
-// UploadPhotoFromUrl uploads photo from remote server to Max server
+// UploadPhotoFromUrl uploads the photo from a remote server to the Max server.
 func (a *uploads) UploadPhotoFromUrl(ctx context.Context, url string) (*schemes.PhotoTokens, error) {
 	respFile, err := http.Get(url)
 	if err != nil {
@@ -76,20 +88,29 @@ func (a *uploads) UploadPhotoFromUrl(ctx context.Context, url string) (*schemes.
 	}
 	defer respFile.Body.Close()
 	result := new(schemes.PhotoTokens)
-	return result, a.uploadMediaFromReader(ctx, schemes.PHOTO, respFile.Body, result)
+	name := a.attachmentName(respFile)
+
+	return result, a.uploadMediaFromReader(ctx, schemes.PHOTO, respFile.Body, name, result)
 }
 
-// UploadPhotoFromReader uploads photo from reader
+// UploadPhotoFromReader uploads the photo from a reader.
 func (a *uploads) UploadPhotoFromReader(ctx context.Context, reader io.Reader) (*schemes.PhotoTokens, error) {
 	result := new(schemes.PhotoTokens)
-	return result, a.uploadMediaFromReader(ctx, schemes.PHOTO, reader, result)
+
+	return result, a.uploadMediaFromReader(ctx, schemes.PHOTO, reader, "", result)
+}
+
+func (a *uploads) UploadPhotoFromReaderWithName(ctx context.Context, reader io.Reader, name string) (*schemes.PhotoTokens, error) {
+	result := new(schemes.PhotoTokens)
+
+	return result, a.uploadMediaFromReader(ctx, schemes.PHOTO, reader, name, result)
 }
 
 func (a *uploads) getUploadURL(ctx context.Context, uploadType schemes.UploadType) (*schemes.UploadEndpoint, error) {
 	result := new(schemes.UploadEndpoint)
 	values := url.Values{}
-	values.Set("type", string(uploadType))
-	body, err := a.client.request(ctx, http.MethodPost, "uploads", values, false, nil)
+	values.Set(paramType, string(uploadType))
+	body, err := a.client.request(ctx, http.MethodPost, pathUpload, values, false, nil)
 	if err != nil {
 		return result, err
 	}
@@ -98,17 +119,27 @@ func (a *uploads) getUploadURL(ctx context.Context, uploadType schemes.UploadTyp
 			log.Println(err)
 		}
 	}()
+
 	return result, json.NewDecoder(body).Decode(result)
 }
 
-func (a *uploads) uploadMediaFromReader(ctx context.Context, uploadType schemes.UploadType, reader io.Reader, result interface{}) error {
+func (a *uploads) uploadMediaFromReader(
+	ctx context.Context,
+	uploadType schemes.UploadType,
+	reader io.Reader,
+	fileName string,
+	result interface{},
+) error {
 	endpoint, err := a.getUploadURL(ctx, uploadType)
 	if err != nil {
 		return err
 	}
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
-	fileWriter, err := bodyWriter.CreateFormFile("data", "file")
+	if fileName == "" {
+		fileName = "file"
+	}
+	fileWriter, err := bodyWriter.CreateFormFile("data", fileName)
 	if err != nil {
 		return err
 	}
@@ -135,22 +166,21 @@ func (a *uploads) uploadMediaFromReader(ctx context.Context, uploadType schemes.
 		}
 	}()
 
-	switch result := result.(type) {
-	case *schemes.UploadedInfo:
-		// Read response body
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Println(err)
-			return err
-		}
-		result.Token = endpoint.Token
-		// Print response body as string
-		log.Println(string(body))
-	default:
-		if err = json.NewDecoder(resp.Body).Decode(result); err != nil {
-			return err
-		}
+	if err = json.NewDecoder(resp.Body).Decode(result); err != nil {
+		return err
 	}
 
 	return nil
+}
+
+func (*uploads) attachmentName(r *http.Response) string {
+	disposition := r.Header["Content-Disposition"]
+	if len(disposition) != 0 {
+		_, params, err := mime.ParseMediaType(disposition[0])
+		if err == nil && params["filename"] != "" {
+			return params["filename"]
+		}
+	}
+
+	return ""
 }

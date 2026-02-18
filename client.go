@@ -13,12 +13,12 @@ import (
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
 
-var (
-	errLongPollTimeout = &TimeoutError{
-		Op:     "long polling",
-		Reason: "request timeout exceeded",
-	}
-)
+//var (
+//	errLongPollTimeout = &TimeoutError{
+//		Op:     "long polling",
+//		Reason: "request timeout exceeded",
+//	}
+//)
 
 type client struct {
 	key        string
@@ -73,11 +73,8 @@ func (cl *client) requestReader(ctx context.Context, method, path string, query 
 
 	u := *cl.baseURL
 	u.Path = path
-	if !reset {
-		query.Set("access_token", cl.key)
-	}
 
-	query.Set("v", cl.version)
+	query.Set(paramVersion, cl.version)
 	u.RawQuery = query.Encode()
 
 	req, err := http.NewRequestWithContext(ctx, method, u.String(), body)
@@ -86,6 +83,9 @@ func (cl *client) requestReader(ctx context.Context, method, path string, query 
 	}
 
 	req.Header.Set("User-Agent", fmt.Sprintf("max-bot-api-client-go/%s", cl.version))
+	if !reset {
+		req.Header.Set("Authorization", cl.key)
+	}
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
@@ -128,7 +128,7 @@ func (cl *client) requestReader(ctx context.Context, method, path string, query 
 	return resp.Body, nil
 }
 
-// Close closes the HTTP client
+// Close closes the HTTP client.
 func (cl *client) Close() error {
 	if transport, ok := cl.httpClient.Transport.(*http.Transport); ok {
 		transport.CloseIdleConnections()
