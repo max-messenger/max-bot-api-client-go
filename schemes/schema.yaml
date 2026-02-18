@@ -1436,6 +1436,11 @@ components:
           description: Users identifier
           type: integer
           format: int64
+          name:
+          description: Visible display name of user or bot
+          type: string
+          nullable: true
+          readOnly: true
         first_name:
           description: Users first name
           type: string
