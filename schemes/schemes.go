@@ -875,14 +875,16 @@ func (b MessageEditedUpdate) GetChatID() int64 {
 type MessageRemovedUpdate struct {
 	Update
 	MessageId string `json:"message_id"` // Identifier of removed message
+	ChatID    int64  `json:"chat_id"`    // Chat identifier where event has occurred
+	UserID    int64  `json:"user_id"`    // User who removed message
 }
 
 func (b MessageRemovedUpdate) GetUserID() int64 {
-	return 0
+	return b.UserID
 }
 
 func (b MessageRemovedUpdate) GetChatID() int64 {
-	return 0
+	return b.ChatID
 }
 
 // UserAddedToChatUpdate represents an update that occurs when a user has been added to a chat
