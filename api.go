@@ -153,6 +153,18 @@ func getUpdateType(updateType schemes.UpdateType) func(debugRaw string) schemes.
 		return func(debugRaw string) schemes.UpdateInterface {
 			return &schemes.BotRemovedFromChatUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
 		}
+	case schemes.TypeBotStoped:
+		return func(debugRaw string) schemes.UpdateInterface {
+			return &schemes.BotStopedFromChatUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
+		}
+	case schemes.TypeDialogRemoved:
+		return func(debugRaw string) schemes.UpdateInterface {
+			return &schemes.DialogRemovedFromChatUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
+		}
+	case schemes.TypeDialogCleared:
+		return func(debugRaw string) schemes.UpdateInterface {
+			return &schemes.DialogClearedFromChatUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
+		}
 	case schemes.TypeUserAdded:
 		return func(debugRaw string) schemes.UpdateInterface {
 			return &schemes.UserAddedToChatUpdate{Update: schemes.Update{DebugRaw: debugRaw}}
@@ -438,6 +450,7 @@ func (a *Api) GetUpdates(ctx context.Context) <-chan schemes.UpdateInterface {
 					for _, rawUpdate := range updateList.Updates {
 						update, err := a.bytesToProperUpdate(rawUpdate)
 						if err != nil {
+							log.Printf("---> Attention!!! Failed to process update: %v", err)
 							continue
 						}
 
