@@ -24,11 +24,15 @@ func main() {
 	defer stop()
 
 	// Initialisation
-	api, _ := maxbot.New(os.Getenv("TOKEN"))
+	opts := []maxbot.Option{
+		maxbot.WithDebugMode(),
+		maxbot.WithClientTimeout(time.Second * 10),
+	}
+	api, _ := maxbot.New(os.Getenv("TOKEN"), opts...)
 	host := os.Getenv("HOST")
 
 	// Some methods demo:
-	info, err := api.Bots.GetBot(ctx, maxbot.WithDebugMode(), maxbot.WithClientTimeout(time.Second*10))
+	info, err := api.Bots.GetBot(ctx)
 	log.Printf("Get me: %#v %#v", info, err)
 
 	subs, _ := api.Subscriptions.GetSubscriptions(ctx)
