@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	maxbot "github.com/max-messenger/max-bot-api-client-go"
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
@@ -27,7 +28,7 @@ func main() {
 	host := os.Getenv("HOST")
 
 	// Some methods demo:
-	info, err := api.Bots.GetBot(ctx)
+	info, err := api.Bots.GetBot(ctx, maxbot.WithDebugMode(), maxbot.WithClientTimeout(time.Second*10))
 	log.Printf("Get me: %#v %#v", info, err)
 
 	subs, _ := api.Subscriptions.GetSubscriptions(ctx)

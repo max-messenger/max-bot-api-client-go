@@ -35,7 +35,7 @@ type Api struct {
 }
 
 // New creates a new Max Bot API client with the provided token.
-func New(token string) (*Api, error) {
+func New(token string, opts ...Option) (*Api, error) {
 	if token == "" {
 		return nil, ErrEmptyToken
 	}
@@ -63,6 +63,10 @@ func New(token string) (*Api, error) {
 	api.Messages = newMessages(cl)
 	api.Subscriptions = newSubscriptions(cl)
 	api.Debugs = newDebugs(cl, 0)
+
+	for _, o := range opts {
+		o(api)
+	}
 
 	return api, nil
 }
