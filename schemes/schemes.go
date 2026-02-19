@@ -398,6 +398,9 @@ const (
 	TypeMessageEdited    UpdateType = "message_edited"
 	TypeBotAdded         UpdateType = "bot_added"
 	TypeBotRemoved       UpdateType = "bot_removed"
+	TypeBotStoped        UpdateType = "bot_stopped"
+	TypeDialogRemoved    UpdateType = "dialog_removed"
+	TypeDialogCleared    UpdateType = "dialog_cleared"
 	TypeUserAdded        UpdateType = "user_added"
 	TypeUserRemoved      UpdateType = "user_removed"
 	TypeBotStarted       UpdateType = "bot_started"
@@ -750,6 +753,51 @@ func (b BotRemovedFromChatUpdate) GetUserID() int64 {
 }
 
 func (b BotRemovedFromChatUpdate) GetChatID() int64 {
+	return b.ChatId
+}
+
+// DialogRemovedFromChatUpdate is sent when the bot has been removed from a chat
+type DialogRemovedFromChatUpdate struct {
+	Update
+	ChatId int64 `json:"chat_id"` // Chat identifier bots removed from
+	User   User  `json:"user"`    // User who removed bots from chat
+}
+
+func (b DialogRemovedFromChatUpdate) GetUserID() int64 {
+	return b.User.UserId
+}
+
+func (b DialogRemovedFromChatUpdate) GetChatID() int64 {
+	return b.ChatId
+}
+
+// DialogClearedFromChatUpdate is sent when the bot has been removed from a chat
+type DialogClearedFromChatUpdate struct {
+	Update
+	ChatId int64 `json:"chat_id"` // Chat identifier bots removed from
+	User   User  `json:"user"`    // User who removed bots from chat
+}
+
+func (b DialogClearedFromChatUpdate) GetUserID() int64 {
+	return b.User.UserId
+}
+
+func (b DialogClearedFromChatUpdate) GetChatID() int64 {
+	return b.ChatId
+}
+
+// BotStopedFromChatUpdate is sent when the bot has been stoped from a chat
+type BotStopedFromChatUpdate struct {
+	Update
+	ChatId int64 `json:"chat_id"` // Chat identifier bots stoped from
+	User   User  `json:"user"`    // User who stoped bots from chat
+}
+
+func (b BotStopedFromChatUpdate) GetUserID() int64 {
+	return b.User.UserId
+}
+
+func (b BotStopedFromChatUpdate) GetChatID() int64 {
 	return b.ChatId
 }
 
