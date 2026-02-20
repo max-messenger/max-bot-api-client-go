@@ -804,8 +804,9 @@ func (b BotStopedFromChatUpdate) GetChatID() int64 {
 // BotStartedUpdate is triggered when a user starts a conversation with the bot by pressing the "Start" button.
 type BotStartedUpdate struct {
 	Update
-	ChatId int64 `json:"chat_id"` // Dialog identifier where event has occurred
-	User   User  `json:"user"`    // User pressed the 'Start' button
+	ChatId  int64  `json:"chat_id"`           // Dialog identifier where event has occurred
+	User    User   `json:"user"`              // User pressed the 'Start' button
+	Payload string `json:"payload,omitempty"` // Deeplink payload
 }
 
 func (b BotStartedUpdate) GetUserID() int64 {
