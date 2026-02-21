@@ -452,11 +452,18 @@ type NewMessageBody struct {
 	Text         string          `json:"text,omitempty"`          // Message text
 	Attachments  []interface{}   `json:"attachments"`             // Message attachments. See `AttachmentRequest` and it's inheritors for full information
 	Link         *NewMessageLink `json:"link,omitempty"`          // Link to Message
-	Format       string          `json:"format,omitempty"`        // Format to Message
+	Format       Format          `json:"format,omitempty"`        // Format to Message
 	PhoneNumbers []string        `json:"phone_numbers,omitempty"` // PhoneNumber to Message
 	Notify       bool            `json:"notify,omitempty"`        // If false, chat participants wouldn't be notified
 	Markups      []MarkUp        `json:"markup,omitempty"`        // mention users
 }
+
+type Format string
+
+const (
+	HTML     Format = "html"
+	Markdown Format = "markdown"
+)
 
 // Markup represents a generic message formatting schema
 type Markup struct {
@@ -867,7 +874,7 @@ func (b MessageCallbackUpdate) GetUserID() int64 {
 }
 
 func (b MessageCallbackUpdate) GetChatID() int64 {
-	return 0
+	return b.Message.Recipient.ChatId
 }
 
 // MessageCreatedUpdate represents an update that is received as soon as a message is created
