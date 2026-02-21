@@ -874,6 +874,10 @@ func (b MessageCallbackUpdate) GetUserID() int64 {
 }
 
 func (b MessageCallbackUpdate) GetChatID() int64 {
+	if b.Message == nil {
+		return 0
+	}
+
 	return b.Message.Recipient.ChatId
 }
 
