@@ -166,6 +166,13 @@ func (a *uploads) uploadMediaFromReader(
 		}
 	}()
 
+	if uploadType == schemes.AUDIO || uploadType == schemes.VIDEO {
+		if info, ok := result.(*schemes.UploadedInfo); ok {
+			info.Token = endpoint.Token
+			return nil
+		}
+	}
+
 	if err = json.NewDecoder(resp.Body).Decode(result); err != nil {
 		return err
 	}
