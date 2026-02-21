@@ -131,6 +131,12 @@ type OpenAppButton struct {
 	ContactId int64  `json:"contact_id,omitempty"`
 }
 
+// MessageButton represents a button with text. When a user presses it the button's text sends
+// to the chat as a text message.
+type MessageButton struct {
+	Button
+}
+
 type Chat struct {
 	ChatId            int64           `json:"chat_id"`                // Chats identifier
 	Type              ChatType        `json:"type"`                   // Type of chat. One of: dialog, chat, channel
