@@ -2,10 +2,10 @@ package maxbot
 
 import (
 	"context"
-	"encoding/json"
-	"log"
 	"net/http"
 	"net/url"
+
+	jsoniter "github.com/json-iterator/go"
 
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
@@ -27,13 +27,9 @@ func (a *subscriptions) GetSubscriptions(ctx context.Context) (*schemes.GetSubsc
 	if err != nil {
 		return result, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
+	defer a.client.closer("getSubscriptions body", body)
 
-	return result, json.NewDecoder(body).Decode(result)
+	return result, jsoniter.NewDecoder(body).Decode(result)
 }
 
 // Subscribe subscribes the bot to receive updates via WebHook.
@@ -51,13 +47,9 @@ func (a *subscriptions) Subscribe(ctx context.Context, subscribeURL string, upda
 	if err != nil {
 		return result, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
+	defer a.client.closer("getSubscribe body", body)
 
-	return result, json.NewDecoder(body).Decode(result)
+	return result, jsoniter.NewDecoder(body).Decode(result)
 }
 
 // Unsubscribe unsubscribes the bot from receiving updates via WebHook.
@@ -70,11 +62,7 @@ func (a *subscriptions) Unsubscribe(ctx context.Context, subscriptionURL string)
 	if err != nil {
 		return result, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
+	defer a.client.closer("unSubscribe body", body)
 
-	return result, json.NewDecoder(body).Decode(result)
+	return result, jsoniter.NewDecoder(body).Decode(result)
 }

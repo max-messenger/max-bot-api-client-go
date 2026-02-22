@@ -2,10 +2,10 @@ package maxbot
 
 import (
 	"context"
-	"encoding/json"
-	"log"
 	"net/http"
 	"net/url"
+
+	jsoniter "github.com/json-iterator/go"
 
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
@@ -28,13 +28,9 @@ func (a *bots) GetBot(ctx context.Context) (*schemes.BotInfo, error) {
 	if err != nil {
 		return result, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
+	defer a.client.closer("getBoy body", body)
 
-	return result, json.NewDecoder(body).Decode(result)
+	return result, jsoniter.NewDecoder(body).Decode(result)
 }
 
 // PatchBot edits current bot info. Fill only the fields you want to update. All remaining fields will stay untouched.
@@ -46,11 +42,7 @@ func (a *bots) PatchBot(ctx context.Context, patch *schemes.BotPatch) (*schemes.
 	if err != nil {
 		return result, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
+	defer a.client.closer("patch body", body)
 
-	return result, json.NewDecoder(body).Decode(result)
+	return result, jsoniter.NewDecoder(body).Decode(result)
 }

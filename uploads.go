@@ -4,15 +4,15 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"io"
-	"log"
 	"mime"
 	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
+
+	jsoniter "github.com/json-iterator/go"
 
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
@@ -31,7 +31,7 @@ func (a *uploads) UploadMediaFromFile(ctx context.Context, uploadType schemes.Up
 	if err != nil {
 		return nil, err
 	}
-	defer fh.Close()
+	defer a.client.closer("uploadMediaFromFile file", fh)
 
 	return a.UploadMediaFromReaderWithName(ctx, uploadType, fh, filename)
 }
@@ -42,7 +42,7 @@ func (a *uploads) UploadMediaFromUrl(ctx context.Context, uploadType schemes.Upl
 	if err != nil {
 		return nil, err
 	}
-	defer respFile.Body.Close()
+	defer a.client.closer("uploadMediaFromUrl body", respFile.Body)
 	name := a.attachmentName(respFile)
 
 	return a.UploadMediaFromReaderWithName(ctx, uploadType, respFile.Body, name)
@@ -66,7 +66,7 @@ func (a *uploads) UploadPhotoFromFile(ctx context.Context, fileName string) (*sc
 	if err != nil {
 		return nil, err
 	}
-	defer fh.Close()
+	defer a.client.closer("uploadPhotoFromFile file", fh)
 	result := new(schemes.PhotoTokens)
 
 	return result, a.uploadMediaFromReader(ctx, schemes.PHOTO, fh, fileName, result)
@@ -86,7 +86,8 @@ func (a *uploads) UploadPhotoFromUrl(ctx context.Context, url string) (*schemes.
 	if err != nil {
 		return nil, err
 	}
-	defer respFile.Body.Close()
+
+	defer a.client.closer("uploadPhotoFromUrl body", respFile.Body)
 	result := new(schemes.PhotoTokens)
 	name := a.attachmentName(respFile)
 
@@ -114,13 +115,9 @@ func (a *uploads) getUploadURL(ctx context.Context, uploadType schemes.UploadTyp
 	if err != nil {
 		return result, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
+	defer a.client.closer("getUploadURL body", body)
 
-	return result, json.NewDecoder(body).Decode(result)
+	return result, jsoniter.NewDecoder(body).Decode(result)
 }
 
 func (a *uploads) uploadMediaFromReader(
@@ -128,7 +125,7 @@ func (a *uploads) uploadMediaFromReader(
 	uploadType schemes.UploadType,
 	reader io.Reader,
 	fileName string,
-	result interface{},
+	result any,
 ) error {
 	endpoint, err := a.getUploadURL(ctx, uploadType)
 	if err != nil {
@@ -148,11 +145,11 @@ func (a *uploads) uploadMediaFromReader(
 		return err
 	}
 
-	if err := bodyWriter.Close(); err != nil {
+	if err = bodyWriter.Close(); err != nil {
 		return err
 	}
 	contentType := bodyWriter.FormDataContentType()
-	if err := bodyWriter.Close(); err != nil {
+	if err = bodyWriter.Close(); err != nil {
 		return err
 	}
 
@@ -160,13 +157,9 @@ func (a *uploads) uploadMediaFromReader(
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
+	defer a.client.closer("uploadMediaFromReader body", resp.Body)
 
-	if err = json.NewDecoder(resp.Body).Decode(result); err != nil {
+	if err = jsoniter.NewDecoder(resp.Body).Decode(result); err != nil {
 		return err
 	}
 

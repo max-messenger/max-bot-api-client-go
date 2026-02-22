@@ -11,13 +11,15 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
 	"time"
 
-	"github.com/max-messenger/max-bot-api-client-go/configservice"
+	jsoniter "github.com/json-iterator/go"
+
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
+
+type closer func(name string, c io.Closer)
 
 // Api represents the MAX Bot API client.
 type Api struct {
@@ -32,6 +34,7 @@ type Api struct {
 	timeout time.Duration
 	pause   time.Duration
 	debug   bool
+	errors  chan error
 }
 
 // New creates a new Max Bot API client with the provided token.
@@ -45,16 +48,16 @@ func New(token string, opts ...Option) (*Api, error) {
 		return nil, fmt.Errorf("%w: %v", ErrInvalidURL, err)
 	}
 
-	cl := newClient(token, version, u, &http.Client{
-		Timeout: defaultTimeout,
-	})
-
 	api := &Api{
-		client:  cl,
 		timeout: defaultTimeout,
 		pause:   defaultPause,
 		debug:   false,
+		errors:  make(chan error, 1),
 	}
+
+	cl := newClient(token, version, u, &http.Client{Timeout: defaultTimeout}, api.closer)
+
+	api.client = cl
 
 	// Initialize sub-clients
 	api.Bots = newBots(cl)
@@ -71,63 +74,7 @@ func New(token string, opts ...Option) (*Api, error) {
 	return api, nil
 }
 
-// NewWithConfig creates a new Max Bot API client from the configuration service.
-func NewWithConfig(cfg configservice.ConfigInterface) (*Api, error) {
-	if cfg == nil {
-		return nil, fmt.Errorf("config is nil")
-	}
-
-	token := cfg.BotTokenCheckString()
-	if token == "" {
-		token = os.Getenv(envToken)
-		if token == "" {
-			return nil, ErrEmptyToken
-		}
-	}
-
-	timeout := time.Duration(cfg.GetHttpBotAPITimeOut()) * time.Second
-	if timeout <= 0 {
-		timeout = defaultTimeout
-	}
-
-	baseURL := cfg.GetHttpBotAPIUrl()
-	if baseURL == "" {
-		baseURL = defaultAPIURL
-	}
-
-	u, err := url.Parse(baseURL)
-	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrInvalidURL, err)
-	}
-
-	apiVersion := cfg.GetHttpBotAPIVersion()
-	if apiVersion == "" {
-		apiVersion = version
-	}
-
-	cl := newClient(token, apiVersion, u, &http.Client{
-		Timeout: timeout,
-	})
-
-	api := &Api{
-		client:  cl,
-		timeout: timeout,
-		pause:   defaultPause,
-		debug:   cfg.GetDebugLogMode(),
-	}
-
-	// Initialize sub-clients
-	api.Bots = newBots(cl)
-	api.Chats = newChats(cl)
-	api.Uploads = newUploads(cl)
-	api.Messages = newMessages(cl)
-	api.Subscriptions = newSubscriptions(cl)
-	api.Debugs = newDebugs(cl, cfg.GetDebugLogChat())
-
-	return api, nil
-}
-
-func getUpdateType(updateType schemes.UpdateType) func(debugRaw string) schemes.UpdateInterface {
+func (a *Api) getUpdateType(updateType schemes.UpdateType) func(debugRaw string) schemes.UpdateInterface {
 	switch updateType {
 	case schemes.TypeMessageCallback:
 		return func(debugRaw string) schemes.UpdateInterface {
@@ -186,7 +133,7 @@ func getUpdateType(updateType schemes.UpdateType) func(debugRaw string) schemes.
 	return nil
 }
 
-func getAttachmentType(attachmentType schemes.AttachmentType) func() schemes.AttachmentInterface {
+func (a *Api) getAttachmentType(attachmentType schemes.AttachmentType) func() schemes.AttachmentInterface {
 	switch attachmentType {
 	case schemes.AttachmentAudio:
 		return func() schemes.AttachmentInterface { return new(schemes.AudioAttachment) }
@@ -214,7 +161,7 @@ func getAttachmentType(attachmentType schemes.AttachmentType) func() schemes.Att
 // bytesToProperUpdate converts raw JSON bytes to the appropriate update type.
 func (a *Api) bytesToProperUpdate(data []byte) (schemes.UpdateInterface, error) {
 	baseUpdate := &schemes.Update{}
-	if err := json.Unmarshal(data, baseUpdate); err != nil {
+	if err := jsoniter.Unmarshal(data, baseUpdate); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal base update: %w", err)
 	}
 
@@ -224,13 +171,13 @@ func (a *Api) bytesToProperUpdate(data []byte) (schemes.UpdateInterface, error) 
 	}
 
 	updateType := baseUpdate.GetUpdateType()
-	constructor := getUpdateType(updateType)
+	constructor := a.getUpdateType(updateType)
 	if constructor == nil {
 		return nil, fmt.Errorf("unknown update type: %s", updateType)
 	}
 
 	update := constructor(debugRaw)
-	if err := json.Unmarshal(data, update); err != nil {
+	if err := jsoniter.Unmarshal(data, update); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal update of type %s: %w", updateType, err)
 	}
 
@@ -286,19 +233,19 @@ func (a *Api) processMessageAttachments(update schemes.UpdateInterface) error {
 // bytesToProperAttachment converts raw JSON bytes to the appropriate attachment type.
 func (a *Api) bytesToProperAttachment(data []byte) (schemes.AttachmentInterface, error) {
 	baseAttachment := &schemes.Attachment{}
-	if err := json.Unmarshal(data, baseAttachment); err != nil {
+	if err := jsoniter.Unmarshal(data, baseAttachment); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal base attachment: %w", err)
 	}
 
 	attachmentType := baseAttachment.GetAttachmentType()
-	constructor := getAttachmentType(attachmentType)
+	constructor := a.getAttachmentType(attachmentType)
 	if constructor == nil {
 		// Return base attachment for unknown types
 		return baseAttachment, nil
 	}
 
 	attachment := constructor()
-	if err := json.Unmarshal(data, attachment); err != nil {
+	if err := jsoniter.Unmarshal(data, attachment); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal attachment of type %s: %w", attachmentType, err)
 	}
 
@@ -317,6 +264,26 @@ func (a *Api) convertRawAttachments(rawAttachments []json.RawMessage) ([]any, er
 	}
 
 	return result, nil
+}
+
+func (a *Api) closer(name string, c io.Closer) {
+	if c == nil {
+		return
+	}
+	if err := c.Close(); err != nil {
+		a.notifyError(fmt.Errorf("failed to close %s: %w", name, err))
+	}
+}
+
+func (a *Api) notifyError(err error) {
+	if err == nil {
+		return
+	}
+	select {
+	case a.errors <- err:
+	default:
+		log.Println(err)
+	}
 }
 
 // UpdatesParams holds parameters for getting updates.
@@ -362,11 +329,7 @@ func (a *Api) getUpdates(ctx context.Context, params *UpdatesParams) (*schemes.U
 		return nil, fmt.Errorf("failed to get updates: %w", err)
 	}
 
-	defer func() {
-		if closeErr := body.Close(); closeErr != nil {
-			log.Printf("failed to close response body: %v", closeErr)
-		}
-	}()
+	defer a.closer("failed to close response body", body)
 
 	data, err := io.ReadAll(body)
 	if err != nil {
@@ -374,7 +337,7 @@ func (a *Api) getUpdates(ctx context.Context, params *UpdatesParams) (*schemes.U
 	}
 
 	result := &schemes.UpdateList{}
-	if err := json.Unmarshal(data, result); err != nil {
+	if err = jsoniter.Unmarshal(data, result); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal updates: %w", err)
 	}
 
@@ -402,7 +365,7 @@ func (a *Api) getUpdatesWithRetry(ctx context.Context, params *UpdatesParams) (*
 
 		if attempt < maxRetries-1 {
 			retryWait := time.Duration(1<<uint(attempt)) * time.Second
-			log.Printf("Attempt %d failed, retrying in %v: %v", attempt+1, retryWait, lastErr)
+			a.notifyError(fmt.Errorf("attempt %d failed, retrying in %v: %v", attempt+1, retryWait, lastErr))
 			select {
 			case <-ctx.Done():
 				return nil, ctx.Err()
@@ -439,7 +402,7 @@ func (a *Api) GetUpdates(ctx context.Context) <-chan schemes.UpdateInterface {
 
 					updateList, err := a.getUpdatesWithRetry(ctx, params)
 					if err != nil {
-						log.Printf("failed to get updates: %v", err)
+						a.notifyError(fmt.Errorf("failed to get updates: %v", err))
 						break
 					}
 
@@ -450,7 +413,7 @@ func (a *Api) GetUpdates(ctx context.Context) <-chan schemes.UpdateInterface {
 					for _, rawUpdate := range updateList.Updates {
 						update, err := a.bytesToProperUpdate(rawUpdate)
 						if err != nil {
-							log.Printf("---> Attention!!! Failed to process update: %v", err)
+							a.notifyError(fmt.Errorf("---> Attention!!! Failed to process update: %v", err))
 							continue
 						}
 

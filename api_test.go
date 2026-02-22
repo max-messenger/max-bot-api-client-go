@@ -12,79 +12,12 @@ import (
 	"testing"
 	"time"
 
+	jsoniter "github.com/json-iterator/go"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	"github.com/max-messenger/max-bot-api-client-go/configservice"
-	"github.com/max-messenger/max-bot-api-client-go/configservice/mocks"
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
-
-func TestNewWithConfig(t *testing.T) {
-	tests := []struct {
-		name      string
-		setupMock func(*mocks.MockConfigInterface)
-		err       error
-	}{
-		{
-			name: "nil config",
-			err:  fmt.Errorf("config is nil"),
-		},
-		{
-			name: "empty token",
-			setupMock: func(m *mocks.MockConfigInterface) {
-				m.EXPECT().BotTokenCheckString().Return("")
-			},
-			err: ErrEmptyToken,
-		},
-		{
-			name: "valid config",
-			setupMock: func(m *mocks.MockConfigInterface) {
-				m.EXPECT().BotTokenCheckString().Return("test_token")
-				m.EXPECT().GetHttpBotAPITimeOut().Return(10)
-				m.EXPECT().GetHttpBotAPIUrl().Return("https://test.com/")
-				m.EXPECT().GetHttpBotAPIVersion().Return("1.0")
-				m.EXPECT().GetDebugLogMode().Return(true)
-				m.EXPECT().GetDebugLogChat().Return(int64(123))
-			},
-			err: nil,
-		},
-		{
-			name: "invalid url",
-			setupMock: func(m *mocks.MockConfigInterface) {
-				m.EXPECT().BotTokenCheckString().Return("test")
-				m.EXPECT().GetHttpBotAPITimeOut().Return(10)
-				m.EXPECT().GetHttpBotAPIUrl().Return("http://[::1]:namedport")
-			},
-			err: ErrInvalidURL,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var cfg configservice.ConfigInterface
-			if tt.setupMock != nil {
-				ctrl := gomock.NewController(t)
-				defer ctrl.Finish()
-
-				mockCfg := mocks.NewMockConfigInterface(ctrl)
-				tt.setupMock(mockCfg)
-				cfg = mockCfg
-			}
-			_, err := NewWithConfig(cfg)
-			if tt.err != nil {
-				require.Error(t, err)
-				if tt.name == "nil config" {
-					require.Equal(t, tt.err.Error(), err.Error())
-				} else {
-					require.ErrorIs(t, err, tt.err)
-				}
-			} else {
-				require.NoError(t, err)
-			}
-		})
-	}
-}
 
 func TestBytesToProperUpdate(t *testing.T) {
 	api, err := New("test")
@@ -164,7 +97,7 @@ func TestBytesToProperUpdate(t *testing.T) {
 func mustMarshal(t *testing.T, v any) []byte {
 	t.Helper()
 
-	data, err := json.Marshal(v)
+	data, err := jsoniter.Marshal(v)
 	require.NoError(t, err)
 
 	return data
@@ -197,7 +130,7 @@ func TestBytesToProperAttachment(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			data, err := json.Marshal(tt.attach)
+			data, err := jsoniter.Marshal(tt.attach)
 			require.NoError(t, err)
 
 			got, err := api.bytesToProperAttachment(data)
@@ -216,7 +149,7 @@ func TestGetUpdates(t *testing.T) {
 			Body:      schemes.MessageBody{Mid: "mid1", Seq: 1, Text: "test message"},
 		},
 	}
-	updateJSON, err := json.Marshal(wantUpdate)
+	updateJSON, err := jsoniter.Marshal(wantUpdate)
 	require.NoError(t, err)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -228,7 +161,7 @@ func TestGetUpdates(t *testing.T) {
 		var updateList schemes.UpdateList
 		if marker == 0 {
 			updateList = schemes.UpdateList{
-				Updates: []json.RawMessage{json.RawMessage(updateJSON)},
+				Updates: []json.RawMessage{updateJSON},
 				Marker:  new(int64),
 			}
 			*updateList.Marker = 1
@@ -240,22 +173,14 @@ func TestGetUpdates(t *testing.T) {
 			*updateList.Marker = marker
 		}
 
-		json.NewEncoder(w).Encode(updateList)
+		_ = jsoniter.NewEncoder(w).Encode(updateList)
 	}))
 	defer server.Close()
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockCfg := mocks.NewMockConfigInterface(ctrl)
-	mockCfg.EXPECT().BotTokenCheckString().Return("test_token")
-	mockCfg.EXPECT().GetHttpBotAPITimeOut().Return(1)
-	mockCfg.EXPECT().GetHttpBotAPIUrl().Return(server.URL + "/")
-	mockCfg.EXPECT().GetHttpBotAPIVersion().Return(version)
-	mockCfg.EXPECT().GetDebugLogMode().Return(false)
-	mockCfg.EXPECT().GetDebugLogChat().Return(int64(0))
-
-	api, err := NewWithConfig(mockCfg)
+	api, err := New("token", WithBaseURL(server.URL))
 	require.NoError(t, err)
 
 	api.pause = 10 * time.Millisecond
@@ -289,7 +214,7 @@ func TestGetHandler(t *testing.T) {
 			Body:      schemes.MessageBody{Mid: "mid1", Seq: 1, Text: "test message"},
 		},
 	}
-	updateJSON, err := json.Marshal(wantUpdate)
+	updateJSON, err := jsoniter.Marshal(wantUpdate)
 	require.NoError(t, err)
 
 	req := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(updateJSON))

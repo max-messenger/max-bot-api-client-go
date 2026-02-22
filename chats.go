@@ -2,13 +2,13 @@ package maxbot
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
+
+	jsoniter "github.com/json-iterator/go"
 
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
@@ -36,13 +36,9 @@ func (a *chats) GetChats(ctx context.Context, count, marker int64) (*schemes.Cha
 	if err != nil {
 		return result, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
+	defer a.client.closer("getChats body", body)
 
-	return result, json.NewDecoder(body).Decode(result)
+	return result, jsoniter.NewDecoder(body).Decode(result)
 }
 
 // GetChat returns info about chat.
@@ -54,13 +50,9 @@ func (a *chats) GetChat(ctx context.Context, chatID int64) (*schemes.Chat, error
 	if err != nil {
 		return result, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
+	defer a.client.closer("getCat body", body)
 
-	return result, json.NewDecoder(body).Decode(result)
+	return result, jsoniter.NewDecoder(body).Decode(result)
 }
 
 // GetChatMembership returns chat membership info for the current bot.
@@ -72,13 +64,9 @@ func (a *chats) GetChatMembership(ctx context.Context, chatID int64) (*schemes.C
 	if err != nil {
 		return result, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
+	defer a.client.closer("GetChatMembership body", body)
 
-	return result, json.NewDecoder(body).Decode(result)
+	return result, jsoniter.NewDecoder(body).Decode(result)
 }
 
 // GetChatMembers returns users participated in chat.
@@ -96,13 +84,9 @@ func (a *chats) GetChatMembers(ctx context.Context, chatID, count, marker int64)
 	if err != nil {
 		return result, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
+	defer a.client.closer("getChatMembers body", body)
 
-	return result, json.NewDecoder(body).Decode(result)
+	return result, jsoniter.NewDecoder(body).Decode(result)
 }
 
 func (a *chats) GetSpecificChatMembers(ctx context.Context, chatID int64, userIDs []int64) (*schemes.ChatMembersList, error) {
@@ -118,13 +102,9 @@ func (a *chats) GetSpecificChatMembers(ctx context.Context, chatID int64, userID
 	if err != nil {
 		return result, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
+	defer a.client.closer("getSpecificChatMembers body", body)
 
-	return result, json.NewDecoder(body).Decode(result)
+	return result, jsoniter.NewDecoder(body).Decode(result)
 }
 
 func (a *chats) GetChatAdmins(ctx context.Context, chatID int64) (*schemes.ChatMembersList, error) {
@@ -134,13 +114,9 @@ func (a *chats) GetChatAdmins(ctx context.Context, chatID int64) (*schemes.ChatM
 	if err != nil {
 		return result, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
+	defer a.client.closer("getChatAdminsbody", body)
 
-	return result, json.NewDecoder(body).Decode(result)
+	return result, jsoniter.NewDecoder(body).Decode(result)
 }
 
 // LeaveChat removes bot from chat members
@@ -152,13 +128,9 @@ func (a *chats) LeaveChat(ctx context.Context, chatID int64) (*schemes.SimpleQue
 	if err != nil {
 		return result, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
+	defer a.client.closer("leaveChat body", body)
 
-	return result, json.NewDecoder(body).Decode(result)
+	return result, jsoniter.NewDecoder(body).Decode(result)
 }
 
 // EditChat edits chat info: title, icon, etc…
@@ -170,13 +142,9 @@ func (a *chats) EditChat(ctx context.Context, chatID int64, update *schemes.Chat
 	if err != nil {
 		return result, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
+	defer a.client.closer("editChat body", body)
 
-	return result, json.NewDecoder(body).Decode(result)
+	return result, jsoniter.NewDecoder(body).Decode(result)
 }
 
 // AddMember adds members to the chat. Additional permissions may be required.
@@ -188,13 +156,9 @@ func (a *chats) AddMember(ctx context.Context, chatID int64, users schemes.UserI
 	if err != nil {
 		return result, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
+	defer a.client.closer("addMember body", body)
 
-	return result, json.NewDecoder(body).Decode(result)
+	return result, jsoniter.NewDecoder(body).Decode(result)
 }
 
 // RemoveMember removes a member from the chat. Additional permissions may be required.
@@ -207,13 +171,9 @@ func (a *chats) RemoveMember(ctx context.Context, chatID int64, userID int64) (*
 	if err != nil {
 		return result, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
+	defer a.client.closer("removeMember body", body)
 
-	return result, json.NewDecoder(body).Decode(result)
+	return result, jsoniter.NewDecoder(body).Decode(result)
 }
 
 // SendAction send the bot action to the chat.
@@ -224,11 +184,7 @@ func (a *chats) SendAction(ctx context.Context, chatID int64, action schemes.Sen
 	if err != nil {
 		return result, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
+	defer a.client.closer("sendAction body", body)
 
-	return result, json.NewDecoder(body).Decode(result)
+	return result, jsoniter.NewDecoder(body).Decode(result)
 }

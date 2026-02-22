@@ -1,9 +1,0 @@
-
-
-http.bot.api.url: https://botapi.max.ru/
-http.bot.api.timeout: 30
-http.bot.api.version: 1.2.7
-bot.token.check.in.input.stream: true
-
-debug.log.chat: 0
-debug.log.mode: false

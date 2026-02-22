@@ -26,8 +26,8 @@ for upd := range api.GetUpdates(ctx) { // Чтение из канала с об
 Вы можете подписаться на обновление `message_created`:
 
 ```go
-for upd := range api.GetUpdates(ctx) { // Чтение из канала с обновлениями
-	switch upd := upd.(type) { // Определение типа пришедшего обновления
+for update := range api.GetUpdates(ctx) { // Чтение из канала с обновлениями
+	switch upd := update.(type) { // Определение типа пришедшего обновления
 	case *schemes.MessageCreatedUpdate: // Обработчик новых сообщений
 		message := upd.Message // полученное сообщение
 	}
@@ -37,8 +37,8 @@ for upd := range api.GetUpdates(ctx) { // Чтение из канала с об
 Или воспользоваться специальными методами:
 
 ```go
-for upd := range api.GetUpdates(ctx) { // Чтение из канала с обновлениями
-	switch upd := upd.(type) { // Определение типа пришедшего обновления
+for update := range api.GetUpdates(ctx) { // Чтение из канала с обновлениями
+	switch upd := update.(type) { // Определение типа пришедшего обновления
 	case *schemes.MessageCreatedUpdate: // Обработчик новых сообщений и команд
 		out := "bot прочитал текст: " + upd.Message.Body.Text
 		switch upd.GetCommand() {
@@ -53,8 +53,8 @@ for upd := range api.GetUpdates(ctx) { // Чтение из канала с об
 Аналогичный код со специальным методом GetText
 
 ```go
-for upd := range api.GetUpdates(ctx) { // Чтение из канала с обновлениями
-	switch upd := upd.(type) { // Определение типа пришедшего обновления
+for update := range api.GetUpdates(ctx) { // Чтение из канала с обновлениями
+	switch upd := update.(type) { // Определение типа пришедшего обновления
 	case *schemes.MessageCreatedUpdate: // Обработчик новых сообщений и команд
 		out := "bot прочитал текст: " + upd.GetText()
 		switch upd.GetCommand() {
@@ -78,8 +78,8 @@ if strings.Contains(upd.GetText(), "hello") {
 Для обработки нажатия на callback-кнопку с указанным payload используете событие schemes.MessageCallbackUpdate:
 
 ```go
-for upd := range api.GetUpdates(ctx) { // Чтение из канала с обновлениями
-	switch upd := upd.(type) { // Определение типа пришедшего обновления
+for update := range api.GetUpdates(ctx) { // Чтение из канала с обновлениями
+	switch upd := update.(type) { // Определение типа пришедшего обновления
 	case *schemes.MessageCallbackUpdate: // Обработчик нажатия на callback-кнопку с указанным payload
 		// Ответ на коллбек
 		if upd.Callback.Payload == "picture" { // Обработчик callback-кнопки с указанным payload
