@@ -1,8 +1,5 @@
 //go:build ignore
 
-/**
- * Webhook example
- */
 package main
 
 import (
@@ -28,7 +25,10 @@ func main() {
 		maxbot.WithDebugMode(),
 		maxbot.WithClientTimeout(time.Second * 10),
 	}
-	api, _ := maxbot.New(os.Getenv("TOKEN"), opts...)
+	api, err := maxbot.New(os.Getenv("BOT_TOKEN"), opts...)
+	if err != nil {
+		log.Fatal(err)
+	}
 	host := os.Getenv("HOST")
 
 	// Some methods demo:
@@ -39,6 +39,7 @@ func main() {
 	for _, s := range subs.Subscriptions {
 		_, _ = api.Subscriptions.Unsubscribe(ctx, s.Url)
 	}
+
 	subscriptionResp, err := api.Subscriptions.Subscribe(ctx, host+"/webhook", []string{}, "my-secret-phrase")
 	log.Printf("Subscription: %#v %#v", subscriptionResp, err)
 
@@ -47,15 +48,15 @@ func main() {
 	http.HandleFunc("/webhook", api.GetHandler(ch))
 	go func() {
 		for {
-			upd := <-ch
+			update := <-ch
 			log.Printf("Received: %#v", upd)
-			switch upd := upd.(type) {
+			switch upd := update.(type) {
 			case *schemes.MessageCreatedUpdate:
 				message := maxbot.NewMessage().
 					SetUser(upd.Message.Sender.UserId).
 					SetText(fmt.Sprintf("Hello, %s! Your message: %s", upd.Message.Sender.Name, upd.Message.Body.Text))
 
-				err := api.Messages.Send(ctx, message)
+				err = api.Messages.Send(ctx, message)
 				log.Printf("Answer: %#v", err)
 			default:
 				log.Printf("Unknown type: %#v", upd)
