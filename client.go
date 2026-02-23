@@ -85,7 +85,7 @@ func (cl *client) requestReader(ctx context.Context, method, path string, query 
 		req.Header.Set("Content-Type", "application/json")
 	}
 
-	resp, err := cl.httpClient.Do(req)
+	resp, err := cl.do(req)
 	if err != nil {
 		if urlErr, ok := err.(*url.Error); ok {
 			if urlErr.Timeout() {
@@ -118,6 +118,10 @@ func (cl *client) requestReader(ctx context.Context, method, path string, query 
 	}
 
 	return resp.Body, nil
+}
+
+func (cl *client) do(req *http.Request) (*http.Response, error) {
+	return cl.httpClient.Do(req)
 }
 
 // Close closes the HTTP client.

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"fmt"
 	"io"
 	"mime"
 	"mime/multipart"
@@ -30,7 +31,7 @@ func newUploads(client *client) *uploads {
 func (a *uploads) UploadMediaFromFile(ctx context.Context, uploadType schemes.UploadType, filename string) (*schemes.UploadedInfo, error) {
 	fh, err := os.Open(filename)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("open file: %w", err)
 	}
 	defer a.client.closer("uploadMediaFromFile file", fh)
 
@@ -38,15 +39,19 @@ func (a *uploads) UploadMediaFromFile(ctx context.Context, uploadType schemes.Up
 }
 
 // UploadMediaFromUrl uploads the file from a remote server to the Max server.
-func (a *uploads) UploadMediaFromUrl(ctx context.Context, uploadType schemes.UploadType, u url.URL) (*schemes.UploadedInfo, error) {
-	respFile, err := http.Get(u.String())
+// urlStr is the URL of the file to download (e.g. "https://example.com/file.pdf").
+func (a *uploads) UploadMediaFromUrl(ctx context.Context, uploadType schemes.UploadType, urlStr string) (*schemes.UploadedInfo, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, urlStr, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create request: %w", err)
 	}
-	defer a.client.closer("uploadMediaFromUrl body", respFile.Body)
-	name := a.attachmentName(respFile)
+	resp, err := a.client.do(req)
+	if err != nil {
+		return nil, fmt.Errorf("fetch URL: %w", err)
+	}
+	defer a.client.closer("uploadMediaFromUrl body", resp.Body)
 
-	return a.UploadMediaFromReaderWithName(ctx, uploadType, respFile.Body, name)
+	return a.UploadMediaFromReaderWithName(ctx, uploadType, resp.Body, a.attachmentName(resp))
 }
 
 func (a *uploads) UploadMediaFromReader(ctx context.Context, uploadType schemes.UploadType, reader io.Reader) (*schemes.UploadedInfo, error) {
@@ -65,7 +70,7 @@ func (a *uploads) UploadMediaFromReaderWithName(ctx context.Context, uploadType 
 func (a *uploads) UploadPhotoFromFile(ctx context.Context, fileName string) (*schemes.PhotoTokens, error) {
 	fh, err := os.Open(fileName)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("open file: %w", err)
 	}
 	defer a.client.closer("uploadPhotoFromFile file", fh)
 	result := new(schemes.PhotoTokens)
@@ -82,10 +87,15 @@ func (a *uploads) UploadPhotoFromBase64String(ctx context.Context, code string) 
 }
 
 // UploadPhotoFromUrl uploads the photo from a remote server to the Max server.
-func (a *uploads) UploadPhotoFromUrl(ctx context.Context, url string) (*schemes.PhotoTokens, error) {
-	respFile, err := http.Get(url)
+// urlStr is the URL of the image to download.
+func (a *uploads) UploadPhotoFromUrl(ctx context.Context, urlStr string) (*schemes.PhotoTokens, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, urlStr, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create request: %w", err)
+	}
+	respFile, err := a.client.do(req)
+	if err != nil {
+		return nil, fmt.Errorf("fetch URL: %w", err)
 	}
 
 	defer a.client.closer("uploadPhotoFromUrl body", respFile.Body)
@@ -143,11 +153,10 @@ func (a *uploads) uploadMediaFromReader(
 
 	fileWriter, err := bodyWriter.CreateFormFile("data", fileName)
 	if err != nil {
-		return err
+		return fmt.Errorf("create form file: %w", err)
 	}
-	_, err = io.Copy(fileWriter, reader)
-	if err != nil {
-		return err
+	if _, err = io.Copy(fileWriter, reader); err != nil {
+		return fmt.Errorf("copy file data: %w", err)
 	}
 
 	contentType := bodyWriter.FormDataContentType()
@@ -155,11 +164,28 @@ func (a *uploads) uploadMediaFromReader(
 		return err
 	}
 
-	resp, err := http.Post(endpoint.Url, contentType, bodyBuf)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint.Url, bodyBuf)
 	if err != nil {
-		return err
+		return fmt.Errorf("create upload request: %w", err)
+	}
+	req.Header.Set("Content-Type", contentType)
+	resp, err := a.client.do(req)
+	if err != nil {
+		return fmt.Errorf("upload: %w", err)
 	}
 	defer a.client.closer("uploadMediaFromReader body", resp.Body)
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		apiErr := &schemes.Error{}
+		if decodeErr := jsoniter.NewDecoder(resp.Body).Decode(apiErr); decodeErr == nil {
+			return &APIError{
+				Code:    resp.StatusCode,
+				Message: apiErr.Code,
+				Details: apiErr.Message,
+			}
+		}
+		return fmt.Errorf("upload: HTTP %d: %s", resp.StatusCode, http.StatusText(resp.StatusCode))
+	}
 
 	if err = jsoniter.NewDecoder(resp.Body).Decode(result); err != nil {
 		return err
