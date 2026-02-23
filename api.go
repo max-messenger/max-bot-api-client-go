@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -18,8 +17,6 @@ import (
 
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
-
-type closer func(name string, c io.Closer)
 
 // Api represents the MAX Bot API client.
 type Api struct {
@@ -34,7 +31,6 @@ type Api struct {
 	timeout time.Duration
 	pause   time.Duration
 	debug   bool
-	errors  chan error
 }
 
 // New creates a new Max Bot API client with the provided token.
@@ -52,10 +48,9 @@ func New(token string, opts ...Option) (*Api, error) {
 		timeout: defaultTimeout,
 		pause:   defaultPause,
 		debug:   false,
-		errors:  make(chan error, 1),
 	}
 
-	cl := newClient(token, version, u, &http.Client{Timeout: defaultTimeout}, api.closer)
+	cl := newClient(token, version, u, &http.Client{Timeout: defaultTimeout})
 
 	api.client = cl
 
@@ -271,18 +266,7 @@ func (a *Api) closer(name string, c io.Closer) {
 		return
 	}
 	if err := c.Close(); err != nil {
-		a.notifyError(fmt.Errorf("failed to close %s: %w", name, err))
-	}
-}
-
-func (a *Api) notifyError(err error) {
-	if err == nil {
-		return
-	}
-	select {
-	case a.errors <- err:
-	default:
-		log.Println(err)
+		a.client.notifyError(fmt.Errorf("failed to close %s: %w", name, err))
 	}
 }
 
@@ -365,7 +349,7 @@ func (a *Api) getUpdatesWithRetry(ctx context.Context, params *UpdatesParams) (*
 
 		if attempt < maxRetries-1 {
 			retryWait := time.Duration(1<<uint(attempt)) * time.Second
-			a.notifyError(fmt.Errorf("attempt %d failed, retrying in %v: %v", attempt+1, retryWait, lastErr))
+			a.client.notifyError(fmt.Errorf("attempt %d failed, retrying in %v: %v", attempt+1, retryWait, lastErr))
 			select {
 			case <-ctx.Done():
 				return nil, ctx.Err()
@@ -375,6 +359,10 @@ func (a *Api) getUpdatesWithRetry(ctx context.Context, params *UpdatesParams) (*
 	}
 
 	return nil, fmt.Errorf("failed after %d attempts: %w", maxRetries, lastErr)
+}
+
+func (a *Api) GetErrors() <-chan error {
+	return a.client.errors
 }
 
 // GetUpdates returns a channel that delivers updates from the API.
@@ -402,7 +390,7 @@ func (a *Api) GetUpdates(ctx context.Context) <-chan schemes.UpdateInterface {
 
 					updateList, err := a.getUpdatesWithRetry(ctx, params)
 					if err != nil {
-						a.notifyError(fmt.Errorf("failed to get updates: %v", err))
+						a.client.notifyError(fmt.Errorf("failed to get updates: %v", err))
 						break
 					}
 
@@ -413,7 +401,7 @@ func (a *Api) GetUpdates(ctx context.Context) <-chan schemes.UpdateInterface {
 					for _, rawUpdate := range updateList.Updates {
 						update, err := a.bytesToProperUpdate(rawUpdate)
 						if err != nil {
-							a.notifyError(fmt.Errorf("---> Attention!!! Failed to process update: %v", err))
+							a.client.notifyError(fmt.Errorf("---> Attention!!! Failed to process update: %v", err))
 							continue
 						}
 
