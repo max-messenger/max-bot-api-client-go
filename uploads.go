@@ -145,9 +145,6 @@ func (a *uploads) uploadMediaFromReader(
 		return err
 	}
 
-	if err = bodyWriter.Close(); err != nil {
-		return err
-	}
 	contentType := bodyWriter.FormDataContentType()
 	if err = bodyWriter.Close(); err != nil {
 		return err
