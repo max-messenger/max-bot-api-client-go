@@ -97,6 +97,7 @@ func (k *KeyboardRow) AddGeolocation(text string, quick bool) *KeyboardRow {
 	return k
 }
 
+// AddOpenApp button.
 func (k *KeyboardRow) AddOpenApp(text string, app, payload string, contactId int64) *KeyboardRow {
 	b := schemes.OpenAppButton{
 		WebApp:    app,
@@ -105,6 +106,19 @@ func (k *KeyboardRow) AddOpenApp(text string, app, payload string, contactId int
 		Button: schemes.Button{
 			Text: text,
 			Type: schemes.OPEN_APP,
+		},
+	}
+	k.cols = append(k.cols, b)
+
+	return k
+}
+
+// AddMessage button.
+func (k *KeyboardRow) AddMessage(text string) *KeyboardRow {
+	b := schemes.MessageButton{
+		Button: schemes.Button{
+			Text: text,
+			Type: schemes.MESSAGE,
 		},
 	}
 	k.cols = append(k.cols, b)

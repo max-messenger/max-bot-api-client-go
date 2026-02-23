@@ -131,6 +131,12 @@ type OpenAppButton struct {
 	ContactId int64  `json:"contact_id,omitempty"`
 }
 
+// MessageButton represents a button with text. When a user presses it the button's text sends
+// to the chat as a text message.
+type MessageButton struct {
+	Button
+}
+
 type Chat struct {
 	ChatId            int64           `json:"chat_id"`                // Chats identifier
 	Type              ChatType        `json:"type"`                   // Type of chat. One of: dialog, chat, channel
@@ -804,8 +810,9 @@ func (b BotStopedFromChatUpdate) GetChatID() int64 {
 // BotStartedUpdate is triggered when a user starts a conversation with the bot by pressing the "Start" button.
 type BotStartedUpdate struct {
 	Update
-	ChatId int64 `json:"chat_id"` // Dialog identifier where event has occurred
-	User   User  `json:"user"`    // User pressed the 'Start' button
+	ChatId  int64  `json:"chat_id"`           // Dialog identifier where event has occurred
+	User    User   `json:"user"`              // User pressed the 'Start' button
+	Payload string `json:"payload,omitempty"` // Deeplink payload
 }
 
 func (b BotStartedUpdate) GetUserID() int64 {

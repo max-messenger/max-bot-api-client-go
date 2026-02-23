@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 
 	jsoniter "github.com/json-iterator/go"
@@ -133,9 +134,13 @@ func (a *uploads) uploadMediaFromReader(
 	}
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
+
 	if fileName == "" {
 		fileName = "file"
+	} else {
+		fileName = filepath.Base(fileName)
 	}
+
 	fileWriter, err := bodyWriter.CreateFormFile("data", fileName)
 	if err != nil {
 		return err

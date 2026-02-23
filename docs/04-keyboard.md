@@ -56,6 +56,13 @@ func (k *KeyboardRow) AddGeolocation(text string, quick bool) *KeyboardRow
 
 Добавляет кнопку запроса геолокации. При нажатии на неё боту будет отправлено сообщение с геолокацией, которую укажет пользователь.
 
+### MessageButton
+```go
+func (k *KeyboardRow) AddMessage(text string) *KeyboardRow
+```
+
+Добавляет текстовую кнопку. При ее нажатии в чат отправится сообщение из кнопки.
+
 ### Chat
 
 ```go

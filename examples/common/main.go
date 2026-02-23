@@ -93,6 +93,9 @@ func main() {
 			keyboard.
 				AddRow().
 				AddCallback("Картинка", schemes.POSITIVE, "picture")
+			keyboard.
+				AddRow().
+				AddMessage("Привет!")
 
 			_ = api.Messages.Send(ctx, maxbot.NewMessage().SetUser(upd.Message.Sender.UserId).SetReply("И вам привет!(в личку!)", upd.Message.Body.Mid))
 
