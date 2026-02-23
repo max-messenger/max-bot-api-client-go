@@ -5,25 +5,25 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	maxbot "github.com/max-messenger/max-bot-api-client-go"
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
-
-	"github.com/rs/zerolog/log"
 )
 
 func main() {
 	opts := []maxbot.Option{
 		maxbot.WithHTTPClient(&http.Client{Timeout: time.Second}),
-		maxbot.WithClientTimeout(30 * time.Second),
 		maxbot.WithDebugMode(),
 	}
 	api, err := maxbot.New(os.Getenv("BOT_TOKEN"), opts...)
 	if err != nil {
-		log.Fatal().Err(err).Msg("NewWithConfig failed. Stop.")
+		log.Fatal("NewWithConfig failed. Stop.", err)
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, os.Interrupt)
@@ -103,7 +103,7 @@ func main() {
 
 			// Отправка сообщения с клавиатурой
 			_ = api.Messages.Send(ctx, maxbot.NewMessage().SetChat(upd.Message.Recipient.ChatId).AddKeyboard(keyboard).SetText(outText))
-			_ = api.Messages.Send(ctx, maxbot.NewMessage().Reply("**Reply** universal", upd.Message).SetFormat("markdown"))
+			_ = api.Messages.Send(ctx, maxbot.NewMessage().Reply("**Reply** universal", upd.Message).SetFormat(schemes.Markdown))
 
 		case *schemes.MessageCallbackUpdate:
 			// Ответ на callback
@@ -118,13 +118,13 @@ func main() {
 			if upd.Callback.Payload == "picture" {
 				photo, err := api.Uploads.UploadPhotoFromFile(ctx, "./big-logo.png")
 				if err != nil {
-					log.Err(err).Msg("Uploads.UploadPhotoFromFile")
+					log.Println("Uploads.UploadPhotoFromFile", err)
 					break
 				}
 
 				msg.AddPhoto(photo) // прикрепляем к сообщению изображение
 				if err = api.Messages.Send(ctx, msg); err != nil {
-					log.Err(err).Msg("Messages.Send")
+					log.Println("Messages.Send", err)
 				}
 			}
 
@@ -132,12 +132,12 @@ func main() {
 				if audio, err := api.Uploads.UploadMediaFromFile(ctx, schemes.AUDIO, "./music.mp3"); err == nil {
 					msg.AddAudio(audio) // прикрепляем к сообщению mp3
 				} else {
-					log.Err(err).Msg("Uploads.UploadPhotoFromFile")
+					log.Println("Uploads.UploadPhotoFromFile", err)
 					break
 				}
 
 				if err = api.Messages.Send(ctx, msg); err != nil {
-					log.Err(err).Msg("Messages.Send")
+					log.Println("Messages.Send", err)
 				}
 			}
 
@@ -145,12 +145,12 @@ func main() {
 				if video, err := api.Uploads.UploadMediaFromFile(ctx, schemes.VIDEO, "./video.mp4"); err == nil {
 					msg.AddVideo(video) // прикрепляем к сообщению mp4
 				} else {
-					log.Err(err).Msg("Uploads.UploadPhotoFromFile")
+					log.Println("Uploads.UploadPhotoFromFile", err)
 					break
 				}
 
 				if err = api.Messages.Send(ctx, msg); err != nil {
-					log.Err(err).Msg("Messages.Send")
+					log.Println("Messages.Send", err)
 				}
 			}
 
@@ -158,12 +158,12 @@ func main() {
 				if doc, err := api.Uploads.UploadMediaFromFile(ctx, schemes.FILE, "./max.pdf"); err == nil {
 					msg.AddFile(doc) // прикрепляем к сообщению pdf file
 				} else {
-					log.Err(err).Msg("Uploads.UploadPhotoFromFile")
+					log.Println("Uploads.UploadPhotoFromFile", err)
 					break
 				}
 
 				if err = api.Messages.Send(ctx, msg); err != nil {
-					log.Err(err).Msg("Messages.Send")
+					log.Println("Messages.Send", err)
 				}
 			}
 

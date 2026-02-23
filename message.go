@@ -37,11 +37,12 @@ func (m *Message) SetText(text string) *Message {
 	return m
 }
 
-func (m *Message) SetFormat(format string) *Message {
+func (m *Message) SetFormat(format schemes.Format) *Message {
 	m.message.Format = format
 
 	return m
 }
+
 func (m *Message) SetNotify(notify bool) *Message {
 	m.message.Notify = notify
 

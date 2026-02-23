@@ -16,20 +16,46 @@ import (
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
 
+type httpClient struct {
+	httpClient *http.Client
+}
+
+// Do use as middleware
+func (c *httpClient) Do(req *http.Request) (*http.Response, error) {
+	// your trace and metrics
+	log.Printf("sending request to %s", req.URL.String())
+	r, err := c.httpClient.Do(req)
+	log.Printf("received response from %s", req.URL.String())
+	return r, err
+}
+
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, os.Interrupt)
 	defer stop()
 
+	httpCli := &httpClient{
+		httpClient: &http.Client{
+			Timeout: time.Second * 35,
+		},
+	}
+
 	// Initialisation
 	opts := []maxbot.Option{
 		maxbot.WithDebugMode(),
-		maxbot.WithClientTimeout(time.Second * 10),
+		maxbot.WithHTTPClient(httpCli),
 	}
 	api, err := maxbot.New(os.Getenv("BOT_TOKEN"), opts...)
 	if err != nil {
 		log.Fatal(err)
 	}
 	host := os.Getenv("HOST")
+
+	errChan := api.GetErrors()
+	go func() {
+		for errMessage := range errChan {
+			log.Println(errMessage) // use your favorite logger
+		}
+	}()
 
 	// Some methods demo:
 	info, err := api.Bots.GetBot(ctx)
@@ -49,7 +75,7 @@ func main() {
 	go func() {
 		for {
 			update := <-ch
-			log.Printf("Received: %#v", upd)
+			log.Printf("Received: %#v", update)
 			switch upd := update.(type) {
 			case *schemes.MessageCreatedUpdate:
 				message := maxbot.NewMessage().
@@ -64,5 +90,5 @@ func main() {
 		}
 	}()
 
-	http.ListenAndServe(":10888", nil)
+	_ = http.ListenAndServe(":10888", nil)
 }
