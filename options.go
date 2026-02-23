@@ -53,3 +53,9 @@ func WithDebugChat(chat int64) Option {
 		api.Debugs.chat = chat
 	}
 }
+
+func WithUpdateHandler(f UpdateHandler) Option {
+	return func(api *Api) {
+		api.updateHandler = f
+	}
+}

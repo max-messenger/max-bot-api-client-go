@@ -18,6 +18,8 @@ import (
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
 
+type UpdateHandler func(schemes.UpdateInterface)
+
 // Api represents the MAX Bot API client.
 type Api struct {
 	Bots          *bots
@@ -26,6 +28,7 @@ type Api struct {
 	Messages      *messages
 	Subscriptions *subscriptions
 	Uploads       *uploads
+	updateHandler UpdateHandler
 
 	client  *client
 	timeout time.Duration
@@ -401,6 +404,11 @@ func (a *Api) GetUpdates(ctx context.Context) <-chan schemes.UpdateInterface {
 							continue
 						}
 
+						if a.updateHandler != nil {
+							a.updateHandler(update)
+							continue
+						}
+
 						select {
 						case ch <- update:
 						case <-ctx.Done():
@@ -436,6 +444,11 @@ func (a *Api) GetHandler(updates chan<- schemes.UpdateInterface) http.HandlerFun
 		update, err := a.bytesToProperUpdate(body)
 		if err != nil {
 			http.Error(w, "Failed to parse update", http.StatusBadRequest)
+			return
+		}
+
+		if a.updateHandler != nil {
+			a.updateHandler(update)
 			return
 		}
 
