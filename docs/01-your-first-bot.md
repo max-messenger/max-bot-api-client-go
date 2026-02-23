@@ -44,21 +44,34 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
+	"time"
 
 	maxbot "github.com/max-messenger/max-bot-api-client-go"
 )
 
 func main() {
 	ctx := context.Background()
-	api, _ := maxbot.New(os.Getenv("TOKEN"))
+	opts := []maxbot.Option{
+		maxbot.WithHTTPClient(&http.Client{Timeout: time.Second}),
+		maxbot.WithClientTimeout(30 * time.Second),
+		maxbot.WithDebugMode(),
+
+	}
+	api, err := maxbot.New(os.Getenv("TOKEN"), opts...)
+	if err != nil {
+		fmt.Println("api initial err:", err)
+		return
+    }
 	// Some methods demo:
 	info, err := api.Bots.GetBot(ctx)
 	fmt.Printf("Get me: %#v %#v", info, err)
 }
 ```
 
-Код выше, создает объект `api`, передавая токен в его конструктор New. Мы рекомендуем передавать токен через переменные окружения, т.к. использовать токен в коде - плохая практика.
+Код выше, создает объект `api`, передавая токен (и набор опций для конфигурирования) в конструктор New. 
+Мы рекомендуем передавать токен через переменные окружения, т.к. использовать токен в коде - плохая практика.
 
 Данная программа выведет только информацию о вашем боте и закончит работу.
 Чтобы бот заработал необходим обработчик событий из канала с обновлениями
@@ -88,15 +101,15 @@ func main() {
 	fmt.Printf("Get me: %#v %#v", info, err)
 
 
-	for upd := range api.GetUpdates(ctx) { // Чтение из канала с обновлениями
-		switch upd := upd.(type) { // Определение типа пришедшего обновления
+	for update := range api.GetUpdates(ctx) { // Чтение из канала с обновлениями
+		switch upd := update.(type) { // Определение типа пришедшего обновления
 		case *schemes.MessageCreatedUpdate:
 			// Отправка сообщения
 			message := maxbot.NewMessage().
 				SetChat(upd.Message.Recipient.ChatId).
 				SetText("Hello from Bot")
 
-			err := api.Messages.Send(ctx, message)
+			err = api.Messages.Send(ctx, message)
 			if err != nil {
 				/* ... */
 			}

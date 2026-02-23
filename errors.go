@@ -24,7 +24,8 @@ func (e *APIError) Error() string {
 }
 
 func (e *APIError) Is(target error) bool {
-	if t, ok := target.(*APIError); ok {
+	var t *APIError
+	if errors.As(target, &t) {
 		return e.Code == t.Code
 	}
 

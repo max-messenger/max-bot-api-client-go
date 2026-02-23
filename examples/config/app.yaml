@@ -1,7 +1,0 @@
-
-http.bot.api.url: https://botapi.max.ru/
-http.bot.api.timeout: 30
-http.bot.api.version: 1.2.5
-
-cron.job.resume.notify: "0 10 * * *"
-cron.job.hangup.notify: "30 22 * * *"

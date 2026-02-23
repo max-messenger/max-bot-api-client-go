@@ -3,31 +3,25 @@ package maxbot
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 
+	jsoniter "github.com/json-iterator/go"
+
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
-
-//var (
-//	errLongPollTimeout = &TimeoutError{
-//		Op:     "long polling",
-//		Reason: "request timeout exceeded",
-//	}
-//)
 
 type client struct {
 	key        string
 	version    string
 	baseURL    *url.URL
 	httpClient *http.Client
+	closer     closer
 }
 
-func newClient(key string, version string, baseURL *url.URL, httpClient *http.Client) *client {
+func newClient(key string, version string, baseURL *url.URL, httpClient *http.Client, closer closer) *client {
 	if httpClient == nil {
 		httpClient = &http.Client{
 			Timeout: defaultTimeout,
@@ -39,6 +33,7 @@ func newClient(key string, version string, baseURL *url.URL, httpClient *http.Cl
 		version:    version,
 		baseURL:    baseURL,
 		httpClient: httpClient,
+		closer:     closer,
 	}
 }
 
@@ -54,7 +49,7 @@ func (cl *client) request(ctx context.Context, method, path string, query url.Va
 		return cl.requestReader(ctx, method, path, query, reset, nil)
 	}
 
-	data, err := json.Marshal(body)
+	data, err := jsoniter.Marshal(body)
 	if err != nil {
 		return nil, &SerializationError{
 			Op:   "marshal",
@@ -108,14 +103,10 @@ func (cl *client) requestReader(ctx context.Context, method, path string, query 
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		defer func() {
-			if closeErr := resp.Body.Close(); closeErr != nil {
-				log.Println(closeErr)
-			}
-		}()
+		defer cl.closer("requestReader body", resp.Body)
 
 		apiErr := &schemes.Error{}
-		if decodeErr := json.NewDecoder(resp.Body).Decode(apiErr); decodeErr != nil {
+		if decodeErr := jsoniter.NewDecoder(resp.Body).Decode(apiErr); decodeErr != nil {
 			return nil, fmt.Errorf("HTTP %d: %s", resp.StatusCode, http.StatusText(resp.StatusCode))
 		}
 

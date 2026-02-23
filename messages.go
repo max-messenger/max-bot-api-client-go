@@ -2,13 +2,13 @@ package maxbot
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"log/slog"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
+
+	jsoniter "github.com/json-iterator/go"
 
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
@@ -36,7 +36,7 @@ func (a *messages) GetMessages(ctx context.Context, chatID int64, messageIDs []s
 		values.Set(paramChatID, strconv.Itoa(int(chatID)))
 	}
 	if len(messageIDs) > 0 {
-        values.Set(paramMessageIDs, strings.Join(messageIDs, ","))
+		values.Set(paramMessageIDs, strings.Join(messageIDs, ","))
 	}
 	// If you use 'from' and 'to' parameters, 'to' must be less than 'from'.
 	if from > to {
@@ -55,13 +55,9 @@ func (a *messages) GetMessages(ctx context.Context, chatID int64, messageIDs []s
 	if err != nil {
 		return result, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			slog.Error("failed to close response body", "error", err)
-		}
-	}()
+	defer a.client.closer("getMessages body", body)
 
-	return result, json.NewDecoder(body).Decode(result)
+	return result, jsoniter.NewDecoder(body).Decode(result)
 }
 
 func (a *messages) GetMessage(ctx context.Context, messageID string) (*schemes.Message, error) {
@@ -71,13 +67,9 @@ func (a *messages) GetMessage(ctx context.Context, messageID string) (*schemes.M
 	if err != nil {
 		return result, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			slog.Error("failed to close response body", "error", err)
-		}
-	}()
+	defer a.client.closer("getMessage body", body)
 
-	return result, json.NewDecoder(body).Decode(result)
+	return result, jsoniter.NewDecoder(body).Decode(result)
 }
 
 // EditMessage updates the message by id.
@@ -102,13 +94,9 @@ func (a *messages) DeleteMessage(ctx context.Context, messageID string) (*scheme
 	if err != nil {
 		return result, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			slog.Error("failed to close response body", "error", err)
-		}
-	}()
+	defer a.client.closer("deleteMessage body", body)
 
-	return result, json.NewDecoder(body).Decode(result)
+	return result, jsoniter.NewDecoder(body).Decode(result)
 }
 
 // AnswerOnCallback should be called to send an answer after a user has clicked the button.
@@ -121,13 +109,9 @@ func (a *messages) AnswerOnCallback(ctx context.Context, callbackID string, call
 	if err != nil {
 		return result, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			slog.Error("failed to close response body", "error", err)
-		}
-	}()
+	defer a.client.closer("answerOnCallback body", body)
 
-	return result, json.NewDecoder(body).Decode(result)
+	return result, jsoniter.NewDecoder(body).Decode(result)
 }
 
 // NewKeyboardBuilder returns a new keyboard builder helper.
@@ -163,13 +147,9 @@ func (a *messages) sendMessage(ctx context.Context, reset bool, chatID int64, us
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			slog.Error("failed to close response body", "error", err)
-		}
-	}()
+	defer a.client.closer("sendMessage body", body)
 
-	if err := json.NewDecoder(body).Decode(wrapper); err != nil {
+	if err = jsoniter.NewDecoder(body).Decode(wrapper); err != nil {
 		return nil, err
 	}
 
@@ -184,13 +164,9 @@ func (a *messages) editMessage(ctx context.Context, messageID string, message *s
 	if err != nil {
 		return result, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			slog.Error("failed to close response body", "error", err)
-		}
-	}()
+	defer a.client.closer("editMessage body", body)
 
-	return result, json.NewDecoder(body).Decode(result)
+	return result, jsoniter.NewDecoder(body).Decode(result)
 }
 
 // Check posiable to send a message to a chat.
@@ -213,13 +189,9 @@ func (a *messages) checkUser(ctx context.Context, reset bool, message *schemes.N
 	if err != nil {
 		return false, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			slog.Error("failed to close response body", "error", err)
-		}
-	}()
+	defer a.client.closer("checkUser body", body)
 
-	if err := json.NewDecoder(body).Decode(result); err != nil {
+	if err = jsoniter.NewDecoder(body).Decode(result); err != nil {
 		return false, err
 	}
 
@@ -250,8 +222,9 @@ func (a *messages) checkNumberExist(ctx context.Context, reset bool, message *sc
 	if err != nil {
 		return nil, err
 	}
-	defer body.Close()
-	if err := json.NewDecoder(body).Decode(result); err != nil {
+	defer a.client.closer("checkNumberExist body", body)
+
+	if err = jsoniter.NewDecoder(body).Decode(result); err != nil {
 		// Message sent without errors
 		return nil, err
 	}

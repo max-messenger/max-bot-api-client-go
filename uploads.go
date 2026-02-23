@@ -4,16 +4,17 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"mime"
 	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
+
+	jsoniter "github.com/json-iterator/go"
 
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
@@ -32,7 +33,7 @@ func (a *uploads) UploadMediaFromFile(ctx context.Context, uploadType schemes.Up
 	if err != nil {
 		return nil, fmt.Errorf("open file: %w", err)
 	}
-	defer fh.Close()
+	defer a.client.closer("uploadMediaFromFile file", fh)
 
 	return a.UploadMediaFromReaderWithName(ctx, uploadType, fh, filename)
 }
@@ -48,7 +49,7 @@ func (a *uploads) UploadMediaFromUrl(ctx context.Context, uploadType schemes.Upl
 	if err != nil {
 		return nil, fmt.Errorf("fetch URL: %w", err)
 	}
-	defer resp.Body.Close()
+	defer a.client.closer("uploadMediaFromUrl body", resp.Body)
 
 	return a.UploadMediaFromReaderWithName(ctx, uploadType, resp.Body, a.attachmentName(resp))
 }
@@ -71,7 +72,7 @@ func (a *uploads) UploadPhotoFromFile(ctx context.Context, fileName string) (*sc
 	if err != nil {
 		return nil, fmt.Errorf("open file: %w", err)
 	}
-	defer fh.Close()
+	defer a.client.closer("uploadPhotoFromFile file", fh)
 	result := new(schemes.PhotoTokens)
 
 	return result, a.uploadMediaFromReader(ctx, schemes.PHOTO, fh, fileName, result)
@@ -96,7 +97,8 @@ func (a *uploads) UploadPhotoFromUrl(ctx context.Context, urlStr string) (*schem
 	if err != nil {
 		return nil, fmt.Errorf("fetch URL: %w", err)
 	}
-	defer respFile.Body.Close()
+
+	defer a.client.closer("uploadPhotoFromUrl body", respFile.Body)
 	result := new(schemes.PhotoTokens)
 	name := a.attachmentName(respFile)
 
@@ -124,16 +126,9 @@ func (a *uploads) getUploadURL(ctx context.Context, uploadType schemes.UploadTyp
 	if err != nil {
 		return result, err
 	}
-	defer func() {
-		if err := body.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
+	defer a.client.closer("getUploadURL body", body)
 
-	if err := json.NewDecoder(body).Decode(result); err != nil {
-		return result, fmt.Errorf("decode upload endpoint: %w", err)
-	}
-	return result, nil
+	return result, jsoniter.NewDecoder(body).Decode(result)
 }
 
 func (a *uploads) uploadMediaFromReader(
@@ -141,7 +136,7 @@ func (a *uploads) uploadMediaFromReader(
 	uploadType schemes.UploadType,
 	reader io.Reader,
 	fileName string,
-	result interface{},
+	result any,
 ) error {
 	endpoint, err := a.getUploadURL(ctx, uploadType)
 	if err != nil {
@@ -149,9 +144,13 @@ func (a *uploads) uploadMediaFromReader(
 	}
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
+
 	if fileName == "" {
 		fileName = "file"
+	} else {
+		fileName = filepath.Base(fileName)
 	}
+
 	fileWriter, err := bodyWriter.CreateFormFile("data", fileName)
 	if err != nil {
 		return fmt.Errorf("create form file: %w", err)
@@ -161,8 +160,8 @@ func (a *uploads) uploadMediaFromReader(
 	}
 
 	contentType := bodyWriter.FormDataContentType()
-	if err := bodyWriter.Close(); err != nil {
-		return fmt.Errorf("close multipart writer: %w", err)
+	if err = bodyWriter.Close(); err != nil {
+		return err
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint.Url, bodyBuf)
@@ -174,15 +173,11 @@ func (a *uploads) uploadMediaFromReader(
 	if err != nil {
 		return fmt.Errorf("upload: %w", err)
 	}
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			log.Println(err)
-		}
-	}()
+	defer a.client.closer("uploadMediaFromReader body", resp.Body)
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		apiErr := &schemes.Error{}
-		if decodeErr := json.NewDecoder(resp.Body).Decode(apiErr); decodeErr == nil {
+		if decodeErr := jsoniter.NewDecoder(resp.Body).Decode(apiErr); decodeErr == nil {
 			return &APIError{
 				Code:    resp.StatusCode,
 				Message: apiErr.Code,
@@ -192,8 +187,8 @@ func (a *uploads) uploadMediaFromReader(
 		return fmt.Errorf("upload: HTTP %d: %s", resp.StatusCode, http.StatusText(resp.StatusCode))
 	}
 
-	if err := json.NewDecoder(resp.Body).Decode(result); err != nil {
-		return fmt.Errorf("decode upload response: %w", err)
+	if err = jsoniter.NewDecoder(resp.Body).Decode(result); err != nil {
+		return err
 	}
 
 	return nil
