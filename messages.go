@@ -85,7 +85,7 @@ func (a *messages) EditMessage(ctx context.Context, messageID string, m *Message
 
 		apiErr := &APIError{}
 		if errors.As(err, &apiErr) && !apiErr.IsAttachmentNotReady() {
-			return fmt.Errorf("sending message failed: %w", err)
+			return fmt.Errorf("editing message failed: %w", err)
 		}
 
 		retryWait := time.Duration(1<<uint(attempt)) * time.Second
@@ -228,11 +228,16 @@ func (a *messages) editMessage(ctx context.Context, messageID string, message *s
 	}
 	defer a.client.closer("editMessage body", body)
 
+	err = jsoniter.NewDecoder(body).Decode(result)
+	if err != nil {
+		return fmt.Errorf("decode error: %w", err)
+	}
+
 	if result.Success {
-		return errors.New(result.Message)
+		return nil
 
 	}
-	return jsoniter.NewDecoder(body).Decode(result)
+	return errors.New(result.Message)
 }
 
 // Check verifies whether it is possible to send a message to the chat.
