@@ -3,10 +3,12 @@ package maxbot
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	jsoniter "github.com/json-iterator/go"
 
@@ -123,7 +125,28 @@ func (a *messages) NewKeyboardBuilder() *Keyboard {
 
 // Send sends a message to the chat. A new message identifier returns if no error.
 func (a *messages) Send(ctx context.Context, m *Message) error {
-	_, err := a.sendMessage(ctx, m.reset, m.chatID, m.userID, m.message)
+	var err error
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		_, err = a.sendMessage(ctx, m.reset, m.chatID, m.userID, m.message)
+		if err == nil {
+			return nil
+		}
+
+		apiErr := &APIError{}
+		if errors.As(err, &apiErr) && !apiErr.IsAttachmentNotReady() {
+			return fmt.Errorf("sending message failed: %w", err)
+		}
+
+		retryWait := time.Duration(1<<uint(attempt)) * time.Second
+		if attempt < maxRetries-1 {
+			a.client.notifyError(fmt.Errorf("attempt %d failed, retrying in %v: %v", attempt+1, retryWait, err))
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(retryWait):
+			}
+		}
+	}
 
 	return err
 }

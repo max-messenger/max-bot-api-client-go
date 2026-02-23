@@ -3,8 +3,10 @@ package maxbot
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 
@@ -18,10 +20,10 @@ type client struct {
 	version    string
 	baseURL    *url.URL
 	httpClient *http.Client
-	closer     closer
+	errors     chan error
 }
 
-func newClient(key string, version string, baseURL *url.URL, httpClient *http.Client, closer closer) *client {
+func newClient(key string, version string, baseURL *url.URL, httpClient *http.Client) *client {
 	if httpClient == nil {
 		httpClient = &http.Client{
 			Timeout: defaultTimeout,
@@ -33,7 +35,27 @@ func newClient(key string, version string, baseURL *url.URL, httpClient *http.Cl
 		version:    version,
 		baseURL:    baseURL,
 		httpClient: httpClient,
-		closer:     closer,
+		errors:     make(chan error, 1),
+	}
+}
+
+func (cl *client) notifyError(err error) {
+	if err == nil {
+		return
+	}
+	select {
+	case cl.errors <- err:
+	default:
+		log.Println(err)
+	}
+}
+
+func (cl *client) closer(name string, c io.Closer) {
+	if c == nil {
+		return
+	}
+	if err := c.Close(); err != nil {
+		cl.notifyError(fmt.Errorf("failed to close %s: %w", name, err))
 	}
 }
 
@@ -87,7 +109,8 @@ func (cl *client) requestReader(ctx context.Context, method, path string, query 
 
 	resp, err := cl.do(req)
 	if err != nil {
-		if urlErr, ok := err.(*url.Error); ok {
+		var urlErr *url.Error
+		if errors.As(err, &urlErr) {
 			if urlErr.Timeout() {
 				return nil, cl.createTimeoutError(
 					fmt.Sprintf("%s %s", method, path),
