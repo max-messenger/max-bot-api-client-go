@@ -27,12 +27,10 @@ type Api struct {
 	Subscriptions *subscriptions
 	Uploads       *uploads
 
-	client   *client
-	timeout  time.Duration
-	pause    time.Duration
-	debug    bool
-	errors   chan error
-	informer chan string
+	client  *client
+	timeout time.Duration
+	pause   time.Duration
+	debug   bool
 }
 
 // New creates a new Max Bot API client with the provided token.
@@ -47,11 +45,9 @@ func New(token string, opts ...Option) (*Api, error) {
 	}
 
 	api := &Api{
-		timeout:  defaultTimeout,
-		pause:    defaultPause,
-		debug:    false,
-		errors:   make(chan error, 1),
-		informer: make(chan string, 1),
+		timeout: defaultTimeout,
+		pause:   defaultPause,
+		debug:   false,
 	}
 
 	cl := newClient(token, version, u, &http.Client{Timeout: defaultTimeout})
@@ -363,6 +359,10 @@ func (a *Api) getUpdatesWithRetry(ctx context.Context, params *UpdatesParams) (*
 	}
 
 	return nil, fmt.Errorf("failed after %d attempts: %w", maxRetries, lastErr)
+}
+
+func (a *Api) GetErrors() <-chan error {
+	return a.client.errors
 }
 
 // GetUpdates returns a channel that delivers updates from the API.

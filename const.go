@@ -15,7 +15,6 @@ const (
 
 const (
 	notifyExists = "notify/exists"
-	envToken     = "TOKEN"
 )
 
 const (
