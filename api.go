@@ -44,23 +44,19 @@ func New(token string, opts ...Option) (*Api, error) {
 		return nil, fmt.Errorf("%w: %v", ErrInvalidURL, err)
 	}
 
+	cl := newClient(token, Version, u, &http.Client{Timeout: defaultTimeout})
 	api := &Api{
-		timeout: defaultTimeout,
-		pause:   defaultPause,
-		debug:   false,
+		Bots:          newBots(cl),
+		Chats:         newChats(cl),
+		Debugs:        newDebugs(cl, 0),
+		Messages:      newMessages(cl),
+		Subscriptions: newSubscriptions(cl),
+		Uploads:       newUploads(cl),
+		client:        cl,
+		timeout:       defaultTimeout,
+		pause:         defaultPause,
+		debug:         false,
 	}
-
-	cl := newClient(token, version, u, &http.Client{Timeout: defaultTimeout})
-
-	api.client = cl
-
-	// Initialize sub-clients
-	api.Bots = newBots(cl)
-	api.Chats = newChats(cl)
-	api.Uploads = newUploads(cl)
-	api.Messages = newMessages(cl)
-	api.Subscriptions = newSubscriptions(cl)
-	api.Debugs = newDebugs(cl, 0)
 
 	for _, o := range opts {
 		o(api)

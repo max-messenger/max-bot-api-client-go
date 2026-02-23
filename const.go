@@ -3,7 +3,7 @@ package maxbot
 import "time"
 
 const (
-	version = "1.2.5"
+	Version = "1.2.5"
 
 	defaultAPIURL   = "https://platform-api.max.ru/"
 	defaultTimeout  = 30 * time.Second

@@ -1,7 +1,6 @@
 package maxbot
 
 import (
-	"net/http"
 	"net/url"
 	"time"
 )
@@ -19,15 +18,9 @@ func WithBaseURL(baseURL string) Option {
 	}
 }
 
-func WithHTTPClient(httpClient *http.Client) Option {
+func WithHTTPClient(httpClient HttpClient) Option {
 	return func(api *Api) {
 		api.client.httpClient = httpClient
-	}
-}
-
-func WithClientTimeout(timeout time.Duration) Option {
-	return func(api *Api) {
-		api.client.httpClient.Timeout = timeout
 	}
 }
 

@@ -15,15 +15,19 @@ import (
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
 
+type HttpClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
 type client struct {
 	key        string
 	version    string
 	baseURL    *url.URL
-	httpClient *http.Client
+	httpClient HttpClient
 	errors     chan error
 }
 
-func newClient(key string, version string, baseURL *url.URL, httpClient *http.Client) *client {
+func newClient(key string, version string, baseURL *url.URL, httpClient HttpClient) *client {
 	if httpClient == nil {
 		httpClient = &http.Client{
 			Timeout: defaultTimeout,
@@ -114,7 +118,7 @@ func (cl *client) requestReader(ctx context.Context, method, path string, query 
 			if urlErr.Timeout() {
 				return nil, cl.createTimeoutError(
 					fmt.Sprintf("%s %s", method, path),
-					fmt.Sprintf("request timeout exceeded (%v)", cl.httpClient.Timeout),
+					"request timeout exceeded",
 				)
 			}
 		}
@@ -145,13 +149,4 @@ func (cl *client) requestReader(ctx context.Context, method, path string, query 
 
 func (cl *client) do(req *http.Request) (*http.Response, error) {
 	return cl.httpClient.Do(req)
-}
-
-// Close closes the HTTP client.
-func (cl *client) Close() error {
-	if transport, ok := cl.httpClient.Transport.(*http.Transport); ok {
-		transport.CloseIdleConnections()
-	}
-
-	return nil
 }
