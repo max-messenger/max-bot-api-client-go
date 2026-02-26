@@ -187,6 +187,13 @@ func (a *uploads) uploadMediaFromReader(
 		return fmt.Errorf("upload: HTTP %d: %s", resp.StatusCode, http.StatusText(resp.StatusCode))
 	}
 
+	if uploadType == schemes.AUDIO || uploadType == schemes.VIDEO {
+		if info, ok := result.(*schemes.UploadedInfo); ok {
+			info.Token = endpoint.Token
+			return nil
+		}
+	}
+
 	if err = jsoniter.NewDecoder(resp.Body).Decode(result); err != nil {
 		return err
 	}
