@@ -260,6 +260,7 @@ func (a *messages) checkUser(ctx context.Context, reset bool, message *schemes.N
 	body, err := a.client.request(ctx, http.MethodGet, notifyExists, values, reset, nil)
 	if err != nil {
 		return false, err
+		
 	}
 	defer a.client.closer("checkUser body", body)
 

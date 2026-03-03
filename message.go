@@ -31,6 +31,11 @@ func (m *Message) SetReset(reset bool) *Message {
 	return m
 }
 
+func (m *Message) SetPhoneNumbers(phoneNumbers []string) *Message {
+	m.message.PhoneNumbers = phoneNumbers
+	return m
+}
+
 func (m *Message) SetText(text string) *Message {
 	m.message.Text = text
 
