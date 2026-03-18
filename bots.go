@@ -28,7 +28,7 @@ func (a *bots) GetBot(ctx context.Context) (*schemes.BotInfo, error) {
 	if err != nil {
 		return result, err
 	}
-	defer a.client.closer("getBoy body", body)
+	defer a.client.closer("getBot body", body)
 
 	return result, jsoniter.NewDecoder(body).Decode(result)
 }
