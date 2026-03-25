@@ -41,7 +41,7 @@ func (a *messages) GetMessages(ctx context.Context, chatID int64, messageIDs []s
 		values.Set(paramMessageIDs, strings.Join(messageIDs, ","))
 	}
 	// If you use 'from' and 'to' parameters, 'to' must be less than 'from'.
-	if from > to {
+	if from < to {
 		to, from = from, to
 	}
 	if from != 0 {
@@ -99,7 +99,7 @@ func (a *messages) EditMessage(ctx context.Context, messageID string, m *Message
 		}
 	}
 
-	return nil
+	return err
 }
 
 // DeleteMessage deletes the message by id.
@@ -260,7 +260,6 @@ func (a *messages) checkUser(ctx context.Context, reset bool, message *schemes.N
 	body, err := a.client.request(ctx, http.MethodGet, notifyExists, values, reset, nil)
 	if err != nil {
 		return false, err
-		
 	}
 	defer a.client.closer("checkUser body", body)
 
@@ -269,10 +268,10 @@ func (a *messages) checkUser(ctx context.Context, reset bool, message *schemes.N
 	}
 
 	if len(result.NumberExist) > 0 {
-		return true, result
+		return true, nil
 	}
 
-	return false, result
+	return false, nil
 }
 
 // ListExist possible to send a message to a chat.
@@ -298,12 +297,11 @@ func (a *messages) checkNumberExist(ctx context.Context, reset bool, message *sc
 	defer a.client.closer("checkNumberExist body", body)
 
 	if err = jsoniter.NewDecoder(body).Decode(result); err != nil {
-		// Message sent without errors
 		return nil, err
 	}
 	if len(result.NumberExist) > 0 {
-		return result.NumberExist, result
+		return result.NumberExist, nil
 	}
 
-	return nil, result
+	return nil, nil
 }

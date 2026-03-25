@@ -47,7 +47,7 @@ func (a *debugs) sendMessage(ctx context.Context, reset bool, chatID int64, user
 	defer a.client.closer("failed to close response body", body)
 
 	if err = jsoniter.NewDecoder(body).Decode(result); err != nil {
-		return nil
+		return err
 	}
 	if result.Code == "" {
 		return nil

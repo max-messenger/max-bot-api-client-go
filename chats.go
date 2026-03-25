@@ -50,7 +50,7 @@ func (a *chats) GetChat(ctx context.Context, chatID int64) (*schemes.Chat, error
 	if err != nil {
 		return result, err
 	}
-	defer a.client.closer("getCat body", body)
+	defer a.client.closer("getChat body", body)
 
 	return result, jsoniter.NewDecoder(body).Decode(result)
 }
@@ -114,7 +114,7 @@ func (a *chats) GetChatAdmins(ctx context.Context, chatID int64) (*schemes.ChatM
 	if err != nil {
 		return result, err
 	}
-	defer a.client.closer("getChatAdminsbody", body)
+	defer a.client.closer("getChatAdmins body", body)
 
 	return result, jsoniter.NewDecoder(body).Decode(result)
 }
