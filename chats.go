@@ -188,3 +188,16 @@ func (a *chats) SendAction(ctx context.Context, chatID int64, action schemes.Sen
 
 	return result, jsoniter.NewDecoder(body).Decode(result)
 }
+
+// PinMessage Pin a message in a group chat.
+func (a *chats) PinMessage(ctx context.Context, chatID int64, pinMessage schemes.PinMessageBody) (*schemes.SimpleQueryResult, error) {
+	result := new(schemes.SimpleQueryResult)
+	values := url.Values{}
+	body, err := a.client.request(ctx, http.MethodPut, fmt.Sprintf(formatPathChatsPin, chatID), values, false, pinMessage)
+	if err != nil {
+		return result, err
+	}
+	defer a.client.closer("pinMessage body", body)
+
+	return result, jsoniter.NewDecoder(body).Decode(result)
+}
