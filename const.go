@@ -31,6 +31,7 @@ const (
 	formatPathChatsMembers      = "chats/%d/members"
 	formatPathChatsMembersMe    = "chats/%d/members/me"
 	formatPathChatsMembersAdmin = "chats/%d/members/admins"
+	formatPathChatsPin          = "chats/%d/pin"
 )
 
 const (
