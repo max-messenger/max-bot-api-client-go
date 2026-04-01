@@ -59,3 +59,9 @@ func WithUpdateHandler(f UpdateHandler) Option {
 		api.updateHandler = f
 	}
 }
+
+func WithWebhookSecret(secret string) Option {
+	return func(api *Api) {
+		api.webhookSecret = secret
+	}
+}

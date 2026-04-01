@@ -30,10 +30,11 @@ type Api struct {
 	Uploads       *uploads
 	updateHandler UpdateHandler
 
-	client  *client
-	timeout time.Duration
-	pause   time.Duration
-	debug   bool
+	client        *client
+	timeout       time.Duration
+	pause         time.Duration
+	debug         bool
+	webhookSecret string
 }
 
 // New creates a new Max Bot API client with the provided token.
@@ -432,6 +433,11 @@ func (a *Api) GetHandler(updates chan<- schemes.UpdateInterface) http.HandlerFun
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		if a.webhookSecret != "" && r.Header.Get("X-Max-Bot-Api-Secret") != a.webhookSecret {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
