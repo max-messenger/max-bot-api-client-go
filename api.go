@@ -428,7 +428,7 @@ func (a *Api) GetUpdates(ctx context.Context) <-chan schemes.UpdateInterface {
 }
 
 // GetHandler returns an http.HandlerFunc for webhook handling.
-// Deprecated
+// Deprecated: use GetUpdateHandler for channel. Or if you want use updateHandler directly use GetUpdateHandlerFunc.
 func (a *Api) GetHandler(updates chan<- schemes.UpdateInterface) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
