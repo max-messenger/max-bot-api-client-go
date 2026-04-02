@@ -428,6 +428,7 @@ func (a *Api) GetUpdates(ctx context.Context) <-chan schemes.UpdateInterface {
 }
 
 // GetHandler returns an http.HandlerFunc for webhook handling.
+// Deprecated
 func (a *Api) GetHandler(updates chan<- schemes.UpdateInterface) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -458,5 +459,71 @@ func (a *Api) GetHandler(updates chan<- schemes.UpdateInterface) http.HandlerFun
 		default:
 			http.Error(w, "Updates channel is full", http.StatusServiceUnavailable)
 		}
+	}
+}
+
+func (a *Api) GetUpdateHandler(updates chan<- schemes.UpdateInterface, secret string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get(SecretHeader) != secret {
+			http.Error(w, "Secret not allowed", http.StatusUnauthorized)
+			return
+		}
+
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "Failed to read request body", http.StatusBadRequest)
+			return
+		}
+
+		update, err := a.bytesToProperUpdate(body)
+		if err != nil {
+			http.Error(w, "Failed to parse update", http.StatusBadRequest)
+			return
+		}
+
+		select {
+		case updates <- update:
+			w.WriteHeader(http.StatusOK)
+		default:
+			http.Error(w, "Updates channel is full", http.StatusServiceUnavailable)
+		}
+	}
+}
+
+func (a *Api) GetUpdateHandlerFunc(h UpdateHandler, secret string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get(SecretHeader) != secret {
+			http.Error(w, "Secret not allowed", http.StatusUnauthorized)
+			return
+		}
+
+		if h == nil {
+			http.Error(w, "No handler provided", http.StatusBadRequest)
+			return
+		}
+
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "Failed to read request body", http.StatusBadRequest)
+			return
+		}
+
+		update, err := a.bytesToProperUpdate(body)
+		if err != nil {
+			http.Error(w, "Failed to parse update", http.StatusBadRequest)
+			return
+		}
+
+		h(update)
 	}
 }

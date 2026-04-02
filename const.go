@@ -5,6 +5,8 @@ import "time"
 const (
 	Version = "1.2.5"
 
+	SecretHeader = "X-Max-Bot-Api-Secret"
+
 	defaultAPIURL   = "https://platform-api.max.ru/"
 	defaultTimeout  = 30 * time.Second
 	defaultPause    = 1 * time.Second
