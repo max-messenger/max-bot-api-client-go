@@ -195,7 +195,7 @@ func (a *messages) SendWithResult(ctx context.Context, m *Message) (*schemes.Mes
 	return nil, err
 }
 
-func (a *messages) sendMessage(ctx context.Context, reset bool, disableLinkPreview *bool, chatID int64, userID int64, message *schemes.NewMessageBody) (*schemes.Message, error) {
+func (a *messages) sendMessage(ctx context.Context, reset bool, disableLinkPreview bool, chatID int64, userID int64, message *schemes.NewMessageBody) (*schemes.Message, error) {
 	wrapper := new(MessageResponse)
 	values := url.Values{}
 	if chatID != 0 {
@@ -204,8 +204,8 @@ func (a *messages) sendMessage(ctx context.Context, reset bool, disableLinkPrevi
 	if userID != 0 {
 		values.Set(paramUserID, strconv.Itoa(int(userID)))
 	}
-	if disableLinkPreview != nil {
-		values.Set(paramDisableLinkPreview, strconv.FormatBool(*disableLinkPreview))
+	if disableLinkPreview {
+		values.Set(paramDisableLinkPreview, strconv.FormatBool(disableLinkPreview))
 	}
 
 	body, err := a.client.request(ctx, http.MethodPost, pathMessages, values, reset, message)
@@ -308,4 +308,3 @@ func (a *messages) checkNumberExist(ctx context.Context, reset bool, message *sc
 
 	return nil, nil
 }
-

@@ -6,7 +6,7 @@ type Message struct {
 	userID             int64
 	chatID             int64
 	reset              bool
-	disableLinkPreview *bool
+	disableLinkPreview bool
 	message            *schemes.NewMessageBody
 }
 
@@ -33,7 +33,7 @@ func (m *Message) SetReset(reset bool) *Message {
 }
 
 func (m *Message) SetDisableLinkPreview(disableLinkPreview bool) *Message {
-	m.disableLinkPreview = &disableLinkPreview
+	m.disableLinkPreview = disableLinkPreview
 
 	return m
 }
@@ -150,4 +150,3 @@ func (m *Message) AddSticker(code string) *Message {
 
 	return m
 }
-
