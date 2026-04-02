@@ -45,11 +45,12 @@ const (
 	paramAccessToken  = "access_token"
 	paramPhoneNumbers = "phone_numbers"
 
-	paramChatID     = "chat_id"
-	paramUserID     = "user_id"
-	paramMessageID  = "message_id"
-	paramMessageIDs = "message_ids"
-	paramCallbackID = "callback_id"
+	paramChatID             = "chat_id"
+	paramUserID             = "user_id"
+	paramMessageID          = "message_id"
+	paramMessageIDs         = "message_ids"
+	paramCallbackID         = "callback_id"
+	paramDisableLinkPreview = "disable_link_preview"
 
 	paramTo      = "to"
 	paramCount   = "count"
@@ -57,3 +58,4 @@ const (
 	paramLimit   = "limit"
 	paramTimeout = "timeout"
 )
+
