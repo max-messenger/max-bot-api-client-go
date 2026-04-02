@@ -142,7 +142,7 @@ func (a *messages) NewKeyboardBuilder() *Keyboard {
 func (a *messages) Send(ctx context.Context, m *Message) error {
 	var err error
 	for attempt := 0; attempt < maxRetries; attempt++ {
-		_, err = a.sendMessage(ctx, m.reset, m.chatID, m.userID, m.message)
+		_, err = a.sendMessage(ctx, m.reset, m.disableLinkPreview, m.chatID, m.userID, m.message)
 		if err == nil {
 			return nil
 		}
@@ -171,7 +171,7 @@ func (a *messages) SendWithResult(ctx context.Context, m *Message) (*schemes.Mes
 	var err error
 	var result *schemes.Message
 	for attempt := 0; attempt < maxRetries; attempt++ {
-		result, err = a.sendMessage(ctx, m.reset, m.chatID, m.userID, m.message)
+		result, err = a.sendMessage(ctx, m.reset, m.disableLinkPreview, m.chatID, m.userID, m.message)
 		if err == nil {
 			return result, nil
 		}
@@ -195,7 +195,7 @@ func (a *messages) SendWithResult(ctx context.Context, m *Message) (*schemes.Mes
 	return nil, err
 }
 
-func (a *messages) sendMessage(ctx context.Context, reset bool, chatID int64, userID int64, message *schemes.NewMessageBody) (*schemes.Message, error) {
+func (a *messages) sendMessage(ctx context.Context, reset bool, disableLinkPreview bool, chatID int64, userID int64, message *schemes.NewMessageBody) (*schemes.Message, error) {
 	wrapper := new(MessageResponse)
 	values := url.Values{}
 	if chatID != 0 {
@@ -203,6 +203,9 @@ func (a *messages) sendMessage(ctx context.Context, reset bool, chatID int64, us
 	}
 	if userID != 0 {
 		values.Set(paramUserID, strconv.Itoa(int(userID)))
+	}
+	if disableLinkPreview {
+		values.Set(paramDisableLinkPreview, strconv.FormatBool(disableLinkPreview))
 	}
 
 	body, err := a.client.request(ctx, http.MethodPost, pathMessages, values, reset, message)

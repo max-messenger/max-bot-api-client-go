@@ -3,10 +3,11 @@ package maxbot
 import "github.com/max-messenger/max-bot-api-client-go/schemes"
 
 type Message struct {
-	userID  int64
-	chatID  int64
-	reset   bool
-	message *schemes.NewMessageBody
+	userID             int64
+	chatID             int64
+	reset              bool
+	disableLinkPreview bool
+	message            *schemes.NewMessageBody
 }
 
 func NewMessage() *Message {
@@ -27,6 +28,12 @@ func (m *Message) SetChat(chatID int64) *Message {
 
 func (m *Message) SetReset(reset bool) *Message {
 	m.reset = reset
+
+	return m
+}
+
+func (m *Message) SetDisableLinkPreview(disableLinkPreview bool) *Message {
+	m.disableLinkPreview = disableLinkPreview
 
 	return m
 }
