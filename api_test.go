@@ -203,7 +203,7 @@ func TestGetHandler(t *testing.T) {
 	require.NoError(t, err)
 
 	ch := make(chan schemes.UpdateInterface, 1)
-	handler := api.GetHandler(ch)
+	handler := api.GetUpdateHandler(ch, "")
 
 	wantUpdate := &schemes.MessageCreatedUpdate{
 		Update: schemes.Update{UpdateType: schemes.TypeMessageCreated, Timestamp: 1234567890},

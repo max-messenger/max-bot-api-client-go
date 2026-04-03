@@ -96,13 +96,16 @@ func main() {
 			keyboard.
 				AddRow().
 				AddMessage("Привет!")
+			keyboard.
+				AddRow().
+				AddClipboard("Копировать", "https://dev.max.ru/docs-api/methods/POST/messages")
 
 			_ = api.Messages.Send(ctx, maxbot.NewMessage().SetUser(upd.Message.Sender.UserId).SetReply("И вам привет!(в личку!)", upd.Message.Body.Mid))
 
 			_ = api.Messages.Send(ctx, maxbot.NewMessage().SetChat(upd.Message.Recipient.ChatId).SetReply("И вам привет! (в чат)", upd.Message.Body.Mid))
 
 			// Отправка сообщения с клавиатурой
-			_ = api.Messages.Send(ctx, maxbot.NewMessage().SetChat(upd.Message.Recipient.ChatId).AddKeyboard(keyboard).SetText(outText))
+			_ = api.Messages.Send(ctx, maxbot.NewMessage().SetChat(upd.Message.Recipient.ChatId).AddKeyboard(keyboard).SetText("Лови кнопочки"))
 			_ = api.Messages.Send(ctx, maxbot.NewMessage().Reply("**Reply** universal", upd.Message).SetFormat(schemes.Markdown))
 
 		case *schemes.MessageCallbackUpdate:

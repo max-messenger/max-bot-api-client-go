@@ -33,6 +33,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, os.Interrupt)
 	defer stop()
 
+	secret := os.Getenv("MAX_BOT_API_SECRET")
 	httpCli := &httpClient{
 		httpClient: &http.Client{
 			Timeout: time.Second * 35,
@@ -71,7 +72,7 @@ func main() {
 
 	ch := make(chan schemes.UpdateInterface) // Channel with updates from Max
 
-	http.HandleFunc("/webhook", api.GetHandler(ch))
+	http.HandleFunc("/webhook", api.GetUpdateHandler(ch, secret))
 	go func() {
 		for {
 			update := <-ch

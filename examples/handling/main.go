@@ -33,6 +33,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, os.Interrupt)
 	defer stop()
 
+	secret := os.Getenv("MAX_BOT_API_SECRET")
 	httpCli := &httpClient{
 		httpClient: &http.Client{
 			Timeout: time.Second * 35,
@@ -47,7 +48,6 @@ func main() {
 	opts := []maxbot.Option{
 		maxbot.WithDebugMode(),
 		maxbot.WithHTTPClient(httpCli),
-		maxbot.WithUpdateHandler(h.handlerUpdate),
 	}
 	api, err := maxbot.New(os.Getenv("BOT_TOKEN"), opts...)
 	if err != nil {
@@ -76,9 +76,7 @@ func main() {
 	subscriptionResp, err := api.Subscriptions.Subscribe(ctx, host+"/webhook", []string{}, "my-secret-phrase")
 	log.Printf("Subscription: %#v %#v", subscriptionResp, err)
 
-	ch := make(chan schemes.UpdateInterface) // Channel with updates from Max
-
-	http.HandleFunc("/webhook", api.GetHandler(ch))
+	http.HandleFunc("/webhook", api.GetUpdateHandlerFunc(h.handlerUpdate, secret))
 
 	_ = http.ListenAndServe(":10888", nil)
 }
