@@ -131,6 +131,11 @@ type OpenAppButton struct {
 	ContactId int64  `json:"contact_id,omitempty"`
 }
 
+type ClipboardButton struct {
+	Button
+	Payload string `json:"payload"`
+}
+
 // MessageButton represents a button with text. When a user presses it the button's text sends
 // to the chat as a text message.
 type MessageButton struct {
@@ -321,6 +326,7 @@ const (
 	GEOLOCATION ButtonType = "request_geo_location"
 	OPEN_APP    ButtonType = "open_app"
 	MESSAGE     ButtonType = "message"
+	CLIPBOARD   ButtonType = "clipboard"
 )
 
 // Intent : Intent of button

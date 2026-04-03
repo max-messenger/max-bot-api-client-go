@@ -125,3 +125,16 @@ func (k *KeyboardRow) AddMessage(text string) *KeyboardRow {
 
 	return k
 }
+
+func (k *KeyboardRow) AddClipboard(text, payload string) *KeyboardRow {
+	b := schemes.ClipboardButton{
+		Payload: payload,
+		Button: schemes.Button{
+			Text: text,
+			Type: schemes.CLIPBOARD,
+		},
+	}
+	k.cols = append(k.cols, b)
+
+	return k
+}
