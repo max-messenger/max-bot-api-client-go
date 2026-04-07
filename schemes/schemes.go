@@ -155,6 +155,7 @@ type Chat struct {
 	IsPublic          bool            `json:"is_public"`              // Is current chat publicly available. Always `false` for dialogs
 	Link              string          `json:"link,omitempty"`         // Link on chat if it is public
 	Description       *string         `json:"description"`            // Chat description
+	MessagesCount     int64           `json:"messages_count"`
 }
 
 // ChatAdminPermission : Chat admin permissions
