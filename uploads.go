@@ -35,7 +35,13 @@ func (a *uploads) UploadMediaFromFile(ctx context.Context, uploadType schemes.Up
 	}
 	defer a.client.closer("uploadMediaFromFile file", fh)
 
-	return a.UploadMediaFromReaderWithName(ctx, uploadType, fh, filename)
+	info, err := fh.Stat()
+	if err != nil {
+		return nil, fmt.Errorf("stat file: %w", err)
+	}
+	result := new(schemes.UploadedInfo)
+
+	return result, a.uploadMediaFromReaderWithSize(ctx, uploadType, fh, filename, info.Size(), result)
 }
 
 // UploadMediaFromUrl uploads the file from a remote server to the Max server.
@@ -73,9 +79,14 @@ func (a *uploads) UploadPhotoFromFile(ctx context.Context, fileName string) (*sc
 		return nil, fmt.Errorf("open file: %w", err)
 	}
 	defer a.client.closer("uploadPhotoFromFile file", fh)
+
+	info, err := fh.Stat()
+	if err != nil {
+		return nil, fmt.Errorf("stat file: %w", err)
+	}
 	result := new(schemes.PhotoTokens)
 
-	return result, a.uploadMediaFromReader(ctx, schemes.PHOTO, fh, fileName, result)
+	return result, a.uploadMediaFromReaderWithSize(ctx, schemes.PHOTO, fh, fileName, info.Size(), result)
 }
 
 // UploadPhotoFromBase64String uploads photos to the Max server.
@@ -145,11 +156,7 @@ func (a *uploads) uploadMediaFromReader(
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
-	if fileName == "" {
-		fileName = "file"
-	} else {
-		fileName = filepath.Base(fileName)
-	}
+	fileName = multipartFileName(fileName)
 
 	fileWriter, err := bodyWriter.CreateFormFile("data", fileName)
 	if err != nil {
@@ -175,6 +182,72 @@ func (a *uploads) uploadMediaFromReader(
 	}
 	defer a.client.closer("uploadMediaFromReader body", resp.Body)
 
+	return a.decodeUploadResponse(resp, uploadType, endpoint.Token, result)
+}
+
+func (a *uploads) uploadMediaFromReaderWithSize(
+	ctx context.Context,
+	uploadType schemes.UploadType,
+	reader io.Reader,
+	fileName string,
+	fileSize int64,
+	result any,
+) error {
+	endpoint, err := a.getUploadURL(ctx, uploadType)
+	if err != nil {
+		return err
+	}
+
+	fileName = multipartFileName(fileName)
+	contentType, contentLength, boundary, err := multipartEnvelope(fileName, fileSize)
+	if err != nil {
+		return fmt.Errorf("prepare multipart: %w", err)
+	}
+
+	bodyReader, bodyWriter := io.Pipe()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint.Url, bodyReader)
+	if err != nil {
+		_ = bodyReader.Close()
+		_ = bodyWriter.Close()
+		return fmt.Errorf("create upload request: %w", err)
+	}
+	req.Header.Set("Content-Type", contentType)
+	req.ContentLength = contentLength
+
+	go func() {
+		writer := multipart.NewWriter(bodyWriter)
+		if err := writer.SetBoundary(boundary); err != nil {
+			_ = bodyWriter.CloseWithError(fmt.Errorf("set multipart boundary: %w", err))
+			return
+		}
+
+		fileWriter, err := writer.CreateFormFile("data", fileName)
+		if err != nil {
+			_ = bodyWriter.CloseWithError(fmt.Errorf("create form file: %w", err))
+			return
+		}
+		if _, err = io.Copy(fileWriter, reader); err != nil {
+			_ = bodyWriter.CloseWithError(fmt.Errorf("copy file data: %w", err))
+			return
+		}
+		if err = writer.Close(); err != nil {
+			_ = bodyWriter.CloseWithError(fmt.Errorf("close multipart writer: %w", err))
+			return
+		}
+		_ = bodyWriter.Close()
+	}()
+
+	resp, err := a.client.do(req)
+	if err != nil {
+		return fmt.Errorf("upload: %w", err)
+	}
+	defer a.client.closer("uploadMediaFromReaderWithSize body", resp.Body)
+
+	return a.decodeUploadResponse(resp, uploadType, endpoint.Token, result)
+}
+
+func (a *uploads) decodeUploadResponse(resp *http.Response, uploadType schemes.UploadType, token string, result any) error {
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		apiErr := &schemes.Error{}
 		if decodeErr := jsoniter.NewDecoder(resp.Body).Decode(apiErr); decodeErr == nil {
@@ -189,16 +262,41 @@ func (a *uploads) uploadMediaFromReader(
 
 	if uploadType == schemes.AUDIO || uploadType == schemes.VIDEO {
 		if info, ok := result.(*schemes.UploadedInfo); ok {
-			info.Token = endpoint.Token
+			info.Token = token
 			return nil
 		}
 	}
 
-	if err = jsoniter.NewDecoder(resp.Body).Decode(result); err != nil {
+	if err := jsoniter.NewDecoder(resp.Body).Decode(result); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func multipartEnvelope(fileName string, fileSize int64) (string, int64, string, error) {
+	header := &bytes.Buffer{}
+	writer := multipart.NewWriter(header)
+	boundary := writer.Boundary()
+
+	if _, err := writer.CreateFormFile("data", fileName); err != nil {
+		return "", 0, "", err
+	}
+
+	contentType := writer.FormDataContentType()
+	if err := writer.Close(); err != nil {
+		return "", 0, "", err
+	}
+
+	return contentType, int64(header.Len()) + fileSize, boundary, nil
+}
+
+func multipartFileName(fileName string) string {
+	if fileName == "" {
+		return "file"
+	}
+
+	return filepath.Base(fileName)
 }
 
 func (*uploads) attachmentName(r *http.Response) string {
