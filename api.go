@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"sync"
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
@@ -30,10 +31,12 @@ type Api struct {
 	Uploads       *uploads
 	updateHandler UpdateHandler
 
-	client  *client
-	timeout time.Duration
-	pause   time.Duration
-	debug   bool
+	client    *client
+	timeout   time.Duration
+	pause     time.Duration
+	debug     bool
+	mu        sync.Mutex
+	updatesCh chan schemes.UpdateInterface
 }
 
 // New creates a new Max Bot API client with the provided token.
@@ -366,10 +369,23 @@ func (a *Api) GetErrors() <-chan error {
 
 // GetUpdates returns a channel that delivers updates from the API.
 func (a *Api) GetUpdates(ctx context.Context) <-chan schemes.UpdateInterface {
+	a.mu.Lock()
+	if a.updatesCh != nil {
+		ch := a.updatesCh
+		a.mu.Unlock()
+		return ch
+	}
 	ch := make(chan schemes.UpdateInterface, 100)
+	a.updatesCh = ch
+	a.mu.Unlock()
 
 	go func() {
-		defer close(ch)
+		defer func() {
+			a.mu.Lock()
+			a.updatesCh = nil
+			a.mu.Unlock()
+			close(ch)
+		}()
 
 		var marker int64
 		ticker := time.NewTicker(a.pause)
