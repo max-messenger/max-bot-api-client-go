@@ -58,6 +58,9 @@ func (cl *client) closer(name string, c io.Closer) {
 	if c == nil {
 		return
 	}
+	if rc, ok := c.(io.ReadCloser); ok {
+		_, _ = io.Copy(io.Discard, rc)
+	}
 	if err := c.Close(); err != nil {
 		cl.notifyError(fmt.Errorf("failed to close %s: %w", name, err))
 	}
