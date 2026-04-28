@@ -230,3 +230,36 @@ func Test_uploads_UploadMediaFromFile_matchesBufferedMultipartHeaders(t *testing
 	require.NotEmpty(t, streamingParams["boundary"])
 	require.Equal(t, requests[0].contentLength, requests[1].contentLength)
 }
+
+func Test_uploadReaderSize_usesRemainingBytesForSeekers(t *testing.T) {
+	reader := strings.NewReader("stream-me")
+
+	_, err := reader.Seek(2, io.SeekStart)
+	require.NoError(t, err)
+
+	size, ok := uploadReaderSize(reader)
+	require.True(t, ok)
+	require.EqualValues(t, len("stream-me")-2, size)
+
+	remaining, err := io.ReadAll(reader)
+	require.NoError(t, err)
+	require.Equal(t, "ream-me", string(remaining))
+}
+
+func Test_uploadReaderSize_usesLenReaders(t *testing.T) {
+	reader := strings.NewReader("content")
+
+	size, ok := uploadReaderSize(reader)
+	require.True(t, ok)
+	require.EqualValues(t, len("content"), size)
+}
+
+func Test_uploadReaderSize_returnsFalseForUnknownReaders(t *testing.T) {
+	reader, writer := io.Pipe()
+	defer reader.Close()
+	defer writer.Close()
+
+	size, ok := uploadReaderSize(reader)
+	require.False(t, ok)
+	require.Zero(t, size)
+}
