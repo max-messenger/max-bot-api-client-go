@@ -57,19 +57,21 @@ func (a *uploads) UploadMediaFromUrl(ctx context.Context, uploadType schemes.Upl
 	}
 	defer a.client.closer("uploadMediaFromUrl body", resp.Body)
 
-	return a.UploadMediaFromReaderWithName(ctx, uploadType, resp.Body, a.attachmentName(resp))
+	result := new(schemes.UploadedInfo)
+
+	return result, a.uploadMediaFromHTTPResponse(ctx, uploadType, resp, result)
 }
 
 func (a *uploads) UploadMediaFromReader(ctx context.Context, uploadType schemes.UploadType, reader io.Reader) (*schemes.UploadedInfo, error) {
 	result := new(schemes.UploadedInfo)
 
-	return result, a.uploadMediaFromReader(ctx, uploadType, reader, "", result)
+	return result, a.uploadMediaFromReaderAutoSize(ctx, uploadType, reader, "", result)
 }
 
 func (a *uploads) UploadMediaFromReaderWithName(ctx context.Context, uploadType schemes.UploadType, reader io.Reader, name string) (*schemes.UploadedInfo, error) {
 	result := new(schemes.UploadedInfo)
 
-	return result, a.uploadMediaFromReader(ctx, uploadType, reader, name, result)
+	return result, a.uploadMediaFromReaderAutoSize(ctx, uploadType, reader, name, result)
 }
 
 // UploadPhotoFromFile uploads photos to the Max server.
@@ -111,22 +113,21 @@ func (a *uploads) UploadPhotoFromUrl(ctx context.Context, urlStr string) (*schem
 
 	defer a.client.closer("uploadPhotoFromUrl body", respFile.Body)
 	result := new(schemes.PhotoTokens)
-	name := a.attachmentName(respFile)
 
-	return result, a.uploadMediaFromReader(ctx, schemes.PHOTO, respFile.Body, name, result)
+	return result, a.uploadMediaFromHTTPResponse(ctx, schemes.PHOTO, respFile, result)
 }
 
 // UploadPhotoFromReader uploads the photo from a reader.
 func (a *uploads) UploadPhotoFromReader(ctx context.Context, reader io.Reader) (*schemes.PhotoTokens, error) {
 	result := new(schemes.PhotoTokens)
 
-	return result, a.uploadMediaFromReader(ctx, schemes.PHOTO, reader, "", result)
+	return result, a.uploadMediaFromReaderAutoSize(ctx, schemes.PHOTO, reader, "", result)
 }
 
 func (a *uploads) UploadPhotoFromReaderWithName(ctx context.Context, reader io.Reader, name string) (*schemes.PhotoTokens, error) {
 	result := new(schemes.PhotoTokens)
 
-	return result, a.uploadMediaFromReader(ctx, schemes.PHOTO, reader, name, result)
+	return result, a.uploadMediaFromReaderAutoSize(ctx, schemes.PHOTO, reader, name, result)
 }
 
 func (a *uploads) getUploadURL(ctx context.Context, uploadType schemes.UploadType) (*schemes.UploadEndpoint, error) {
@@ -140,6 +141,39 @@ func (a *uploads) getUploadURL(ctx context.Context, uploadType schemes.UploadTyp
 	defer a.client.closer("getUploadURL body", body)
 
 	return result, jsoniter.NewDecoder(body).Decode(result)
+}
+
+func (a *uploads) uploadMediaFromHTTPResponse(ctx context.Context, uploadType schemes.UploadType, resp *http.Response, result any) error {
+	return a.uploadMediaFromReaderKnownSize(ctx, uploadType, resp.Body, a.attachmentName(resp), resp.ContentLength, result)
+}
+
+func (a *uploads) uploadMediaFromReaderAutoSize(
+	ctx context.Context,
+	uploadType schemes.UploadType,
+	reader io.Reader,
+	fileName string,
+	result any,
+) error {
+	if size, ok := uploadReaderSize(reader); ok {
+		return a.uploadMediaFromReaderWithSize(ctx, uploadType, reader, fileName, size, result)
+	}
+
+	return a.uploadMediaFromReader(ctx, uploadType, reader, fileName, result)
+}
+
+func (a *uploads) uploadMediaFromReaderKnownSize(
+	ctx context.Context,
+	uploadType schemes.UploadType,
+	reader io.Reader,
+	fileName string,
+	size int64,
+	result any,
+) error {
+	if size >= 0 {
+		return a.uploadMediaFromReaderWithSize(ctx, uploadType, reader, fileName, size, result)
+	}
+
+	return a.uploadMediaFromReader(ctx, uploadType, reader, fileName, result)
 }
 
 func (a *uploads) uploadMediaFromReader(
@@ -289,6 +323,32 @@ func multipartEnvelope(fileName string, fileSize int64) (string, int64, string, 
 	}
 
 	return contentType, int64(header.Len()) + fileSize, boundary, nil
+}
+
+func uploadReaderSize(reader io.Reader) (int64, bool) {
+	type readerWithLen interface {
+		Len() int
+	}
+
+	if sized, ok := reader.(readerWithLen); ok {
+		return int64(sized.Len()), true
+	}
+
+	if seeker, ok := reader.(io.Seeker); ok {
+		current, err := seeker.Seek(0, io.SeekCurrent)
+		if err != nil {
+			return 0, false
+		}
+		end, err := seeker.Seek(0, io.SeekEnd)
+		if err != nil {
+			_, _ = seeker.Seek(current, io.SeekStart)
+			return 0, false
+		}
+		_, _ = seeker.Seek(current, io.SeekStart)
+		return end - current, true
+	}
+
+	return 0, false
 }
 
 func multipartFileName(fileName string) string {
