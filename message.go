@@ -61,6 +61,13 @@ func (m *Message) SetNotify(notify bool) *Message {
 	return m
 }
 
+func (m *Message) SetForward(id string) *Message {
+	m.message.Text = ""
+	m.message.Link = &schemes.NewMessageLink{Type: schemes.FORWARD, Mid: id}
+
+	return m
+}
+
 func (m *Message) SetReply(text, id string) *Message {
 	m.message.Text = text
 	m.message.Link = &schemes.NewMessageLink{Type: schemes.REPLY, Mid: id}
