@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"mime"
@@ -13,8 +14,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	jsoniter "github.com/json-iterator/go"
 
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
@@ -140,7 +139,7 @@ func (a *uploads) getUploadURL(ctx context.Context, uploadType schemes.UploadTyp
 	}
 	defer a.client.closer("getUploadURL body", body)
 
-	return result, jsoniter.NewDecoder(body).Decode(result)
+	return result, json.NewDecoder(body).Decode(result)
 }
 
 func (a *uploads) uploadMediaFromHTTPResponse(ctx context.Context, uploadType schemes.UploadType, resp *http.Response, result any) error {
@@ -284,7 +283,7 @@ func (a *uploads) uploadMediaFromReaderWithSize(
 func (a *uploads) decodeUploadResponse(resp *http.Response, uploadType schemes.UploadType, token string, result any) error {
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		apiErr := &schemes.Error{}
-		if decodeErr := jsoniter.NewDecoder(resp.Body).Decode(apiErr); decodeErr == nil {
+		if decodeErr := json.NewDecoder(resp.Body).Decode(apiErr); decodeErr == nil {
 			return &APIError{
 				Code:    resp.StatusCode,
 				Message: apiErr.Code,
@@ -301,7 +300,7 @@ func (a *uploads) decodeUploadResponse(resp *http.Response, uploadType schemes.U
 		}
 	}
 
-	if err := jsoniter.NewDecoder(resp.Body).Decode(result); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(result); err != nil {
 		return err
 	}
 

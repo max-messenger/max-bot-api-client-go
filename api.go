@@ -14,8 +14,6 @@ import (
 	"sync"
 	"time"
 
-	jsoniter "github.com/json-iterator/go"
-
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
 
@@ -158,7 +156,7 @@ func (a *Api) getAttachmentType(attachmentType schemes.AttachmentType) func() sc
 // bytesToProperUpdate converts raw JSON bytes to the appropriate update type.
 func (a *Api) bytesToProperUpdate(data []byte) (schemes.UpdateInterface, error) {
 	baseUpdate := &schemes.Update{}
-	if err := jsoniter.Unmarshal(data, baseUpdate); err != nil {
+	if err := json.Unmarshal(data, baseUpdate); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal base update: %w", err)
 	}
 
@@ -174,7 +172,7 @@ func (a *Api) bytesToProperUpdate(data []byte) (schemes.UpdateInterface, error) 
 	}
 
 	update := constructor(debugRaw)
-	if err := jsoniter.Unmarshal(data, update); err != nil {
+	if err := json.Unmarshal(data, update); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal update of type %s: %w", updateType, err)
 	}
 
@@ -230,7 +228,7 @@ func (a *Api) processMessageAttachments(update schemes.UpdateInterface) error {
 // bytesToProperAttachment converts raw JSON bytes to the appropriate attachment type.
 func (a *Api) bytesToProperAttachment(data []byte) (schemes.AttachmentInterface, error) {
 	baseAttachment := &schemes.Attachment{}
-	if err := jsoniter.Unmarshal(data, baseAttachment); err != nil {
+	if err := json.Unmarshal(data, baseAttachment); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal base attachment: %w", err)
 	}
 
@@ -242,7 +240,7 @@ func (a *Api) bytesToProperAttachment(data []byte) (schemes.AttachmentInterface,
 	}
 
 	attachment := constructor()
-	if err := jsoniter.Unmarshal(data, attachment); err != nil {
+	if err := json.Unmarshal(data, attachment); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal attachment of type %s: %w", attachmentType, err)
 	}
 
@@ -326,7 +324,7 @@ func (a *Api) getUpdates(ctx context.Context, params *UpdatesParams) (*schemes.U
 	}
 
 	result := &schemes.UpdateList{}
-	if err = jsoniter.Unmarshal(data, result); err != nil {
+	if err = json.Unmarshal(data, result); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal updates: %w", err)
 	}
 

@@ -3,14 +3,13 @@ package maxbot
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"net/url"
-
-	jsoniter "github.com/json-iterator/go"
 
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
@@ -78,7 +77,7 @@ func (cl *client) request(ctx context.Context, method, path string, query url.Va
 		return cl.requestReader(ctx, method, path, query, reset, nil)
 	}
 
-	data, err := jsoniter.Marshal(body)
+	data, err := json.Marshal(body)
 	if err != nil {
 		return nil, &SerializationError{
 			Op:   "marshal",
@@ -136,7 +135,7 @@ func (cl *client) requestReader(ctx context.Context, method, path string, query 
 		defer cl.closer("requestReader body", resp.Body)
 
 		apiErr := &schemes.Error{}
-		if decodeErr := jsoniter.NewDecoder(resp.Body).Decode(apiErr); decodeErr != nil {
+		if decodeErr := json.NewDecoder(resp.Body).Decode(apiErr); decodeErr != nil {
 			return nil, fmt.Errorf("HTTP %d: %s", resp.StatusCode, http.StatusText(resp.StatusCode))
 		}
 

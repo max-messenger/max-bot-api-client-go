@@ -2,6 +2,7 @@ package maxbot
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -9,8 +10,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	jsoniter "github.com/json-iterator/go"
 
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
@@ -59,7 +58,7 @@ func (a *messages) GetMessages(ctx context.Context, chatID int64, messageIDs []s
 	}
 	defer a.client.closer("getMessages body", body)
 
-	return result, jsoniter.NewDecoder(body).Decode(result)
+	return result, json.NewDecoder(body).Decode(result)
 }
 
 func (a *messages) GetMessage(ctx context.Context, messageID string) (*schemes.Message, error) {
@@ -71,7 +70,7 @@ func (a *messages) GetMessage(ctx context.Context, messageID string) (*schemes.M
 	}
 	defer a.client.closer("getMessage body", body)
 
-	return result, jsoniter.NewDecoder(body).Decode(result)
+	return result, json.NewDecoder(body).Decode(result)
 }
 
 // EditMessage updates the message by id.
@@ -113,7 +112,7 @@ func (a *messages) DeleteMessage(ctx context.Context, messageID string) (*scheme
 	}
 	defer a.client.closer("deleteMessage body", body)
 
-	return result, jsoniter.NewDecoder(body).Decode(result)
+	return result, json.NewDecoder(body).Decode(result)
 }
 
 // AnswerOnCallback should be called to send an answer after a user has clicked the button.
@@ -128,7 +127,7 @@ func (a *messages) AnswerOnCallback(ctx context.Context, callbackID string, call
 	}
 	defer a.client.closer("answerOnCallback body", body)
 
-	return result, jsoniter.NewDecoder(body).Decode(result)
+	return result, json.NewDecoder(body).Decode(result)
 }
 
 // NewKeyboardBuilder returns a new keyboard builder helper.
@@ -214,7 +213,7 @@ func (a *messages) sendMessage(ctx context.Context, reset bool, disableLinkPrevi
 	}
 	defer a.client.closer("sendMessage body", body)
 
-	if err = jsoniter.NewDecoder(body).Decode(wrapper); err != nil {
+	if err = json.NewDecoder(body).Decode(wrapper); err != nil {
 		return nil, err
 	}
 
@@ -231,7 +230,7 @@ func (a *messages) editMessage(ctx context.Context, messageID string, message *s
 	}
 	defer a.client.closer("editMessage body", body)
 
-	err = jsoniter.NewDecoder(body).Decode(result)
+	err = json.NewDecoder(body).Decode(result)
 	if err != nil {
 		return fmt.Errorf("decode error: %w", err)
 	}
@@ -266,7 +265,7 @@ func (a *messages) checkUser(ctx context.Context, reset bool, message *schemes.N
 	}
 	defer a.client.closer("checkUser body", body)
 
-	if err = jsoniter.NewDecoder(body).Decode(result); err != nil {
+	if err = json.NewDecoder(body).Decode(result); err != nil {
 		return false, err
 	}
 
@@ -299,7 +298,7 @@ func (a *messages) checkNumberExist(ctx context.Context, reset bool, message *sc
 	}
 	defer a.client.closer("checkNumberExist body", body)
 
-	if err = jsoniter.NewDecoder(body).Decode(result); err != nil {
+	if err = json.NewDecoder(body).Decode(result); err != nil {
 		return nil, err
 	}
 	if len(result.NumberExist) > 0 {

@@ -12,9 +12,7 @@ import (
 	"testing"
 	"time"
 
-	jsoniter "github.com/json-iterator/go"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/mock/gomock"
 
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
@@ -97,7 +95,7 @@ func TestBytesToProperUpdate(t *testing.T) {
 func mustMarshal(t *testing.T, v any) []byte {
 	t.Helper()
 
-	data, err := jsoniter.Marshal(v)
+	data, err := json.Marshal(v)
 	require.NoError(t, err)
 
 	return data
@@ -130,7 +128,7 @@ func TestBytesToProperAttachment(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			data, err := jsoniter.Marshal(tt.attach)
+			data, err := json.Marshal(tt.attach)
 			require.NoError(t, err)
 
 			got, err := api.bytesToProperAttachment(data)
@@ -149,7 +147,7 @@ func TestGetUpdates(t *testing.T) {
 			Body:      schemes.MessageBody{Mid: "mid1", Seq: 1, Text: "test message"},
 		},
 	}
-	updateJSON, err := jsoniter.Marshal(wantUpdate)
+	updateJSON, err := json.Marshal(wantUpdate)
 	require.NoError(t, err)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -173,12 +171,9 @@ func TestGetUpdates(t *testing.T) {
 			*updateList.Marker = marker
 		}
 
-		_ = jsoniter.NewEncoder(w).Encode(updateList)
+		_ = json.NewEncoder(w).Encode(updateList)
 	}))
 	defer server.Close()
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 
 	api, err := New("token", WithBaseURL(server.URL))
 	require.NoError(t, err)
@@ -214,7 +209,7 @@ func TestGetHandler(t *testing.T) {
 			Body:      schemes.MessageBody{Mid: "mid1", Seq: 1, Text: "test message"},
 		},
 	}
-	updateJSON, err := jsoniter.Marshal(wantUpdate)
+	updateJSON, err := json.Marshal(wantUpdate)
 	require.NoError(t, err)
 
 	req := httptest.NewRequest(http.MethodPost, "/", bytes.NewReader(updateJSON))
