@@ -2,10 +2,9 @@ package maxbot
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/url"
-
-	jsoniter "github.com/json-iterator/go"
 
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
@@ -29,7 +28,7 @@ func (a *subscriptions) GetSubscriptions(ctx context.Context) (*schemes.GetSubsc
 	}
 	defer a.client.closer("getSubscriptions body", body)
 
-	return result, jsoniter.NewDecoder(body).Decode(result)
+	return result, json.NewDecoder(body).Decode(result)
 }
 
 // Subscribe subscribes the bot to receive updates via WebHook.
@@ -49,7 +48,7 @@ func (a *subscriptions) Subscribe(ctx context.Context, subscribeURL string, upda
 	}
 	defer a.client.closer("getSubscribe body", body)
 
-	return result, jsoniter.NewDecoder(body).Decode(result)
+	return result, json.NewDecoder(body).Decode(result)
 }
 
 // Unsubscribe unsubscribes the bot from receiving updates via WebHook.
@@ -64,5 +63,5 @@ func (a *subscriptions) Unsubscribe(ctx context.Context, subscriptionURL string)
 	}
 	defer a.client.closer("unSubscribe body", body)
 
-	return result, jsoniter.NewDecoder(body).Decode(result)
+	return result, json.NewDecoder(body).Decode(result)
 }

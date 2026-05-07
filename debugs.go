@@ -2,11 +2,10 @@ package maxbot
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"strconv"
-
-	jsoniter "github.com/json-iterator/go"
 
 	"github.com/max-messenger/max-bot-api-client-go/schemes"
 )
@@ -46,7 +45,7 @@ func (a *debugs) sendMessage(ctx context.Context, reset bool, chatID int64, user
 	}
 	defer a.client.closer("failed to close response body", body)
 
-	if err = jsoniter.NewDecoder(body).Decode(result); err != nil {
+	if err = json.NewDecoder(body).Decode(result); err != nil {
 		return err
 	}
 	if result.Code == "" {
