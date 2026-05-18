@@ -2,66 +2,121 @@ package maxbot
 
 import (
 	"context"
-	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
+	"time"
 
-	"github.com/max-messenger/max-bot-api-client-go/schemes"
+	"github.com/max-messenger/max-bot-api-client-go/v2/model"
 )
 
-type subscriptions struct {
-	client *client
+type UpdateHandler func(context.Context, model.Update)
+
+type Subscriptions struct {
+	client  *client
+	pause   time.Duration
+	timeout time.Duration
 }
 
-func newSubscriptions(client *client) *subscriptions {
-	return &subscriptions{client: client}
+func newSubscriptions(client *client) *Subscriptions {
+	return &Subscriptions{
+		client:  client,
+		pause:   client.pollPause,
+		timeout: client.pollTimeout,
+	}
 }
 
-// GetSubscriptions returns the list of all subscriptions.
-func (a *subscriptions) GetSubscriptions(ctx context.Context) (*schemes.GetSubscriptionsResult, error) {
-	result := new(schemes.GetSubscriptionsResult)
+func (s *Subscriptions) GetSubscriptions(ctx context.Context) (res model.GetSubscriptionsResult, err error) {
+	err = s.client.raw(ctx, http.MethodGet, pathSubscriptions, nil, nil, &res)
+
+	return
+}
+
+func (s *Subscriptions) Subscribe(ctx context.Context, u, st string, ut []string, v string) (res model.SimpleQueryResult, err error) {
+	data := model.SubscriptionRequestBody{
+		URL:         u,
+		Secret:      st,
+		UpdateTypes: ut,
+		Version:     v,
+	}
+	err = s.client.raw(ctx, http.MethodPost, pathSubscriptions, nil, data, &res)
+
+	return
+}
+
+func (s *Subscriptions) Unsubscribe(ctx context.Context, u string) (res model.SimpleQueryResult, err error) {
+	values := url.Values{}
+	values.Add(paramURL, u)
+	err = s.client.raw(ctx, http.MethodDelete, pathSubscriptions, values, nil, &res)
+
+	return
+}
+
+// GetUpdates returns a list of updates from the API.
+func (s *Subscriptions) GetUpdates(ctx context.Context, marker int64) ([]model.Update, int64, error) {
+	res := make([]model.Update, 0)
+
+	updateList, err := s.getUpdatesWithRetry(ctx, maxUpdatesLimit, int(s.timeout.Seconds()), marker)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if len(updateList.Updates) == 0 {
+		return res, 0, nil
+	}
+
+	for _, rawUpdate := range updateList.Updates {
+		res = append(res, rawUpdate.FromRaw())
+	}
+
+	return res, updateList.Marker, nil
+}
+
+func (s *Subscriptions) getUpdatesWithRetry(ctx context.Context, limit, timeout int, marker int64) (res updateList, err error) {
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		res, err = s.getUpdates(ctx, limit, timeout, marker)
+		if err == nil {
+			return
+		}
+
+		// Остановить retry если context отменен/истек
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			return
+		}
+
+		if attempt < maxRetries-1 {
+			retryWait := time.Duration(1<<uint(attempt)) * time.Second
+			select {
+			case <-ctx.Done():
+				err = ctx.Err()
+
+				return
+			case <-time.After(retryWait):
+			}
+		}
+	}
+
+	err = fmt.Errorf("failed after %d attempts: %w", maxRetries, err)
+
+	return
+}
+
+func (s *Subscriptions) getUpdates(ctx context.Context, limit, timeout int, marker int64) (res updateList, err error) {
 	values := url.Values{}
 
-	body, err := a.client.request(ctx, http.MethodGet, pathSubscriptions, values, false, nil)
-	if err != nil {
-		return result, err
+	if limit > 0 {
+		values.Set(paramLimit, strconv.Itoa(limit))
 	}
-	defer a.client.closer("getSubscriptions body", body)
-
-	return result, json.NewDecoder(body).Decode(result)
-}
-
-// Subscribe subscribes the bot to receive updates via WebHook.
-func (a *subscriptions) Subscribe(ctx context.Context, subscribeURL string, updateTypes []string, secret string) (*schemes.SimpleQueryResult, error) {
-	subscription := &schemes.SubscriptionRequestBody{
-		Secret:      secret,
-		Url:         subscribeURL,
-		UpdateTypes: updateTypes,
-		Version:     a.client.version,
+	if timeout > 0 {
+		values.Set(paramTimeout, strconv.Itoa(timeout))
 	}
-	result := new(schemes.SimpleQueryResult)
-	values := url.Values{}
-
-	body, err := a.client.request(ctx, http.MethodPost, pathSubscriptions, values, false, subscription)
-	if err != nil {
-		return result, err
+	if marker > 0 {
+		values.Set(paramMarker, strconv.FormatInt(marker, 10))
 	}
-	defer a.client.closer("getSubscribe body", body)
 
-	return result, json.NewDecoder(body).Decode(result)
-}
+	err = s.client.raw(ctx, http.MethodGet, pathUpdates, values, nil, &res)
 
-// Unsubscribe unsubscribes the bot from receiving updates via WebHook.
-func (a *subscriptions) Unsubscribe(ctx context.Context, subscriptionURL string) (*schemes.SimpleQueryResult, error) {
-	result := new(schemes.SimpleQueryResult)
-	values := url.Values{}
-	values.Set(paramURL, subscriptionURL)
-
-	body, err := a.client.request(ctx, http.MethodDelete, pathSubscriptions, values, false, nil)
-	if err != nil {
-		return result, err
-	}
-	defer a.client.closer("unSubscribe body", body)
-
-	return result, json.NewDecoder(body).Decode(result)
+	return
 }

@@ -2,201 +2,161 @@ package maxbot
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 
-	"github.com/max-messenger/max-bot-api-client-go/schemes"
+	"github.com/max-messenger/max-bot-api-client-go/v2/model"
 )
 
-type chats struct {
+type Chats struct {
 	client *client
 }
 
-func newChats(client *client) *chats {
-	return &chats{client: client}
-}
-
-// GetChats returns information about chats that bot participated in: a result list and marker points to the next page.
-func (a *chats) GetChats(ctx context.Context, count, marker int64) (*schemes.ChatList, error) {
-	result := new(schemes.ChatList)
+func (c *Chats) GetChats(ctx context.Context, count, marker int64) (res model.ChatList, err error) {
 	values := url.Values{}
 	if count > 0 {
-		values.Set(paramCount, strconv.Itoa(int(count)))
+		values.Set(paramCount, strconv.FormatInt(count, 10))
 	}
 	if marker > 0 {
-		values.Set(paramMarker, strconv.Itoa(int(marker)))
+		values.Set(paramMarker, strconv.FormatInt(marker, 10))
 	}
 
-	body, err := a.client.request(ctx, http.MethodGet, pathChats, values, false, nil)
-	if err != nil {
-		return result, err
-	}
-	defer a.client.closer("getChats body", body)
+	err = c.client.raw(ctx, http.MethodGet, pathChats, values, nil, &res)
 
-	return result, json.NewDecoder(body).Decode(result)
+	return
 }
 
-// GetChat returns info about chat.
-func (a *chats) GetChat(ctx context.Context, chatID int64) (*schemes.Chat, error) {
-	result := new(schemes.Chat)
+func (c *Chats) GetChat(ctx context.Context, chatID int64) (res model.Chat, err error) {
+	err = c.client.raw(ctx, http.MethodGet, fmt.Sprintf(formatPathChatsID, chatID), nil, nil, &res)
+
+	return
+}
+
+func (c *Chats) EditChat(ctx context.Context, chatID int64, patch model.ChatPatch) (res model.Chat, err error) {
+	err = c.client.raw(ctx, http.MethodPatch, fmt.Sprintf(formatPathChatsID, chatID), nil, patch, &res)
+
+	return
+}
+
+func (c *Chats) DeleteChat(ctx context.Context, chatID int64) (res model.SimpleQueryResult, err error) {
+	err = c.client.raw(ctx, http.MethodDelete, fmt.Sprintf(formatPathChatsID, chatID), nil, nil, &res)
+
+	return
+}
+
+func (c *Chats) SendAction(ctx context.Context, chatID int64, action model.SenderAction) (res model.SimpleQueryResult, err error) {
+	err = c.client.raw(ctx, http.MethodPost, fmt.Sprintf(formatPathChatsActions, chatID), nil, model.ActionRequestBody{Action: action}, &res)
+
+	return
+}
+
+func (c *Chats) GetPinnedMessage(ctx context.Context, chatID int64) (res model.GetPinnedMessageResult, err error) {
+	err = c.client.raw(ctx, http.MethodGet, fmt.Sprintf(formatPathChatPin, chatID), nil, nil, &res)
+
+	return
+}
+
+func (c *Chats) PinMessage(ctx context.Context, chatID int64, messageID string, notify bool) (res model.SimpleQueryResult, err error) {
+	data := model.PinMessageBody{
+		MessageID: messageID,
+		Notify:    &notify,
+	}
+
+	err = c.client.raw(ctx, http.MethodPut, fmt.Sprintf(formatPathChatPin, chatID), nil, data, &res)
+
+	return
+}
+
+func (c *Chats) UnpinMessage(ctx context.Context, chatID int64) (res model.SimpleQueryResult, err error) {
+	err = c.client.raw(ctx, http.MethodDelete, fmt.Sprintf(formatPathChatPin, chatID), nil, nil, &res)
+
+	return
+}
+
+func (c *Chats) GetMembership(ctx context.Context, chatID int64) (res model.ChatMember, err error) {
+	err = c.client.raw(ctx, http.MethodGet, fmt.Sprintf(formatPathChatsMembersMe, chatID), nil, nil, &res)
+
+	return
+}
+
+func (c *Chats) LeaveChat(ctx context.Context, chatID int64) (res model.SimpleQueryResult, err error) {
+	err = c.client.raw(ctx, http.MethodDelete, fmt.Sprintf(formatPathChatsMembersMe, chatID), nil, nil, &res)
+
+	return
+}
+
+func (c *Chats) GetAdmins(ctx context.Context, chatID int64) (res model.ChatMembersList, err error) {
+	err = c.client.raw(ctx, http.MethodGet, fmt.Sprintf(formatPathChatsMembersAdmin, chatID), nil, nil, &res)
+
+	return
+}
+
+func (c *Chats) SetAdmins(ctx context.Context, chatID int64, admins []model.ChatAdmin) (res model.SimpleQueryResult, err error) {
+	data := model.ChatAdminsList{
+		Admins: admins,
+	}
+	err = c.client.raw(ctx, http.MethodPost, fmt.Sprintf(formatPathChatsMembersAdmin, chatID), nil, data, &res)
+
+	return
+}
+
+func (c *Chats) DeleteAdmins(ctx context.Context, chatID, userID int64) (res model.SimpleQueryResult, err error) {
+	err = c.client.raw(ctx, http.MethodDelete, fmt.Sprintf(formatPathChatsMembersAdminDelete, chatID, userID), nil, nil, &res)
+
+	return
+}
+
+func (c *Chats) GetMembers(ctx context.Context, chatID, marker, count int64, userIDs []int64) (res model.ChatMembersList, err error) {
 	values := url.Values{}
 
-	body, err := a.client.request(ctx, http.MethodGet, fmt.Sprintf(formatPathChatsID, chatID), values, false, nil)
-	if err != nil {
-		return result, err
-	}
-	defer a.client.closer("getChat body", body)
-
-	return result, json.NewDecoder(body).Decode(result)
-}
-
-// GetChatMembership returns chat membership info for the current bot.
-func (a *chats) GetChatMembership(ctx context.Context, chatID int64) (*schemes.ChatMember, error) {
-	result := new(schemes.ChatMember)
-	values := url.Values{}
-
-	body, err := a.client.request(ctx, http.MethodGet, fmt.Sprintf(formatPathChatsMembersMe, chatID), values, false, nil)
-	if err != nil {
-		return result, err
-	}
-	defer a.client.closer("GetChatMembership body", body)
-
-	return result, json.NewDecoder(body).Decode(result)
-}
-
-// GetChatMembers returns users participated in chat.
-func (a *chats) GetChatMembers(ctx context.Context, chatID, count, marker int64) (*schemes.ChatMembersList, error) {
-	result := new(schemes.ChatMembersList)
-	values := url.Values{}
-	if count > 0 {
-		values.Set(paramCount, strconv.Itoa(int(count)))
-	}
-	if marker != 0 {
-		values.Set(paramMarker, strconv.Itoa(int(marker)))
-	}
-
-	body, err := a.client.request(ctx, http.MethodGet, fmt.Sprintf(formatPathChatsMembers, chatID), values, false, nil)
-	if err != nil {
-		return result, err
-	}
-	defer a.client.closer("getChatMembers body", body)
-
-	return result, json.NewDecoder(body).Decode(result)
-}
-
-func (a *chats) GetSpecificChatMembers(ctx context.Context, chatID int64, userIDs []int64) (*schemes.ChatMembersList, error) {
-	result := new(schemes.ChatMembersList)
 	ids := make([]string, len(userIDs))
 	for i, id := range userIDs {
 		ids[i] = strconv.FormatInt(id, 10)
 	}
-	values := url.Values{}
-	values.Set("user_ids", strings.Join(ids, ","))
 
-	body, err := a.client.request(ctx, http.MethodGet, fmt.Sprintf(formatPathChatsMembers, chatID), values, false, nil)
-	if err != nil {
-		return result, err
+	if len(ids) > 0 {
+		values.Set(paramUserIDs, strings.Join(ids, ","))
 	}
-	defer a.client.closer("getSpecificChatMembers body", body)
+	if count > 0 {
+		values.Set(paramCount, strconv.FormatInt(count, 10))
+	}
+	if marker != 0 {
+		values.Set(paramMarker, strconv.FormatInt(marker, 10))
+	}
 
-	return result, json.NewDecoder(body).Decode(result)
+	err = c.client.raw(ctx, http.MethodGet, fmt.Sprintf(formatPathChatsMembers, chatID), values, nil, &res)
+
+	return
 }
 
-func (a *chats) GetChatAdmins(ctx context.Context, chatID int64) (*schemes.ChatMembersList, error) {
-	result := new(schemes.ChatMembersList)
-
-	body, err := a.client.request(ctx, http.MethodGet, fmt.Sprintf(formatPathChatsMembersAdmin, chatID), nil, false, nil)
-	if err != nil {
-		return result, err
+func (c *Chats) AddMembers(ctx context.Context, chatID int64, userIDs []int64) (res model.SimpleQueryResult, err error) {
+	data := model.UserIdsList{
+		UserIds: userIDs,
 	}
-	defer a.client.closer("getChatAdmins body", body)
+	err = c.client.raw(ctx, http.MethodPost, fmt.Sprintf(formatPathChatsMembers, chatID), nil, data, &res)
 
-	return result, json.NewDecoder(body).Decode(result)
+	return
 }
 
-// LeaveChat removes bot from chat members
-func (a *chats) LeaveChat(ctx context.Context, chatID int64) (*schemes.SimpleQueryResult, error) {
-	result := new(schemes.SimpleQueryResult)
+func (c *Chats) RemoveMember(ctx context.Context, chatID, userID int64, block bool) (res model.SimpleQueryResult, err error) {
 	values := url.Values{}
-
-	body, err := a.client.request(ctx, http.MethodDelete, fmt.Sprintf(formatPathChatsMembersMe, chatID), values, false, nil)
-	if err != nil {
-		return result, err
+	if userID > 0 {
+		values.Set(paramUserID, strconv.FormatInt(userID, 10))
 	}
-	defer a.client.closer("leaveChat body", body)
+	if block {
+		values.Set(paramBlock, strconv.FormatBool(block))
+	}
 
-	return result, json.NewDecoder(body).Decode(result)
+	err = c.client.raw(ctx, http.MethodDelete, fmt.Sprintf(formatPathChatsMembers, chatID), values, nil, &res)
+
+	return
 }
 
-// EditChat edits chat info: title, icon, etc…
-func (a *chats) EditChat(ctx context.Context, chatID int64, update *schemes.ChatPatch) (*schemes.Chat, error) {
-	result := new(schemes.Chat)
-	values := url.Values{}
-
-	body, err := a.client.request(ctx, http.MethodPatch, fmt.Sprintf(formatPathChatsID, chatID), values, false, update)
-	if err != nil {
-		return result, err
+func newChats(cli *client) *Chats {
+	return &Chats{
+		client: cli,
 	}
-	defer a.client.closer("editChat body", body)
-
-	return result, json.NewDecoder(body).Decode(result)
-}
-
-// AddMember adds members to the chat. Additional permissions may be required.
-func (a *chats) AddMember(ctx context.Context, chatID int64, users schemes.UserIdsList) (*schemes.SimpleQueryResult, error) {
-	result := new(schemes.SimpleQueryResult)
-	values := url.Values{}
-
-	body, err := a.client.request(ctx, http.MethodPost, fmt.Sprintf(formatPathChatsMembers, chatID), values, false, users)
-	if err != nil {
-		return result, err
-	}
-	defer a.client.closer("addMember body", body)
-
-	return result, json.NewDecoder(body).Decode(result)
-}
-
-// RemoveMember removes a member from the chat. Additional permissions may be required.
-func (a *chats) RemoveMember(ctx context.Context, chatID int64, userID int64) (*schemes.SimpleQueryResult, error) {
-	result := new(schemes.SimpleQueryResult)
-	values := url.Values{}
-	values.Set(paramUserID, strconv.Itoa(int(userID)))
-
-	body, err := a.client.request(ctx, http.MethodDelete, fmt.Sprintf(formatPathChatsMembers, chatID), values, false, nil)
-	if err != nil {
-		return result, err
-	}
-	defer a.client.closer("removeMember body", body)
-
-	return result, json.NewDecoder(body).Decode(result)
-}
-
-// SendAction send the bot action to the chat.
-func (a *chats) SendAction(ctx context.Context, chatID int64, action schemes.SenderAction) (*schemes.SimpleQueryResult, error) {
-	result := new(schemes.SimpleQueryResult)
-	values := url.Values{}
-	body, err := a.client.request(ctx, http.MethodPost, fmt.Sprintf(formatPathChatsActions, chatID), values, false, schemes.ActionRequestBody{Action: action})
-	if err != nil {
-		return result, err
-	}
-	defer a.client.closer("sendAction body", body)
-
-	return result, json.NewDecoder(body).Decode(result)
-}
-
-// PinMessage Pin a message in a group chat.
-func (a *chats) PinMessage(ctx context.Context, chatID int64, pinMessage schemes.PinMessageBody) (*schemes.SimpleQueryResult, error) {
-	result := new(schemes.SimpleQueryResult)
-	values := url.Values{}
-	body, err := a.client.request(ctx, http.MethodPut, fmt.Sprintf(formatPathChatsPin, chatID), values, false, pinMessage)
-	if err != nil {
-		return result, err
-	}
-	defer a.client.closer("pinMessage body", body)
-
-	return result, json.NewDecoder(body).Decode(result)
 }

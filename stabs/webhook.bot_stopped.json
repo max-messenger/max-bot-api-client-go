@@ -1,0 +1,16 @@
+{
+  "chat_id": 182182182,
+  "user": {
+    "user_id": 123456789,
+    "first_name": "John",
+    "last_name": "Doe",
+    "is_bot": false,
+    "last_activity_time": 1775025580000,
+    "avatar_url": "avatar.png",
+    "full_avatar_url": "avatar.full.png",
+    "name": "John Doe"
+  },
+  "timestamp": 1775025604499,
+  "user_locale": "ru",
+  "update_type": "bot_stopped"
+}

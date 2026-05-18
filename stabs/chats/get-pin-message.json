@@ -1,0 +1,22 @@
+{
+  "message": {
+    "recipient": {
+      "chat_id": -70000000000005,
+      "chat_type": "chat"
+    },
+    "timestamp": 1775626919577,
+    "body": {
+      "mid": "mid.sha-more",
+      "seq": 116328127605864690,
+      "text": "hi"
+    },
+    "sender": {
+      "user_id": 123123123,
+      "first_name": "John",
+      "last_name": "Doe",
+      "is_bot": false,
+      "last_activity_time": 1775628268494,
+      "name": "John Doe"
+    }
+  }
+}

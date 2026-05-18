@@ -1,17 +1,16 @@
 package maxbot
 
-import "github.com/max-messenger/max-bot-api-client-go/schemes"
+import "github.com/max-messenger/max-bot-api-client-go/v2/model"
 
 type Message struct {
 	userID             int64
 	chatID             int64
-	reset              bool
 	disableLinkPreview bool
-	message            *schemes.NewMessageBody
+	message            model.NewMessageBody
 }
 
 func NewMessage() *Message {
-	return &Message{userID: 0, chatID: 0, message: &schemes.NewMessageBody{Attachments: []interface{}{}}}
+	return &Message{userID: 0, chatID: 0, message: model.NewMessageBody{}}
 }
 
 func (m *Message) SetUser(userID int64) *Message {
@@ -26,20 +25,9 @@ func (m *Message) SetChat(chatID int64) *Message {
 	return m
 }
 
-func (m *Message) SetReset(reset bool) *Message {
-	m.reset = reset
+func (m *Message) SetDisableLinkPreview(mode bool) *Message {
+	m.disableLinkPreview = mode
 
-	return m
-}
-
-func (m *Message) SetDisableLinkPreview(disableLinkPreview bool) *Message {
-	m.disableLinkPreview = disableLinkPreview
-
-	return m
-}
-
-func (m *Message) SetPhoneNumbers(phoneNumbers []string) *Message {
-	m.message.PhoneNumbers = phoneNumbers
 	return m
 }
 
@@ -49,104 +37,108 @@ func (m *Message) SetText(text string) *Message {
 	return m
 }
 
-func (m *Message) SetFormat(format schemes.Format) *Message {
+func (m *Message) AddImageUrl(photoUrl string) *Message {
+	attach := model.Attachment{
+		Type: model.AttachImage,
+		Payload: model.Payload{
+			URL: photoUrl,
+		},
+	}
+	m.message.Attachments = append(m.message.Attachments, attach)
+
+	return m
+}
+
+func (m *Message) SetFormat(format model.TextFormat) *Message {
 	m.message.Format = format
 
 	return m
 }
 
-func (m *Message) SetNotify(notify bool) *Message {
-	m.message.Notify = notify
+// AddSticker добавляет стикер. Сообщение не должно содержать текста и других вложений.
+func (m *Message) AddSticker(stickerCode string) *Message {
+	attach := model.Attachment{
+		Type: model.AttachSticker,
+		Payload: model.Payload{
+			Code: stickerCode,
+		},
+	}
+	m.message.Attachments = append(m.message.Attachments, attach)
+
+	return m
+}
+
+// AddContact добавляет контакт. Сообщение не должно содержать текста и других вложений.
+func (m *Message) AddContact(userID int64) *Message {
+	attach := model.Attachment{
+		Type: model.AttachContact,
+		Payload: model.Payload{
+			ContactID: userID,
+		},
+	}
+	m.message.Attachments = append(m.message.Attachments, attach)
+
+	return m
+}
+
+func (m *Message) AddLocation(lat, lot float64) *Message {
+	attach := model.Attachment{
+		Type:      model.AttachLocation,
+		Latitude:  lat,
+		Longitude: lot,
+	}
+	m.message.Attachments = append(m.message.Attachments, attach)
+
+	return m
+}
+
+func (m *Message) AddShare(link string) *Message {
+	attach := model.Attachment{
+		Type: model.AttachShare,
+		Payload: model.Payload{
+			URL: link,
+		},
+	}
+	m.message.Attachments = append(m.message.Attachments, attach)
+
+	return m
+}
+
+// WithoutNotify Если false, участники чата не будут уведомлены (по умолчанию true).
+func (m *Message) WithoutNotify() *Message {
+	notify := false
+	m.message.Notify = &notify
 
 	return m
 }
 
 func (m *Message) SetReply(text, id string) *Message {
 	m.message.Text = text
-	m.message.Link = &schemes.NewMessageLink{Type: schemes.REPLY, Mid: id}
+	m.message.Link = &model.NewMessageLink{Type: model.LinkTypeReply, Mid: id}
 
 	return m
 }
 
-func (m *Message) Reply(text string, reply schemes.Message) *Message {
-	m.message.Text = text
-	if reply.Recipient.UserId != 0 {
-		m.userID = reply.Recipient.UserId
+func (m *Message) AddKeyboard(keyboard *model.Keyboard) *Message {
+	attach := model.Attachment{
+		Type: model.AttachInlineKeyboard,
+		Payload: model.Payload{
+			Buttons: keyboard.Build(),
+		},
 	}
-	if reply.Recipient.ChatId != 0 {
-		m.chatID = reply.Recipient.ChatId
+	m.message.Attachments = append(m.message.Attachments, attach)
+
+	return m
+}
+
+func (m *Message) AddAttachByToken(fileToken string, at model.AttachmentType) *Message {
+	attach := model.Attachment{
+		Type: at,
+		Payload: model.Payload{
+			Token: fileToken,
+		},
 	}
-	m.message.Link = &schemes.NewMessageLink{Type: schemes.REPLY, Mid: reply.Body.Mid}
-
-	return m
-}
-
-func (m *Message) AddMarkUp(user int64, from int, len int) *Message {
-	m.message.Markups = append(m.message.Markups, schemes.MarkUp{UserId: user, From: from, Length: len, Type: schemes.MarkupUser})
-
-	return m
-}
-
-func (m *Message) AddKeyboard(keyboard *Keyboard) *Message {
-	m.message.Attachments = append(m.message.Attachments, schemes.NewInlineKeyboardAttachmentRequest(keyboard.Build()))
-
-	return m
-}
-
-func (m *Message) AddPhoto(photo *schemes.PhotoTokens) *Message {
-	m.message.Attachments = append(m.message.Attachments, schemes.NewPhotoAttachmentRequest(schemes.PhotoAttachmentRequestPayload{
-		Photos: photo.Photos,
-	}))
-
-	return m
-}
-
-func (m *Message) AddPhotoByToken(token string) *Message {
-	m.message.Attachments = append(m.message.Attachments, schemes.NewPhotoAttachmentRequest(schemes.PhotoAttachmentRequestPayload{
-		Token: token,
-	}))
-	return m
-}
-
-func (m *Message) AddAudio(audio *schemes.UploadedInfo) *Message {
-	m.message.Attachments = append(m.message.Attachments, schemes.NewAudioAttachmentRequest(*audio))
-
-	return m
-}
-
-func (m *Message) AddVideo(video *schemes.UploadedInfo) *Message {
-	m.message.Attachments = append(m.message.Attachments, schemes.NewVideoAttachmentRequest(*video))
-
-	return m
-}
-
-func (m *Message) AddFile(file *schemes.UploadedInfo) *Message {
-	m.message.Attachments = append(m.message.Attachments, schemes.NewFileAttachmentRequest(*file))
-
-	return m
-}
-
-func (m *Message) AddLocation(lat float64, lon float64) *Message {
-	m.message.Attachments = append(m.message.Attachments, schemes.NewLocationAttachmentRequest(lat, lon))
-
-	return m
-}
-
-func (m *Message) AddContact(name string, contactID int64, vcfInfo string, vcfPhone string) *Message {
-	m.message.Attachments = append(m.message.Attachments, schemes.NewContactAttachmentRequest(schemes.ContactAttachmentRequestPayload{
-		Name:      name,
-		ContactId: contactID,
-		VcfInfo:   vcfInfo,
-		VcfPhone:  vcfPhone,
-	}))
-
-	return m
-}
-
-func (m *Message) AddSticker(code string) *Message {
-	m.message.Attachments = append(m.message.Attachments, schemes.NewStickerAttachmentRequest(schemes.StickerAttachmentRequestPayload{
-		Code: code,
-	}))
+	m.message.Attachments = append(m.message.Attachments, attach)
 
 	return m
 }

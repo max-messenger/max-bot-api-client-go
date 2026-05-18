@@ -1,0 +1,25 @@
+{
+  "last_access_time": 1775626919577,
+  "is_owner": false,
+  "is_admin": true,
+  "join_time": 1775626919577,
+  "permissions": [
+    "add_admins",
+    "edit_link",
+    "pin_message",
+    "change_chat_info",
+    "add_remove_members",
+    "can_call",
+    "write",
+    "read_all_messages"
+  ],
+  "user_id": 229229229,
+  "first_name": "bot firstname",
+  "username": "test-bot",
+  "is_bot": true,
+  "last_activity_time": 1775626919577,
+  "description": "bot for unit-test",
+  "avatar_url": "https://localhost/avatar.png",
+  "full_avatar_url": "https://localhost/avatar.full.png",
+  "name": "bot firstname"
+}

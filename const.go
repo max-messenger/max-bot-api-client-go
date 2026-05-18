@@ -3,59 +3,63 @@ package maxbot
 import "time"
 
 const (
-	Version = "1.2.5"
+	defaultScheme   = "https"
+	DefaultHost     = "platform-api.max.ru"
+	defaultFileName = "file"
 
-	SecretHeader = "X-Max-Bot-Api-Secret"
+	SecretHeader        = "X-Max-Bot-Api-Secret"
+	AuthorizationHeader = "Authorization"
 
-	defaultAPIURL   = "https://platform-api.max.ru/"
+	maxRetries      = 3
 	defaultTimeout  = 30 * time.Second
-	defaultPause    = 1 * time.Second
+	defaultPause    = time.Second
 	maxUpdatesLimit = 50
-
-	maxRetries = 3
 )
 
 const (
-	notifyExists = "notify/exists"
+	pathMe            = "/me"
+	pathChats         = "/chats"
+	pathAnswers       = "/answers"
+	pathUpdates       = "/updates"
+	pathUpload        = "/uploads"
+	pathMessages      = "/messages"
+	pathSubscriptions = "/subscriptions"
+
+	formatPathMessageId               = "/messages/%s"
+	formatPathVideoAttachmentDetails  = "/videos/%s"
+	formatPathChatsID                 = "/chats/%d"
+	formatPathChatPin                 = "/chats/%d/pin"
+	formatPathChatsActions            = "/chats/%d/actions"
+	formatPathChatsMembers            = "/chats/%d/members"
+	formatPathChatsMembersMe          = "/chats/%d/members/me"
+	formatPathChatsMembersAdmin       = "/chats/%d/members/admins"
+	formatPathChatsMembersAdminDelete = "/chats/%d/members/admins/%d"
 )
 
 const (
-	pathMe            = "me"
-	pathChats         = "chats"
-	pathAnswers       = "answers"
-	pathUpdates       = "updates"
-	pathUpload        = "uploads"
-	pathMessages      = "messages"
-	pathSubscriptions = "subscriptions"
+	paramURL    = "url"
+	paramType   = "type"
+	paramMarker = "marker"
 
-	formatPathChatsID           = "chats/%d"
-	formatPathChatsActions      = "chats/%d/actions"
-	formatPathChatsMembers      = "chats/%d/members"
-	formatPathChatsMembersMe    = "chats/%d/members/me"
-	formatPathChatsMembersAdmin = "chats/%d/members/admins"
-	formatPathChatsPin          = "chats/%d/pin"
-)
+	paramUser           = "user"
+	paramHash           = "hash"
+	paramBlock          = "block"
+	paramChatID         = "chat_id"
+	paramUserID         = "user_id"
+	paramUserIDs        = "user_ids"
+	paramMessageID      = "message_id"
+	paramMessageIDs     = "message_ids"
+	paramCallbackID     = "callback_id"
+	paramWebAppPlatform = "WebAppPlatform"
+	paramWebAppVersion  = "WebAppVersion"
+	paramWebAppData     = "WebAppData"
 
-const (
-	paramVersion      = "v"
-	paramURL          = "url"
-	paramType         = "type"
-	paramTypes        = "types"
-	paramMarker       = "marker"
-	paramAccessToken  = "access_token"
-	paramPhoneNumbers = "phone_numbers"
+	fieldData = "data"
 
-	paramChatID             = "chat_id"
-	paramUserID             = "user_id"
-	paramMessageID          = "message_id"
-	paramMessageIDs         = "message_ids"
-	paramCallbackID         = "callback_id"
+	paramTo                 = "to"
+	paramCount              = "count"
+	paramFrom               = "from"
+	paramLimit              = "limit"
+	paramTimeout            = "timeout"
 	paramDisableLinkPreview = "disable_link_preview"
-
-	paramTo      = "to"
-	paramCount   = "count"
-	paramFrom    = "from"
-	paramLimit   = "limit"
-	paramTimeout = "timeout"
 )
-

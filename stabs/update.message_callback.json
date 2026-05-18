@@ -1,0 +1,44 @@
+{
+  "updates": [
+    {
+      "callback": {
+        "timestamp": 1775026702210,
+        "callback_id": "f9LHodD0cOJf4_DkJGeq8BkDgc5vgSwZocVrn44oirfMzUQ4mv5k_h1-yQvExmZNjV7gVcaO2Z3Gv6LJpZQ-nj_0HTcX7NwSdT4fDtXou9i0A51TjSj9",
+        "user": {
+          "user_id": 123456789,
+          "first_name": "John",
+          "last_name": "Doe",
+          "is_bot": false,
+          "last_activity_time": 1775026693000,
+          "name": "John Doe"
+        },
+        "payload": "picture"
+      },
+      "message": {
+        "recipient": {
+          "chat_id": 182182182,
+          "chat_type": "dialog",
+          "user_id": 123456789
+        },
+        "timestamp": 1775026671403,
+        "body": {
+          "mid": "mid.000000000adf429c019d47d58f2b3d9e",
+          "seq": 116328147937082782,
+          "text": "Hello, John Doe! Your message: empty"
+        },
+        "sender": {
+          "user_id": 229229229,
+          "first_name": "UniBot",
+          "username": "unit_bot",
+          "is_bot": true,
+          "last_activity_time": 1775026702261,
+          "name": "UniBot"
+        }
+      },
+      "timestamp": 1775025604499,
+      "user_locale": "ru",
+      "update_type": "message_callback"
+    }
+  ],
+  "marker": 25493970
+}

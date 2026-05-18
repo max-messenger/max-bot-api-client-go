@@ -1,0 +1,30 @@
+{
+  "updates": [
+    {
+      "message": {
+        "recipient": {
+          "chat_id": 182182182,
+          "chat_type": "dialog",
+          "user_id": 229229229
+        },
+        "timestamp": 1775025603399,
+        "body": {
+          "mid": "mid.000000000adf429c019d47b1ce4600ff",
+          "seq": 116327994376978687,
+          "text": "hi bot"
+        },
+        "sender": {
+          "user_id": 123456789,
+          "first_name": "John",
+          "last_name": "Doe",
+          "is_bot": false,
+          "last_activity_time": 1775024330000,
+          "name": "John Doe"
+        }
+      },
+      "timestamp": 1775025604499,
+      "update_type": "message_edited"
+    }
+  ],
+  "marker": 25493970
+}

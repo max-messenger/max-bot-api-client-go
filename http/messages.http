@@ -1,0 +1,46 @@
+### Get the chat info by id
+GET {{ host }}/messages?chat_id={{chat_id}}
+Authorization: {{ token }}
+
+### Get the chat info by id
+GET {{ host }}//messages/mid.id
+Authorization: {{ token }}
+
+### Get the chat info by id
+DELETE {{ host }}//messages?message_id=mid.id
+Authorization: {{ token }}
+
+###
+PUT {{ host }}//messages?message_id=mid.id
+Authorization: {{ token }}
+Content-Type: application/json
+
+{
+  "text": "bot edit message"
+}
+
+### send message to user
+POST https://platform-api.max.ru/messages?user_id={{ user_max_id }}
+Authorization: {{ token }}
+Content-Type: application/json
+
+{
+  "text" : "bot message",
+  "attachments" : null
+}
+
+### send message to user
+POST https://platform-api.max.ru/messages?user_id={{ user_max_id }}
+Authorization: {{ token }}
+Content-Type: application/json
+
+{
+  "attachments": [
+    {
+      "type": "image",
+      "payload": {
+        "url": "https://sun9-87.userapi.com/s/v1/ig2/pmiSqT09R_T_P0yT6Je4jIEFwIuRbxtmfzeVKUZfrALpWNpnrm6yy2Vk-88um3UlXXEbDMdM77X1NqToYSby81_F.jpg?quality=95&crop=0,0,1080,1080&as=32x32,48x48,72x72,108x108,160x160,240x240,360x360,480x480,540x540,640x640,720x720,1080x1080&from=bu&u=JtUBE3zyhMcqfi2-zPLAK6JOCheKQU8fyQyaMdA2fU8&cs=1080x0"
+      }
+    }
+  ]
+}

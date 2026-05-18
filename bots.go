@@ -2,46 +2,36 @@ package maxbot
 
 import (
 	"context"
-	"encoding/json"
+	"fmt"
 	"net/http"
-	"net/url"
 
-	"github.com/max-messenger/max-bot-api-client-go/schemes"
+	"github.com/max-messenger/max-bot-api-client-go/v2/model"
 )
 
-type bots struct {
+type Bots struct {
 	client *client
 }
 
-func newBots(client *client) *bots {
-	return &bots{client: client}
+func newBots(cli *client) *Bots {
+	return &Bots{
+		client: cli,
+	}
 }
 
-// GetBot returns info about current bot.
-// Current bot can be identified by access token. Method returns bot identifier, name and avatar (if any).
-func (a *bots) GetBot(ctx context.Context) (*schemes.BotInfo, error) {
-	result := new(schemes.BotInfo)
-	values := url.Values{}
-
-	body, err := a.client.request(ctx, http.MethodGet, pathMe, values, false, nil)
+func (b *Bots) GetMyInfo(ctx context.Context) (info model.BotInfo, err error) {
+	err = b.client.raw(ctx, http.MethodGet, pathMe, nil, nil, &info)
 	if err != nil {
-		return result, err
+		err = fmt.Errorf(`GetMyInfo: %w`, err)
 	}
-	defer a.client.closer("getBot body", body)
 
-	return result, json.NewDecoder(body).Decode(result)
+	return
 }
 
-// PatchBot edits current bot info. Fill only the fields you want to update. All remaining fields will stay untouched.
-func (a *bots) PatchBot(ctx context.Context, patch *schemes.BotPatch) (*schemes.BotInfo, error) {
-	result := new(schemes.BotInfo)
-	values := url.Values{}
-
-	body, err := a.client.request(ctx, http.MethodPatch, pathMe, values, false, patch)
+func (b *Bots) EditMyInfo(ctx context.Context, botPath model.BotPatch) (info model.BotInfo, err error) {
+	err = b.client.raw(ctx, http.MethodPatch, pathMe, nil, botPath, &info)
 	if err != nil {
-		return result, err
+		err = fmt.Errorf(`EditMyInfo: %w`, err)
 	}
-	defer a.client.closer("patch body", body)
 
-	return result, json.NewDecoder(body).Decode(result)
+	return
 }

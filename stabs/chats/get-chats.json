@@ -1,0 +1,17 @@
+{
+  "chats": [
+    {
+      "chat_id": -70000000000005,
+      "type": "chat",
+      "status": "active",
+      "title": "chat title",
+      "last_event_time": 1775628268494,
+      "participants_count": 3,
+      "is_public": false,
+      "description": "chat description",
+      "owner_id": 123123123,
+      "link": "https://max.ru/join/hash-chat-link",
+      "messages_count": 7
+    }
+  ]
+}

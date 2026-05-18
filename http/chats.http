@@ -1,0 +1,99 @@
+### Get all chats where the bot is added. Excluding chats with the user.
+GET {{ host }}/chats
+Authorization: {{ token }}
+
+### Get the chat info by id
+GET {{ host }}/chats/{{ chat_id }}
+Authorization: {{ token }}
+
+### Get the chat info by link (not working)
+GET {{ host }}/chats/@{{ bot_username }}
+Authorization: {{ token }}
+
+### Change a couple of fields in the chat
+PATCH {{ host }}/chats/{{ chat_id }}
+Content-Type: application/json
+Authorization: {{ token }}
+
+{
+  "title": "chat title",
+  "pin": "{{ message_id }}",
+  "notify": true
+}
+
+### Delete the chat
+DELETE {{ host }}/chats/-73203065276555
+Authorization: {{ token }}
+
+### Send bot action
+POST {{ host }}/chats/{{ chat_id }}/actions
+Authorization: {{ token }}
+Content-Type: application/json
+
+{
+  "action": "sending_file"
+}
+
+### Get pin message
+GET {{ host }}/chats/{{ chat_id }}/pin
+Authorization: {{ token }}
+
+### Pin the message
+PUT {{ host }}/chats/{{ chat_id }}/pin
+Authorization: {{ token }}
+Content-Type: application/json
+
+{
+  "message_id": "{{ message_id }}",
+  "notify": true
+}
+
+### Unpin message
+DELETE {{ host }}/chats/{{ chat_id }}/pin
+Authorization: {{ token }}
+
+### Get bot member from chat
+GET {{ host }}/chats/{{ chat_id }}/members/me
+Authorization: {{ token }}
+
+### Leave the chat
+DELETE {{ host }}/chats/{{ chat_id }}/members/me
+Authorization: {{ token }}
+
+### Get all members from chat
+GET {{ host }}/chats/{{ chat_id }}/members
+Authorization: {{ token }}
+
+### Get admins
+GET {{ host }}/chats/{{ chat_id }}/members/admins
+Authorization: {{ token }}
+
+
+### Assing user as admin
+POST {{ host }}/chats/{{ chat_id }}/members/admins
+Authorization: {{ token }}
+Content-Type: application/json
+
+{
+  "admins": [
+    {
+      "user_id": 200000002,
+      "permissions": [
+        "add_remove_members",
+        "read_all_messages",
+        "add_admins",
+        "pin_message",
+        "write",
+        "change_chat_info"
+      ]
+    }
+  ]
+}
+
+### Delete permissions
+DELETE {{ host }}/chats/{{ chat_id }}/members/admins/200000009
+Authorization: {{ token }}
+
+### Delete user
+DELETE {{ host }}/chats/{{ chat_id }}/members/200000009
+Authorization: {{ token }}
