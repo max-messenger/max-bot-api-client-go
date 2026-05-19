@@ -1,8 +1,10 @@
 package model
 
 type Attachment struct {
-	Type    AttachmentType `json:"type"`
-	Payload Payload        `json:"payload"`
+	Type     AttachmentType `json:"type"`
+	Payload  Payload        `json:"payload"`
+	FileName string         `json:"filename"`
+	Size     int            `json:"size"`
 
 	Latitude  float64 `json:"latitude,omitempty"`
 	Longitude float64 `json:"longitude,omitempty"`
