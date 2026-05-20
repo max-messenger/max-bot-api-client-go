@@ -136,3 +136,7 @@ func (m *Message) AddAttachByToken(fileToken string, at model.AttachmentType) *M
 
 	return m
 }
+
+func (m *Message) MessageBody() model.NewMessageBody {
+	return m.message
+}
