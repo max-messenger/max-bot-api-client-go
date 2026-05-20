@@ -105,7 +105,7 @@ func TestKeyboardBuild(t *testing.T) {
 			k := NewKeyboard()
 			tt.setup(k)
 
-			result := k.Build()
+			result := k.build()
 
 			if len(result) != len(tt.expected) {
 				t.Errorf("Expected %d rows, got %d", len(tt.expected), len(result))
@@ -386,7 +386,7 @@ func TestKeyboardMultipleRowsAndButtons(t *testing.T) {
 	row3 := k.AddRow()
 	row3.AddCallback("Action", IntentPositive, "doIt")
 
-	result := k.Build()
+	result := k.build()
 
 	if len(result) != 3 {
 		t.Errorf("Expected 3 rows, got %d", len(result))

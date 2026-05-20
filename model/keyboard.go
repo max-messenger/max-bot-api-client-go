@@ -25,13 +25,24 @@ func NewKeyboard() *Keyboard {
 	}
 }
 
-func (k *Keyboard) Build() [][]*Button {
+func (k *Keyboard) build() [][]*Button {
 	buttons := make([][]*Button, 0)
 	for _, row := range k.rows {
 		buttons = append(buttons, row.Build())
 	}
 
 	return buttons
+}
+
+func (k *Keyboard) Build() Attachment {
+	attach := Attachment{
+		Type: AttachInlineKeyboard,
+		Payload: Payload{
+			Buttons: k.build(),
+		},
+	}
+
+	return attach
 }
 
 func (k *Keyboard) AddRow() *KeyboardRow {

@@ -11,11 +11,14 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"sort"
 	"strings"
 
 	"github.com/max-messenger/max-bot-api-client-go/v2/model"
 )
+
+var commandReg = regexp.MustCompile(`^(/\w+)`)
 
 type BotsAPI interface {
 	GetMyInfo(ctx context.Context) (model.BotInfo, error)
@@ -200,4 +203,13 @@ func ValidateInitData(initData string, botToken string) (res model.UserApp, err 
 	}
 
 	return
+}
+
+func GetCommand(u model.Update) string {
+	match := commandReg.FindAllString(u.Message.Body.Text, -1)
+	if len(match) > 0 {
+		return match[0]
+	}
+
+	return ""
 }

@@ -120,13 +120,7 @@ func (m *Message) SetReply(text, id string) *Message {
 }
 
 func (m *Message) AddKeyboard(keyboard *model.Keyboard) *Message {
-	attach := model.Attachment{
-		Type: model.AttachInlineKeyboard,
-		Payload: model.Payload{
-			Buttons: keyboard.Build(),
-		},
-	}
-	m.message.Attachments = append(m.message.Attachments, attach)
+	m.message.Attachments = append(m.message.Attachments, keyboard.Build())
 
 	return m
 }
@@ -141,4 +135,8 @@ func (m *Message) AddAttachByToken(fileToken string, at model.AttachmentType) *M
 	m.message.Attachments = append(m.message.Attachments, attach)
 
 	return m
+}
+
+func (m *Message) MessageBody() model.NewMessageBody {
+	return m.message
 }
