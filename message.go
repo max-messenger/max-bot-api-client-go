@@ -120,13 +120,7 @@ func (m *Message) SetReply(text, id string) *Message {
 }
 
 func (m *Message) AddKeyboard(keyboard *model.Keyboard) *Message {
-	attach := model.Attachment{
-		Type: model.AttachInlineKeyboard,
-		Payload: model.Payload{
-			Buttons: keyboard.Build(),
-		},
-	}
-	m.message.Attachments = append(m.message.Attachments, attach)
+	m.message.Attachments = append(m.message.Attachments, keyboard.Build())
 
 	return m
 }
