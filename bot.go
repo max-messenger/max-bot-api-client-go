@@ -206,7 +206,7 @@ func ValidateInitData(initData string, botToken string) (res model.UserApp, err 
 }
 
 func GetCommand(u model.Update) string {
-	match := commandReg.FindAllString(u.Message.Body.Text, -1)
+	match := commandReg.FindAllString(u.GetMessage().Body.Text, -1)
 	if len(match) > 0 {
 		return match[0]
 	}
