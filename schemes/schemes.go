@@ -230,6 +230,7 @@ type ContactAttachment struct {
 type ContactAttachmentPayload struct {
 	VcfInfo string `json:"vcf_info,omitempty"` // User info in VCF format
 	TamInfo *User  `json:"max_info"`           // User info
+	Hash    string `json:"hash"`
 }
 
 // ContactAttachmentRequest attaches a contact card.
