@@ -43,3 +43,19 @@ func (u Update) GetUser() User {
 
 	return User{}
 }
+
+func (u Update) GetCallback() Callback {
+	if u.Callback != nil {
+		return *u.Callback
+	}
+
+	return Callback{}
+}
+
+func (u Update) GetChat() ChatProp {
+	if u.ChatProp != nil {
+		return *u.ChatProp
+	}
+
+	return ChatProp{}
+}
