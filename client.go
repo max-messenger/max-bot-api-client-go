@@ -38,7 +38,7 @@ func newClient(key string, version string, baseURL *url.URL, httpClient HttpClie
 		version:    version,
 		baseURL:    baseURL,
 		httpClient: httpClient,
-		errors:     make(chan error, 1),
+		errors:     make(chan error, defaultErrorBufferSize),
 	}
 }
 
