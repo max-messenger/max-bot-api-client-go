@@ -59,3 +59,15 @@ func WithUpdateHandler(f UpdateHandler) Option {
 		api.updateHandler = f
 	}
 }
+
+// WithErrorBufferSize задаёт ёмкость канала ошибок, возвращаемого GetErrors().
+// Больший буфер снижает риск потери ошибок при всплесках (повторные сбои long
+// polling и т.п.). Значения меньше 1 игнорируются.
+func WithErrorBufferSize(size int) Option {
+	return func(api *Api) {
+		if size < 1 {
+			return
+		}
+		api.client.errors = make(chan error, size)
+	}
+}

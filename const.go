@@ -12,6 +12,11 @@ const (
 	defaultPause    = 1 * time.Second
 	maxUpdatesLimit = 50
 
+	// defaultErrorBufferSize — ёмкость канала ошибок по умолчанию. Буфер в 1
+	// элемент терял ошибки при всплесках (например, при повторных сбоях long
+	// polling): лишние ошибки уходили только в log, минуя GetErrors().
+	defaultErrorBufferSize = 16
+
 	maxRetries = 3
 )
 
@@ -58,4 +63,3 @@ const (
 	paramLimit   = "limit"
 	paramTimeout = "timeout"
 )
-
