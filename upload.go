@@ -92,11 +92,26 @@ func (u *Upload) Upload(ctx context.Context, uploadType model.UploadType, r io.R
 
 		return
 	}
+	decoder := json.NewDecoder(resp.Body)
+	if uploadType == model.UploadImage {
+		result := model.UploadedImageInfo{}
+		err = decoder.Decode(&result)
+		if err != nil {
+			err = fmt.Errorf("unmarshal image response body: %w", err)
+
+			return
+		}
+		for _, info := range result.Photos {
+			token = info.Token
+
+			return
+		}
+	}
 
 	result := model.UploadedInfo{}
-	err = json.NewDecoder(resp.Body).Decode(&result)
+	err = decoder.Decode(&result)
 	if err != nil {
-		err = fmt.Errorf("unmarshal response body: %w", err)
+		err = fmt.Errorf("unmarshal file response body: %w", err)
 
 		return
 	}

@@ -59,7 +59,11 @@ func TestUpload_Upload(t *testing.T) {
 					return &http.Response{
 						StatusCode: http.StatusOK,
 						Body: io.NopCloser(bytes.NewReader([]byte(`{
-							"token": "uploaded_token_123"
+							"photos":{
+								"hash":{
+									"token": "uploaded_token_123"
+									}
+								}
 						}`))),
 					}, nil
 				}
