@@ -93,6 +93,27 @@ func (u *Upload) Upload(ctx context.Context, uploadType model.UploadType, r io.R
 		return
 	}
 
+	if uploadType == model.UploadImage {
+		var photoTokens model.PhotoTokens
+		err = json.NewDecoder(resp.Body).Decode(&photoTokens)
+		if err != nil {
+			err = fmt.Errorf("unmarshal response body: %w", err)
+
+			return
+		}
+		if len(photoTokens.Photos) == 0 {
+			err = fmt.Errorf("upload: photo response contains no tokens")
+			return
+		}
+
+		for _, pt := range photoTokens.Photos {
+			token = pt.Token
+			break
+		}
+
+		return
+	}
+
 	result := model.UploadedInfo{}
 	err = json.NewDecoder(resp.Body).Decode(&result)
 	if err != nil {
