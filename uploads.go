@@ -300,6 +300,23 @@ func (a *uploads) decodeUploadResponse(resp *http.Response, uploadType schemes.U
 		}
 	}
 
+	if uploadType == schemes.PHOTO {
+		if info, ok := result.(*schemes.UploadedInfo); ok {
+			photoTokens := &schemes.PhotoTokens{}
+			if err := json.NewDecoder(resp.Body).Decode(photoTokens); err != nil {
+				return err
+			}
+			if len(photoTokens.Photos) == 0 {
+				return fmt.Errorf("upload: photo response contains no tokens")
+			}
+			for _, pt := range photoTokens.Photos {
+				info.Token = pt.Token
+				break
+			}
+			return nil
+		}
+	}
+
 	if err := json.NewDecoder(resp.Body).Decode(result); err != nil {
 		return err
 	}
