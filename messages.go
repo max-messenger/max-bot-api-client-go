@@ -39,10 +39,13 @@ func (a *messages) GetMessages(ctx context.Context, chatID int64, messageIDs []s
 	if len(messageIDs) > 0 {
 		values.Set(paramMessageIDs, strings.Join(messageIDs, ","))
 	}
-	// If you use 'from' and 'to' parameters, 'to' must be less than 'from'.
-	if from > to {
-		to, from = from, to
-	}
+	// По контракту API 'from' - верхняя граница времени
+	// (все сообщения с начала чата до 'from', t <= from),
+	// 'to' - нижняя (все сообщения начиная с 'to' до конца чата,
+	// t >= to), поэтому 'to' должно быть меньше 'from'. Раньше здесь был свап
+	// from/to, который инвертировал корректно заданный диапазон и приводил к
+	// пустому результату или возврату последних count сообщений.
+	// https://dev.max.ru/docs-api/methods/GET/messages
 	if from != 0 {
 		values.Set(paramFrom, strconv.Itoa(from))
 	}
