@@ -21,6 +21,7 @@ func newChats(client *client) *chats {
 }
 
 // GetChats returns information about chats that bot participated in: a result list and marker points to the next page.
+// Deprecated method: This method is not allowed.
 func (a *chats) GetChats(ctx context.Context, count, marker int64) (*schemes.ChatList, error) {
 	result := new(schemes.ChatList)
 	values := url.Values{}
