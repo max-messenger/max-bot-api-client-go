@@ -26,7 +26,6 @@ type BotsAPI interface {
 }
 
 type ChatsAPI interface {
-	GetChats(ctx context.Context, count, marker int64) (model.ChatList, error)
 	GetChat(ctx context.Context, chatID int64) (model.Chat, error)
 	EditChat(ctx context.Context, chatID int64, patch model.ChatPatch) (model.Chat, error)
 	DeleteChat(ctx context.Context, chatID int64) (model.SimpleQueryResult, error)

@@ -15,20 +15,6 @@ type Chats struct {
 	client *client
 }
 
-func (c *Chats) GetChats(ctx context.Context, count, marker int64) (res model.ChatList, err error) {
-	values := url.Values{}
-	if count > 0 {
-		values.Set(paramCount, strconv.FormatInt(count, 10))
-	}
-	if marker > 0 {
-		values.Set(paramMarker, strconv.FormatInt(marker, 10))
-	}
-
-	err = c.client.raw(ctx, http.MethodGet, pathChats, values, nil, &res)
-
-	return
-}
-
 func (c *Chats) GetChat(ctx context.Context, chatID int64) (res model.Chat, err error) {
 	err = c.client.raw(ctx, http.MethodGet, fmt.Sprintf(formatPathChatsID, chatID), nil, nil, &res)
 

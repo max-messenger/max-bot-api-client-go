@@ -26,48 +26,6 @@ func (t *chatsTest) SetupTest() {
 
 }
 
-func (t *chatsTest) TestGetChats() {
-	data, err := stabs.ReadFile("stabs/chats/get-chats.json")
-	t.NoError(err)
-
-	expect := model.ChatList{
-		Chats: []model.Chat{
-			{
-				ChatID:            -70000000000005,
-				Type:              model.ChatTypeChat,
-				Status:            model.ChatStatusActive,
-				Title:             "chat title",
-				LastEventTime:     1775628268494,
-				ParticipantsCount: 3,
-				IsPublic:          false,
-				Description:       "chat description",
-				OwnerID:           123123123,
-				Link:              "https://max.ru/join/hash-chat-link",
-				MessagesCount:     7,
-			},
-		},
-	}
-
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		t.Equal(r.Header.Get(AuthorizationHeader), testToken)
-		t.Equal(r.Method, http.MethodGet)
-		t.Equal(r.URL.Path, pathChats)
-		t.Equal(r.RequestURI, "/chats?count=7&marker=13")
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write(data)
-	}))
-
-	defer srv.Close()
-
-	api, err := NewApi(testToken, WithBaseURL(srv.URL))
-	t.NoError(err)
-
-	res, err := api.Chats.GetChats(context.Background(), 7, 13)
-	t.NoError(err)
-
-	t.Equal(expect, res)
-}
-
 func (t *chatsTest) TestGetChat() {
 	data, err := stabs.ReadFile("stabs/chats/get-chat-by-id.json")
 	t.NoError(err)
