@@ -137,3 +137,9 @@ func (k *KeyboardRow) AddClipboard(text, payload string) *KeyboardRow {
 
 	return k
 }
+
+func (k *KeyboardRow) AddButton(btn Button) *KeyboardRow {
+	k.cols = append(k.cols, &btn)
+
+	return k
+}
