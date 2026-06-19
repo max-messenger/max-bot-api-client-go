@@ -133,24 +133,20 @@ func TestKeyboardRowAddCallback(t *testing.T) {
 		{
 			name:    "basic callback",
 			text:    "Click me",
-			intent:  IntentPositive,
 			payload: "action_1",
 			expected: Button{
 				Type:    ButtonCallback,
 				Text:    "Click me",
-				Intent:  IntentPositive,
 				Payload: "action_1",
 			},
 		},
 		{
 			name:    "empty payload",
 			text:    "No payload",
-			intent:  IntentPositive,
 			payload: "",
 			expected: Button{
 				Type:    ButtonCallback,
 				Text:    "No payload",
-				Intent:  IntentPositive,
 				Payload: "",
 			},
 		},
@@ -159,7 +155,7 @@ func TestKeyboardRowAddCallback(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			row := &KeyboardRow{cols: make([]*Button, 0)}
-			result := row.AddCallback(tt.text, tt.intent, tt.payload)
+			result := row.AddCallBack(tt.text, tt.payload)
 
 			if result != row {
 				t.Error("AddCallback should return the same row instance for chaining")
@@ -175,9 +171,6 @@ func TestKeyboardRowAddCallback(t *testing.T) {
 			}
 			if button.Text != tt.expected.Text {
 				t.Errorf("Text: expected %s, got %s", tt.expected.Text, button.Text)
-			}
-			if button.Intent != tt.expected.Intent {
-				t.Errorf("Intent: expected %v, got %v", tt.expected.Intent, button.Intent)
 			}
 			if button.Payload != tt.expected.Payload {
 				t.Errorf("Payload: expected %s, got %s", tt.expected.Payload, button.Payload)
@@ -339,7 +332,7 @@ func TestKeyboardRowChaining(t *testing.T) {
 
 	row.
 		AddMessage("Msg1").
-		AddCallback("Callback", IntentPositive, "data").
+		AddCallBack("Callback", "data").
 		AddLink("Link", "https://example.com").
 		AddGeoLocation("Geo", true).
 		AddContact("Contact").
@@ -384,7 +377,7 @@ func TestKeyboardMultipleRowsAndButtons(t *testing.T) {
 
 	// Row 3: 1 button
 	row3 := k.AddRow()
-	row3.AddCallback("Action", IntentPositive, "doIt")
+	row3.AddCallBack("Action", "doIt")
 
 	result := k.build()
 
@@ -428,7 +421,6 @@ func TestButtonJSONMarshaling(t *testing.T) {
 	btn := &Button{
 		Text:    "Test",
 		Type:    ButtonCallback,
-		Intent:  IntentPositive,
 		Payload: "test_payload",
 	}
 

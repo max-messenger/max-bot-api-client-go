@@ -11,7 +11,6 @@ type KeyboardRow struct {
 type Button struct {
 	Text      string     `json:"text"`
 	Type      ButtonType `json:"type"`
-	Intent    Intent     `json:"intent"`
 	URL       string     `json:"url,omitempty"`
 	Quick     bool       `json:"quick,omitempty"`
 	WebApp    string     `json:"web_app,omitempty"`
@@ -59,11 +58,23 @@ func (k *KeyboardRow) Build() []*Button {
 	return buttons
 }
 
-func (k *KeyboardRow) AddCallback(text string, indent Intent, payload string) *KeyboardRow {
+// Deprecated: use AddCallBack
+func (k *KeyboardRow) AddCallback(text string, _ Intent, payload string) *KeyboardRow {
 	kr := &Button{
 		Type:    ButtonCallback,
 		Text:    text,
-		Intent:  indent,
+		Payload: payload,
+	}
+
+	k.cols = append(k.cols, kr)
+
+	return k
+}
+
+func (k *KeyboardRow) AddCallBack(text string, payload string) *KeyboardRow {
+	kr := &Button{
+		Type:    ButtonCallback,
+		Text:    text,
 		Payload: payload,
 	}
 

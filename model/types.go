@@ -68,6 +68,7 @@ const (
 	ActionMarkSeen     SenderAction = "mark_seen"
 )
 
+// Deprecated: не поддерживается, всегда используется default
 type Intent string
 
 const (
