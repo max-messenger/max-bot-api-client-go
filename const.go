@@ -7,7 +7,7 @@ const (
 
 	SecretHeader = "X-Max-Bot-Api-Secret"
 
-	defaultAPIURL   = "https://platform-api.max.ru/"
+	defaultAPIURL   = "https://platform-api2.max.ru/"
 	defaultTimeout  = 30 * time.Second
 	defaultPause    = 1 * time.Second
 	maxUpdatesLimit = 50
