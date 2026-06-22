@@ -4,7 +4,7 @@ import "time"
 
 const (
 	defaultScheme   = "https"
-	DefaultHost     = "platform-api.max.ru"
+	DefaultHost     = "platform-api2.max.ru"
 	defaultFileName = "file"
 
 	SecretHeader        = "X-Max-Bot-Api-Secret"
