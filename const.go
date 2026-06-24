@@ -3,8 +3,12 @@ package maxbot
 import "time"
 
 const (
-	defaultScheme   = "https"
-	DefaultHost     = "platform-api2.max.ru"
+	defaultScheme = "https"
+
+	// Deprecated: not allowed
+	DefaultHost = "platform-api.max.ru"
+
+	DefaultHostV2   = "platform-api2.max.ru"
 	defaultFileName = "file"
 
 	SecretHeader        = "X-Max-Bot-Api-Secret"
@@ -18,7 +22,6 @@ const (
 
 const (
 	pathMe            = "/me"
-	pathChats         = "/chats"
 	pathAnswers       = "/answers"
 	pathUpdates       = "/updates"
 	pathUpload        = "/uploads"

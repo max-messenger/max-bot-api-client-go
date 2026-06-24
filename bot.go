@@ -65,7 +65,7 @@ type UploadAPI interface {
 }
 
 func NewApi(token string, opt ...Opt) (*Api, error) {
-	cli := newClient(token, DefaultHost)
+	cli := newClient(token, DefaultHostV2)
 	var err error
 	for _, o := range opt {
 		err = o(cli)
