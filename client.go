@@ -20,13 +20,12 @@ type HttpClient interface {
 
 type client struct {
 	key        string
-	version    string
 	baseURL    *url.URL
 	httpClient HttpClient
 	errors     chan error
 }
 
-func newClient(key string, version string, baseURL *url.URL, httpClient HttpClient) *client {
+func newClient(key string, baseURL *url.URL, httpClient HttpClient) *client {
 	if httpClient == nil {
 		httpClient = &http.Client{
 			Timeout: defaultTimeout,
@@ -35,7 +34,6 @@ func newClient(key string, version string, baseURL *url.URL, httpClient HttpClie
 
 	return &client{
 		key:        key,
-		version:    version,
 		baseURL:    baseURL,
 		httpClient: httpClient,
 		errors:     make(chan error, defaultErrorBufferSize),
@@ -97,7 +95,6 @@ func (cl *client) requestReader(ctx context.Context, method, path string, query 
 	u := *cl.baseURL
 	u.Path = path
 
-	query.Set(paramVersion, cl.version)
 	u.RawQuery = query.Encode()
 
 	req, err := http.NewRequestWithContext(ctx, method, u.String(), body)
@@ -105,7 +102,7 @@ func (cl *client) requestReader(ctx context.Context, method, path string, query 
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	req.Header.Set("User-Agent", fmt.Sprintf("max-bot-api-client-go/%s", cl.version))
+	req.Header.Set("User-Agent", "max-bot-api-client-go")
 	if !reset {
 		req.Header.Set("Authorization", cl.key)
 	}

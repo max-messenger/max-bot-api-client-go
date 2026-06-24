@@ -36,10 +36,9 @@ func WithPauseTimeout(timeout time.Duration) Option {
 	}
 }
 
-func WithVersion(version string) Option {
-	return func(api *Api) {
-		api.client.version = version
-	}
+// Deprecated: not allowed
+func WithVersion(_ string) Option {
+	return func(api *Api) {}
 }
 
 func WithDebugMode() Option {

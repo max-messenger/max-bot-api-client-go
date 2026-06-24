@@ -37,7 +37,6 @@ func (a *subscriptions) Subscribe(ctx context.Context, subscribeURL string, upda
 		Secret:      secret,
 		Url:         subscribeURL,
 		UpdateTypes: updateTypes,
-		Version:     a.client.version,
 	}
 	result := new(schemes.SimpleQueryResult)
 	values := url.Values{}

@@ -3,6 +3,7 @@ package maxbot
 import "time"
 
 const (
+	// Deprecated: not allowed
 	Version = "1.2.5"
 
 	SecretHeader = "X-Max-Bot-Api-Secret"
@@ -45,7 +46,6 @@ const (
 )
 
 const (
-	paramVersion      = "v"
 	paramURL          = "url"
 	paramType         = "type"
 	paramTypes        = "types"

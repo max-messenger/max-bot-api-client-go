@@ -72,7 +72,7 @@ func Test_uploads_UploadMediaFromReaderWithName_whenUploadVideoOrAudioType(t *te
 	defer server.Close()
 
 	u, _ := url.Parse(server.URL)
-	cl := newClient("bot_token", Version, u, server.Client())
+	cl := newClient("bot_token", u, server.Client())
 	upl := newUploads(cl)
 
 	for _, tt := range tests {
@@ -127,7 +127,7 @@ func Test_uploads_UploadMediaFromFile(t *testing.T) {
 	defer server.Close()
 
 	u, _ := url.Parse(server.URL)
-	cl := newClient("bot_token", Version, u, server.Client())
+	cl := newClient("bot_token", u, server.Client())
 	upl := newUploads(cl)
 
 	result, err := upl.UploadMediaFromFile(context.Background(), schemes.FILE, fileName)
@@ -163,7 +163,7 @@ func Test_uploads_UploadPhotoFromFile(t *testing.T) {
 	defer server.Close()
 
 	u, _ := url.Parse(server.URL)
-	cl := newClient("bot_token", Version, u, server.Client())
+	cl := newClient("bot_token", u, server.Client())
 	upl := newUploads(cl)
 
 	result, err := upl.UploadPhotoFromFile(context.Background(), fileName)
@@ -218,7 +218,7 @@ func Test_uploads_UploadMediaFromFile_matchesBufferedMultipartHeaders(t *testing
 	defer server.Close()
 
 	u, _ := url.Parse(server.URL)
-	cl := newClient("bot_token", Version, u, server.Client())
+	cl := newClient("bot_token", u, server.Client())
 	upl := newUploads(cl)
 
 	_, err := upl.UploadMediaFromReaderWithName(context.Background(), schemes.FILE, strings.NewReader(fileContent), fileName)
