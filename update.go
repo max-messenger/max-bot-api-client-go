@@ -53,11 +53,7 @@ func (u updateRaw) FromRaw() model.Update {
 				Attachments: u.Message.Body.Attachments,
 			},
 		}
-		update.Callback = &model.Callback{
-			Timestamp:  u.Callback.Timestamp,
-			CallbackID: u.Callback.CallbackID,
-			Payload:    u.Callback.Payload,
-		}
+		update.Callback = &u.Callback
 
 	case model.UpdateMessageCreated, model.UpdateMessageEdited:
 		update.ChatID = u.Message.Recipient.ChatID
