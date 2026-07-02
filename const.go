@@ -27,6 +27,7 @@ const (
 	pathUpload        = "/uploads"
 	pathMessages      = "/messages"
 	pathSubscriptions = "/subscriptions"
+	pathChats         = "/chats"
 
 	formatPathMessageId               = "/messages/%s"
 	formatPathVideoAttachmentDetails  = "/videos/%s"

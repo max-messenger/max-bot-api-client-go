@@ -26,6 +26,11 @@ type Chat struct {
 	PinnedMessage     Message          `json:"pinned_message"`
 }
 
+type ChatList struct {
+	Chats  []Chat `json:"chats"`
+	Marker *int64 `json:"marker"`
+}
+
 type ChatPatch struct {
 	Icon   *Payload `json:"icon,omitempty"`
 	Title  string   `json:"title,omitempty"`

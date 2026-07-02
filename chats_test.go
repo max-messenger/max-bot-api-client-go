@@ -26,6 +26,125 @@ func (t *chatsTest) SetupTest() {
 
 }
 
+func (t *chatsTest) TestGetChats() {
+	data, err := stabs.ReadFile("stabs/chats/get-chats.json")
+	t.NoError(err)
+
+	marker := int64(1234567890)
+	expect := model.ChatList{
+		Chats: []model.Chat{
+			{
+				ChatID:            -70000000000005,
+				Type:              model.ChatTypeChat,
+				Status:            model.ChatStatusActive,
+				Title:             "chat title",
+				LastEventTime:     1775628268494,
+				ParticipantsCount: 3,
+				IsPublic:          false,
+				Description:       "chat description",
+				OwnerID:           123123123,
+				Link:              "https://max.ru/join/hash-chat-link",
+				MessagesCount:     7,
+			},
+		},
+		Marker: &marker,
+	}
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Equal(r.Header.Get(AuthorizationHeader), testToken)
+		t.Equal(r.Method, http.MethodGet)
+		t.Equal(r.URL.Path, pathChats)
+		t.Equal(r.RequestURI, "/chats?count=50&marker=100")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(data)
+	}))
+
+	defer srv.Close()
+
+	api, err := NewApi(testToken, WithBaseURL(srv.URL))
+	t.NoError(err)
+
+	res, err := api.Chats.GetChats(context.Background(), 50, 100)
+	t.NoError(err)
+
+	t.Equal(expect, res)
+}
+
+func (t *chatsTest) TestGetChatsWithoutParams() {
+	data, err := stabs.ReadFile("stabs/chats/get-chats.json")
+	t.NoError(err)
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Equal(r.Header.Get(AuthorizationHeader), testToken)
+		t.Equal(r.Method, http.MethodGet)
+		t.Equal(r.URL.Path, pathChats)
+		t.Equal(r.RequestURI, "/chats")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(data)
+	}))
+
+	defer srv.Close()
+
+	api, err := NewApi(testToken, WithBaseURL(srv.URL))
+	t.NoError(err)
+
+	res, err := api.Chats.GetChats(context.Background(), 0, 0)
+	t.NoError(err)
+
+	t.Len(res.Chats, 1)
+	t.Equal(int64(-70000000000005), res.Chats[0].ChatID)
+	t.NotNil(res.Marker)
+	t.Equal(int64(1234567890), *res.Marker)
+}
+
+func (t *chatsTest) TestGetChatsOnlyCount() {
+	data, err := stabs.ReadFile("stabs/chats/get-chats.json")
+	t.NoError(err)
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Equal(r.Header.Get(AuthorizationHeader), testToken)
+		t.Equal(r.Method, http.MethodGet)
+		t.Equal(r.URL.Path, pathChats)
+		t.Equal(r.RequestURI, "/chats?count=10")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(data)
+	}))
+
+	defer srv.Close()
+
+	api, err := NewApi(testToken, WithBaseURL(srv.URL))
+	t.NoError(err)
+
+	res, err := api.Chats.GetChats(context.Background(), 10, 0)
+	t.NoError(err)
+
+	t.Len(res.Chats, 1)
+}
+
+func (t *chatsTest) TestGetChatsOnlyMarker() {
+	data, err := stabs.ReadFile("stabs/chats/get-chats.json")
+	t.NoError(err)
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Equal(r.Header.Get(AuthorizationHeader), testToken)
+		t.Equal(r.Method, http.MethodGet)
+		t.Equal(r.URL.Path, pathChats)
+		t.Equal(r.RequestURI, "/chats?marker=500")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(data)
+	}))
+
+	defer srv.Close()
+
+	api, err := NewApi(testToken, WithBaseURL(srv.URL))
+	t.NoError(err)
+
+	res, err := api.Chats.GetChats(context.Background(), 0, 500)
+	t.NoError(err)
+
+	t.Len(res.Chats, 1)
+}
+
 func (t *chatsTest) TestGetChat() {
 	data, err := stabs.ReadFile("stabs/chats/get-chat-by-id.json")
 	t.NoError(err)
