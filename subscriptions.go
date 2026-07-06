@@ -58,20 +58,20 @@ func (s *Subscriptions) Unsubscribe(ctx context.Context, u string) (res model.Si
 func (s *Subscriptions) GetUpdates(ctx context.Context, marker int64) ([]model.Update, int64, error) {
 	res := make([]model.Update, 0)
 
-	updateList, err := s.getUpdatesWithRetry(ctx, maxUpdatesLimit, int(s.timeout.Seconds()), marker)
+	result, err := s.getUpdatesWithRetry(ctx, maxUpdatesLimit, int(s.timeout.Seconds()), marker)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	if len(updateList.Updates) == 0 {
-		return res, 0, nil
+	if len(result.Updates) == 0 {
+		return res, result.Marker, nil
 	}
 
-	for _, rawUpdate := range updateList.Updates {
+	for _, rawUpdate := range result.Updates {
 		res = append(res, rawUpdate.FromRaw())
 	}
 
-	return res, updateList.Marker, nil
+	return res, result.Marker, nil
 }
 
 func (s *Subscriptions) getUpdatesWithRetry(ctx context.Context, limit, timeout int, marker int64) (res updateList, err error) {
