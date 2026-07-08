@@ -62,7 +62,8 @@ func main() {
 			default:
 				textHandler(ctx, api, update)
 			}
-
+		case model.UpdateMessageCallback:
+			callbackHandler(ctx, api, update)
 		default:
 			log.Printf("Unknown type: %#v\n", update)
 		}
@@ -106,7 +107,7 @@ func textHandler(ctx context.Context, api *maxbot.Api, update model.Update) {
 		AddRow().
 		AddMessage("message").
 		AddClipboard("скопировать url", "https://max.ru").
-		AddCallBack("callback button", "callback")
+		AddCallBack("delete", "callback-payload")
 
 	msg := maxbot.NewMessage().
 		SetText("hello").
@@ -253,4 +254,20 @@ func shareHandler(ctx context.Context, api *maxbot.Api, update model.Update) {
 		AddShare("https://dev.max.ru/docs-api/methods/POST/messages")
 
 	_, _ = api.Messages.Send(ctx, msg)
+}
+
+func callbackHandler(ctx context.Context, api *maxbot.Api, update model.Update) {
+	fmt.Printf("--text: %s. %v\n", update.Message.Body.Text, update)
+	resDel, _ := api.Messages.DeleteMessage(ctx, update.MessageID)
+	log.Printf("%v\n", resDel)
+
+	msg := maxbot.NewMessage().
+		SetText(fmt.Sprintf("receive callback: %s", update.Callback.Payload)).
+		SetChat(update.ChatID).
+		SetUser(update.UserID)
+
+	fmt.Printf("--text: %s. %v\n", update.Message.Body.Text, update)
+	fmt.Println(msg)
+	res, _ := api.Messages.Send(ctx, msg)
+	log.Printf("%v\n", res)
 }
