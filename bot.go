@@ -22,7 +22,9 @@ var commandReg = regexp.MustCompile(`^(/\w+)`)
 
 type BotsAPI interface {
 	GetMyInfo(ctx context.Context) (model.BotInfo, error)
+	// Deprecated: use PatchCommands
 	EditMyInfo(ctx context.Context, patch model.BotPatch) (model.BotInfo, error)
+	PatchCommands(ctx context.Context, botPatch model.BotPatchCommands) (model.BotPatchCommands, error)
 }
 
 type ChatsAPI interface {

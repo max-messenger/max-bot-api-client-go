@@ -22,6 +22,7 @@ const (
 
 const (
 	pathMe            = "/me"
+	pathMeCommands    = "/me/commands"
 	pathAnswers       = "/answers"
 	pathUpdates       = "/updates"
 	pathUpload        = "/uploads"
