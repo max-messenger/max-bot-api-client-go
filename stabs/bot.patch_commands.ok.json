@@ -1,0 +1,8 @@
+{
+  "commands": [
+    {
+      "name": "/help",
+      "description": "Commands and any info"
+    }
+  ]
+}

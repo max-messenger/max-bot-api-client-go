@@ -2,14 +2,12 @@
 GET {{ host }}/me
 Authorization: {{token}}
 
-### change bot info
-PATCH {{ host }}/me
+### patch bot commands
+PATCH {{ host }}/me/commands
 Authorization: {{token}}
 Content-Type: application/json
 
 {
-  "first_name": "cutie bot",
-  "description": "your cutie bot",
   "commands": [
     {
       "name": "/help",

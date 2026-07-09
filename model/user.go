@@ -51,6 +51,10 @@ type BotPatch struct {
 	Photo       *Payload     `json:"photo,omitempty"`
 }
 
+type BotPatchCommands struct {
+	Commands []BotCommand `json:"commands"`
+}
+
 type BotCommand struct {
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
