@@ -18,11 +18,11 @@ func TestCommand(t *testing.T) {
 		},
 		{
 			command:  "/help:id-773",
-			expected: "/help:id-773",
+			expected: "/help",
 		},
 		{
 			command:  "/help:id-773",
-			expected: "/help:id-773",
+			expected: "/help",
 		},
 		{
 			command:  "/help-me",

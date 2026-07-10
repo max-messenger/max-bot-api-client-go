@@ -18,7 +18,7 @@ import (
 	"github.com/max-messenger/max-bot-api-client-go/v2/model"
 )
 
-var commandReg = regexp.MustCompile(`^(/[^\s]+)`)
+var commandReg = regexp.MustCompile(`^(/[^\s:]+)`)
 
 type BotsAPI interface {
 	GetMyInfo(ctx context.Context) (model.BotInfo, error)
