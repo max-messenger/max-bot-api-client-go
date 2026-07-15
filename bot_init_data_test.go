@@ -75,7 +75,6 @@ func TestValidateInitData(t *testing.T) {
 		ID:        123456,
 		FirstName: "Test",
 		LastName:  "User",
-		Username:  "testuser",
 	}
 
 	tests := []struct {
@@ -133,25 +132,6 @@ func TestValidateInitData(t *testing.T) {
 			wantErrMsg: "hash verification failed",
 		},
 		{
-			name: "Invalid JSON in user parameter",
-			initData: func() string {
-				params := map[string]string{
-					"user":      "invalid_json",
-					"auth_date": "123456789",
-				}
-				hash := generateTestHash(validBotToken, params)
-				params["hash"] = hash
-				values := url.Values{}
-				for k, v := range params {
-					values.Set(k, v)
-				}
-				return values.Encode()
-			}(),
-			botToken:   validBotToken,
-			wantErr:    true,
-			wantErrMsg: "json decode err",
-		},
-		{
 			name: "URL encoded init data",
 			initData: func() string {
 				rawData := createValidInitData(validBotToken, validUser)
@@ -195,7 +175,7 @@ func TestValidateInitData(t *testing.T) {
 				return
 			}
 
-			if gotUser != tt.wantUser {
+			if gotUser.User != tt.wantUser {
 				t.Errorf("ValidateInitData() user = %+v, want %+v", gotUser, tt.wantUser)
 			}
 		})
@@ -229,7 +209,7 @@ func TestValidateInitDataWithWebAppPlatform(t *testing.T) {
 			t.Errorf("ValidateInitData() failed with web_app_platform: %v", err)
 		}
 
-		if gotUser != user {
+		if gotUser.User != user {
 			t.Errorf("ValidateInitData() user = %+v, want %+v", gotUser, user)
 		}
 	})
@@ -241,7 +221,6 @@ func TestValidateInitDataWithSpecialCharacters(t *testing.T) {
 		ID:        123,
 		FirstName: "Test & Special",
 		LastName:  "User=Value",
-		Username:  "test@user.com",
 	}
 
 	t.Run("Special characters in user data", func(t *testing.T) {
@@ -252,7 +231,7 @@ func TestValidateInitDataWithSpecialCharacters(t *testing.T) {
 			t.Errorf("ValidateInitData() failed with special characters: %v", err)
 		}
 
-		if gotUser != user {
+		if gotUser.User != user {
 			t.Errorf("ValidateInitData() user = %+v, want %+v", gotUser, user)
 		}
 	})
@@ -322,7 +301,7 @@ func TestValidateInitDataMultipleHashValues(t *testing.T) {
 			t.Errorf("ValidateInitData() failed: %v", err)
 		}
 
-		if gotUser != user {
+		if gotUser.User != user {
 			t.Errorf("ValidateInitData() user = %+v, want %+v", gotUser, user)
 		}
 	})

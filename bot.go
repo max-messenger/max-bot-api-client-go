@@ -135,7 +135,7 @@ func (a *Api) GetHandler(handler UpdateHandler, secret string) http.HandlerFunc 
 }
 
 // ValidateInitData Проверяет подпись запроса от Max MiniApp. Возвращает пользователя.
-func ValidateInitData(initData string, botToken string) (res model.UserApp, err error) {
+func ValidateInitData(initData string, botToken string) (res model.InitData, err error) {
 	if initData == "" {
 		err = fmt.Errorf("initData cannot be empty")
 
@@ -170,13 +170,14 @@ func ValidateInitData(initData string, botToken string) (res model.UserApp, err 
 	receivedHash := hashValues[0]
 	values.Del(paramHash)
 
-	values.Del(paramWebAppPlatform)
-	values.Del(paramWebAppVersion)
-
 	var sortedParams []string
 	for key := range values {
 		value := values.Get(key)
 		sortedParams = append(sortedParams, fmt.Sprintf("%s=%s", key, value))
+		err = parseParam(key, value, &res)
+		if err != nil {
+			return
+		}
 	}
 	sort.Strings(sortedParams)
 
@@ -184,21 +185,12 @@ func ValidateInitData(initData string, botToken string) (res model.UserApp, err 
 
 	mac1 := hmac.New(sha256.New, []byte(paramWebAppData))
 	mac1.Write([]byte(botToken))
-	secretKey := mac1.Sum(nil)
 
-	mac := hmac.New(sha256.New, secretKey)
+	mac := hmac.New(sha256.New, mac1.Sum(nil))
 	mac.Write([]byte(dataCheckString))
-	expectedHash := hex.EncodeToString(mac.Sum(nil))
 
-	if subtle.ConstantTimeCompare([]byte(receivedHash), []byte(expectedHash)) != 1 {
+	if subtle.ConstantTimeCompare([]byte(receivedHash), []byte(hex.EncodeToString(mac.Sum(nil)))) != 1 {
 		err = fmt.Errorf("hash verification failed")
-
-		return
-	}
-
-	err = json.Unmarshal([]byte(values.Get(paramUser)), &res)
-	if err != nil {
-		err = fmt.Errorf("json decode err: %w", err)
 
 		return
 	}
@@ -213,4 +205,23 @@ func GetCommand(u model.Update) string {
 	}
 
 	return ""
+}
+
+func parseParam(key, val string, result *model.InitData) error {
+	switch key {
+	case paramQueryID:
+		result.QueryID = val
+	case paramUser:
+		return json.Unmarshal([]byte(val), &result.User)
+	case paramChat:
+		return json.Unmarshal([]byte(val), &result.Chat)
+	case paramAuthDate:
+		return json.Unmarshal([]byte(val), &result.AuthDate)
+	case paramStartParam:
+		result.StartParam = val
+	case paramIP:
+		result.IP = val
+	}
+
+	return nil
 }
