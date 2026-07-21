@@ -37,7 +37,7 @@ func NewCommand(input string) (res Command) {
 	res.RemainingText = result["text"]
 
 	if result["params"] != "" {
-		res.Params = strings.Split(result["params"], "|")
+		res.Params = strings.Split(result["params"], ",")
 	}
 
 	return
