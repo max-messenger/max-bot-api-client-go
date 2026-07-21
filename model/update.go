@@ -59,3 +59,7 @@ func (u Update) GetChat() ChatProp {
 
 	return ChatProp{}
 }
+
+func (u Update) GetCommand() Command {
+	return NewCommand(u.GetMessage().Body.Text)
+}
