@@ -15,9 +15,9 @@ type Payload struct {
 	URL       string      `json:"url,omitempty"`
 	Code      string      `json:"code,omitempty"`
 	ContactID int64       `json:"contact_id,omitempty"` // for send contact
-	VCFInfo   string      `json:"vcf_info"`
-	MaxInfo   User        `json:"max_info"`
-	Hash      string      `json:"hash"`
+	VCFInfo   string      `json:"vcf_info,omitempty"`
+	MaxInfo   *User       `json:"max_info,omitempty"`
+	Hash      string      `json:"hash,omitempty"`
 	Buttons   [][]*Button `json:"buttons,omitempty"`
 }
 

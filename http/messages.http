@@ -20,7 +20,7 @@ Content-Type: application/json
 }
 
 ### send message to user
-POST https://platform-api.max.ru/messages?user_id={{ user_max_id }}
+POST {{ host }}/messages?user_id={{ user_max_id }}
 Authorization: {{ token }}
 Content-Type: application/json
 
@@ -30,7 +30,7 @@ Content-Type: application/json
 }
 
 ### send message to user
-POST https://platform-api.max.ru/messages?user_id={{ user_max_id }}
+POST {{ host }}/messages?user_id={{ user_max_id }}
 Authorization: {{ token }}
 Content-Type: application/json
 
@@ -43,4 +43,28 @@ Content-Type: application/json
       }
     }
   ]
+}
+
+###
+POST {{ host }}/answers?callback_id=f9LHodD0cOJoiuLLTLt6zkOsfBmp1-xn0bkLz7asBJ7-OFAmWBN1iAxLI6e5sUlp1Js3va8SFeJoNCu6boZVVdDnmUzgs_onBh-piImsOfGZT9T5uIR0
+Authorization: {{ token }}
+Content-Type: application/json
+
+{
+  "message": {
+    "text": "callback answer",
+    "attachments": []
+  }
+}
+
+###
+POST {{ host }}/messages?user_id={{ user_max_id }}
+Content-Type: application/json
+
+{
+  "text": "reply",
+  "link": {
+    "type": "reply",
+    "mid": "mid.000000000cc3d1ef019f83db9ad30172"
+  }
 }
