@@ -37,8 +37,8 @@ func main() {
 		fmt.Printf("Received: [%s] %#v\n", update.UpdateType, update)
 		switch update.UpdateType {
 		case model.UpdateMessageCreated:
-			text := update.GetMessage().Body.Text
-			switch text {
+			cmd := update.GetCommand()
+			switch cmd.Command {
 			case "/image":
 				imageHandler(ctx, api, update)
 			case "/video":
