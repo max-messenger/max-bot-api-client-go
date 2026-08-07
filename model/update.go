@@ -14,6 +14,7 @@ type Update struct {
 	Callback   *Callback
 	ChatProp   *ChatProp
 	Message    *MessageUpdate
+	Payload    string
 }
 
 func (u Update) GetTimestampTime() time.Time {

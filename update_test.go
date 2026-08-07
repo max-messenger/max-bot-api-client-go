@@ -10,16 +10,16 @@ import (
 )
 
 func TestUpdate(t *testing.T) {
-	suite.Run(t, new(subscriptionTest))
+	suite.Run(t, new(updateTest))
 }
 
-type subscriptionTest struct {
+type updateTest struct {
 	suite.Suite
 }
 
-func (t *subscriptionTest) SetupTest() {}
+func (t *updateTest) SetupTest() {}
 
-func (t *subscriptionTest) TestUpdate() {
+func (t *updateTest) TestUpdate() {
 	cases := []struct {
 		fileName string
 		expected model.Update
@@ -73,6 +73,7 @@ func (t *subscriptionTest) TestUpdate() {
 				IsChannel:  false,
 				UpdateType: model.UpdateBotStarted,
 				UserLocale: "ru",
+				Payload:    "piu-piu-ololo",
 				User: &model.User{
 					UserID:           123456789,
 					FirstName:        "John",
@@ -422,13 +423,13 @@ func (t *subscriptionTest) TestUpdate() {
 			data, err := stabs.ReadFile(c.fileName)
 			t.NoError(err)
 
-			updateList := &updateList{}
-			err = json.Unmarshal(data, updateList)
+			updates := &updateList{}
+			err = json.Unmarshal(data, updates)
 			t.NoError(err)
 
-			t.Require().Len(updateList.Updates, 1)
+			t.Require().Len(updates.Updates, 1)
 
-			t.Equal(c.expected, updateList.Updates[0].FromRaw())
+			t.Equal(c.expected, updates.Updates[0].FromRaw())
 		})
 	}
 }

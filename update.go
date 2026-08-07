@@ -17,6 +17,7 @@ type updateRaw struct {
 	User       model.User       `json:"user"`
 	Message    model.Message    `json:"message"`
 	Callback   model.Callback   `json:"callback"`
+	Payload    string           `json:"payload"`
 }
 
 type updateList struct {
@@ -100,7 +101,11 @@ func (u updateRaw) FromRaw() model.Update {
 			Title: u.Title,
 		}
 		update.User = &u.User
-	case model.UpdateBotAdded, model.UpdateBotRemoved, model.UpdateBotStarted, model.UpdateBotStopped:
+	case model.UpdateBotStarted:
+		update.IsChannel = u.IsChannel
+		update.User = &u.User
+		update.Payload = u.Payload
+	case model.UpdateBotAdded, model.UpdateBotRemoved, model.UpdateBotStopped:
 		update.IsChannel = u.IsChannel
 		update.User = &u.User
 	case model.UpdateMessageRemoved:
