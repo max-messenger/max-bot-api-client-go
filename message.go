@@ -10,7 +10,7 @@ type Message struct {
 }
 
 func NewMessage() *Message {
-	return &Message{userID: 0, chatID: 0, message: model.NewMessageBody{}}
+	return &Message{userID: 0, chatID: 0, message: model.NewMessageBody{Attachments: make([]model.Attachment, 0)}}
 }
 
 func (m *Message) SetUser(userID int64) *Message {
