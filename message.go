@@ -127,6 +127,12 @@ func (m *Message) AddKeyboard(keyboard *model.Keyboard) *Message {
 	return m
 }
 
+func (m *Message) AddAttachments(attachments []model.Attachment) *Message {
+	m.message.Attachments = attachments
+
+	return m
+}
+
 func (m *Message) AddAttachByToken(fileToken string, at model.AttachmentType) *Message {
 	if fileToken == "" {
 		return m
