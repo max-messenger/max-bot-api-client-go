@@ -53,6 +53,10 @@ func (u Update) GetCallback() Callback {
 	return Callback{}
 }
 
+func (u Update) GetCallbackPayload() CallbackPayload {
+	return NewCallbackPayload(u.GetCallback().Payload)
+}
+
 func (u Update) GetChat() ChatProp {
 	if u.ChatProp != nil {
 		return *u.ChatProp

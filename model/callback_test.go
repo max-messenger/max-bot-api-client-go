@@ -43,7 +43,7 @@ func TestCallback(tt *testing.T) {
 
 	for i, tc := range cases {
 		tt.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
-			parsed := NewCallback(tc.message)
+			parsed := NewCallbackPayload(tc.message)
 
 			if parsed.Payload != tc.payload {
 				t.Errorf("payload want %q, got %q", tc.payload, parsed.Payload)

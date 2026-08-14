@@ -23,7 +23,7 @@ type CallbackPayload struct {
 	Param   string
 }
 
-func NewCallback(input string) (res CallbackPayload) {
+func NewCallbackPayload(input string) (res CallbackPayload) {
 	if input == "" {
 		return
 	}
