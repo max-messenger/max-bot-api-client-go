@@ -5,6 +5,7 @@ import "github.com/max-messenger/max-bot-api-client-go/v2/model"
 type Message struct {
 	userID             int64
 	chatID             int64
+	MessageID          string
 	disableLinkPreview bool
 	message            model.NewMessageBody
 }
