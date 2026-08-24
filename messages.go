@@ -112,7 +112,7 @@ func (m *Messages) GetComments(ctx context.Context, messageID string, before, af
 	if count > 0 {
 		values.Set(paramCount, strconv.FormatInt(count, 10))
 	}
-	err = m.client.raw(ctx, http.MethodGet, fmt.Sprintf(formatPathComments, messageID), nil, nil, &res)
+	err = m.client.raw(ctx, http.MethodGet, fmt.Sprintf(formatPathComments, messageID), values, nil, &res)
 
 	return
 }
