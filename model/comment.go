@@ -5,7 +5,13 @@ type CommentList struct {
 }
 
 type Comment struct {
-	Recipient Recipient   `json:"recipient"`
-	Timestamp int64       `json:"timestamp"`
-	Body      MessageBody `json:"body"`
+	Recipient CommentRecipient `json:"recipient"`
+	Timestamp int64            `json:"timestamp"`
+	Body      MessageBody      `json:"body"`
+}
+
+type CommentRecipient struct {
+	ChatID   int64    `json:"chat_id"`
+	ChatType ChatType `json:"chat_type"`
+	PostID   string   `json:"post_id"`
 }
