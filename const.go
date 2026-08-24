@@ -59,11 +59,14 @@ const (
 	paramUserIDs    = "user_ids"
 	paramMessageID  = "message_id"
 	paramMessageIDs = "message_ids"
+	paramCommentIDs = "comment_ids"
 	paramCallbackID = "callback_id"
 	paramWebAppData = "WebAppData"
 
 	fieldData = "data"
 
+	paramBefore             = "before"
+	paramAfter              = "after"
 	paramTo                 = "to"
 	paramCount              = "count"
 	paramFrom               = "from"

@@ -40,8 +40,22 @@ func (m *Messages) GetMessages(ctx context.Context, chatID, from, to, count int6
 	return
 }
 
-func (m *Messages) GetMessageByID(ctx context.Context, messageID string) (res model.Message, err error) {
-	err = m.client.raw(ctx, http.MethodGet, fmt.Sprintf(formatPathMessageId, messageID), nil, nil, &res)
+func (m *Messages) GetMessageByID(ctx context.Context, messageID string, before, after, count int64, commentIds []string) (res model.Message, err error) {
+	values := url.Values{}
+
+	if len(commentIds) > 0 {
+		values.Set(paramCommentIDs, strings.Join(commentIds, ","))
+	}
+	if before > 0 {
+		values.Set(paramBefore, strconv.FormatInt(before, 10))
+	}
+	if after > 0 {
+		values.Set(paramAfter, strconv.FormatInt(after, 10))
+	}
+	if count > 0 {
+		values.Set(paramCount, strconv.FormatInt(count, 10))
+	}
+	err = m.client.raw(ctx, http.MethodGet, fmt.Sprintf(formatPathMessageId, messageID), values, nil, &res)
 
 	return
 }
