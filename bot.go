@@ -53,6 +53,7 @@ type MessagesAPI interface {
 	DeleteMessage(ctx context.Context, messageID string) (model.SimpleQueryResult, error)
 	AnswerOnCallback(ctx context.Context, callbackID string, answer model.CallbackAnswer) (model.SimpleQueryResult, error)
 	GetVideoAttachmentDetails(ctx context.Context, videoToken string) (model.VideoAttachmentDetails, error)
+	GetComments(ctx context.Context, messageID string, before, after, count int64, commentIds []string) (res model.CommentList, err error)
 }
 
 type SubscriptionsAPI interface {
