@@ -30,6 +30,7 @@ const (
 	pathSubscriptions = "/subscriptions"
 
 	formatPathMessageId               = "/messages/%s"
+	formatPathComments                = "/messages/%s/comments"
 	formatPathVideoAttachmentDetails  = "/videos/%s"
 	formatPathChatsID                 = "/chats/%d"
 	formatPathChatPin                 = "/chats/%d/pin"

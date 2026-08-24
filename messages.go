@@ -97,6 +97,12 @@ func (m *Messages) GetVideoAttachmentDetails(ctx context.Context, videoToken str
 	return
 }
 
+func (m *Messages) GetComments(ctx context.Context, messageID string) (res model.CommentList, err error) {
+	err = m.client.raw(ctx, http.MethodGet, fmt.Sprintf(formatPathComments, messageID), nil, nil, &res)
+
+	return
+}
+
 func newMessages(client *client) *Messages {
 	return &Messages{
 		client: client,

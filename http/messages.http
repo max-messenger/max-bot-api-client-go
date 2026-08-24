@@ -59,6 +59,7 @@ Content-Type: application/json
 
 ###
 POST {{ host }}/messages?user_id={{ user_max_id }}
+Authorization: {{ token }}
 Content-Type: application/json
 
 {
@@ -68,3 +69,7 @@ Content-Type: application/json
     "mid": "mid.000000000cc3d1ef019f83db9ad30172"
   }
 }
+
+### get comments by message id
+GET {{ host }}/messages/{{ message_id }}/comments
+Authorization: {{ token }}
