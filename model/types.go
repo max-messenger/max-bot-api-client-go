@@ -119,7 +119,6 @@ const (
 	ButtonLink           ButtonType = "link"
 	ButtonRequestGeo     ButtonType = "request_geo_location"
 	ButtonRequestContact ButtonType = "request_contact"
-	ButtonChat           ButtonType = "chat"
 	ButtonMessage        ButtonType = "message"
 	ButtonOpenApp        ButtonType = "open_app"
 	ButtonClipboard      ButtonType = "clipboard"
@@ -135,8 +134,6 @@ const (
 	AttachSticker        AttachmentType = "sticker"
 	AttachContact        AttachmentType = "contact"
 	AttachInlineKeyboard AttachmentType = "inline_keyboard"
-	AttachReplyKeyboard  AttachmentType = "reply_keyboard"
 	AttachLocation       AttachmentType = "location"
 	AttachShare          AttachmentType = "share"
-	AttachData           AttachmentType = "data"
 )
