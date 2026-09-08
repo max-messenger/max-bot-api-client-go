@@ -10,6 +10,8 @@ type Update struct {
 	IsChannel  bool
 	UpdateType UpdateType
 	MessageID  string
+	PostID     string
+	CommentID  string
 	User       *User
 	Callback   *Callback
 	ChatProp   *ChatProp

@@ -13,6 +13,7 @@ type updateRaw struct {
 	InviterID  int64            `json:"inviter_id"`
 	AdminID    int64            `json:"admin_id"`
 	MessageID  string           `json:"message_id"`
+	PostID     string           `json:"post_id"`
 	UpdateType model.UpdateType `json:"update_type"`
 	User       model.User       `json:"user"`
 	Message    model.Message    `json:"message"`
@@ -111,6 +112,28 @@ func (u updateRaw) FromRaw() model.Update {
 	case model.UpdateMessageRemoved:
 		update.MessageID = u.MessageID
 		update.UserID = u.UserID
+	case model.UpdateCommentCreated, model.UpdateCommentEdited:
+		update.PostID = u.Message.Recipient.PostID
+		update.ChatID = u.Message.Recipient.ChatID
+		update.CommentID = u.Message.Body.Mid
+		update.Message = &model.MessageUpdate{
+			Timestamp: u.Message.Timestamp,
+			Recipient: model.Recipient{
+				ChatID:   u.Message.Recipient.ChatID,
+				ChatType: u.Message.Recipient.ChatType,
+				PostID:   u.Message.Recipient.PostID,
+			},
+			Body: model.MessageBody{
+				Mid:  u.Message.Body.Mid,
+				Seq:  u.Message.Body.Seq,
+				Text: u.Message.Body.Text,
+			},
+			Link: u.Message.Link,
+		}
+	case model.UpdateCommentRemoved:
+		update.UserID = u.UserID
+		update.MessageID = u.MessageID
+		update.PostID = u.PostID
 	}
 
 	return update

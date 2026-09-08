@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"embed"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -36,6 +37,8 @@ func main() {
 	handle := func(ctx context.Context, update model.Update) {
 		fmt.Printf("Received: [%s] %#v\n", update.UpdateType, update)
 		switch update.UpdateType {
+		case model.UpdateCommentCreated:
+			fmt.Printf("New comment created\n")
 		case model.UpdateMessageCreated:
 			cmd := update.GetCommand()
 			switch cmd.Command {
@@ -61,6 +64,7 @@ func main() {
 				shareHandler(ctx, api, update)
 			default:
 				textHandler(ctx, api, update)
+				makeComment(ctx, api, update)
 			}
 		case model.UpdateMessageCallback:
 			callbackHandler(ctx, api, update)
@@ -76,6 +80,9 @@ func main() {
 		case <-ctx.Done():
 		default:
 			updates, marker, err = api.Subscriptions.GetUpdates(ctx, marker)
+			if _, tErr := errors.AsType[*maxbot.TimeoutError](err); tErr {
+				continue
+			}
 			if err != nil {
 				log.Println("GetUpdates: ", err)
 				return
@@ -86,6 +93,13 @@ func main() {
 			}
 		}
 	}
+}
+
+func makeComment(ctx context.Context, api *maxbot.Api, update model.Update) {
+	comment := maxbot.NewComment("...")
+	comment.SetLink(maxbot.CommentLink{})
+	res, _ := api.Comments.Send(ctx, update.MessageID, comment)
+	log.Printf("%v\n", res)
 }
 
 func textHandler(ctx context.Context, api *maxbot.Api, update model.Update) {

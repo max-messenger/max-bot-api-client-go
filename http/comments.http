@@ -1,0 +1,35 @@
+### Get comments
+GET {{ host }}/messages/{{ post_id }}/comments
+Authorization: {{ token }}
+
+
+### send new comment
+POST {{ host }}/messages/{{ post_id}}/comments
+Authorization: {{ token }}
+Content-Type: application/json
+
+{
+  "text": "...",
+  "link": {
+    "type": "reply",
+    "mid": "{{ comment_id }}"
+  }
+}
+
+### edit comment
+PUT {{ host }}/messages/{{ post_id}}/comments?comment_id={{ comment_id }}
+Authorization: {{ token }}
+Content-Type: application/json
+
+{
+  "text": "..."
+}
+
+### delete
+DELETE {{ host }}/messages/{{ post_id}}/comments?comment_id={{ comment_id }}
+Authorization: {{ token }}
+Content-Type: application/json
+
+### get by id
+GET {{ host }}/messages/{{ post_id}}/comments/{{ comment_id }}
+Authorization: {{ token }}

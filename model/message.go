@@ -4,6 +4,7 @@ type Recipient struct {
 	ChatID   int64    `json:"chat_id"`
 	ChatType ChatType `json:"chat_type"`
 	UserID   int64    `json:"user_id"`
+	PostID   string   `json:"post_id"`
 }
 
 type Message struct {

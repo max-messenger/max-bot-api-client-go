@@ -1,0 +1,17 @@
+{
+  "message": {
+    "recipient": {
+      "chat_type": "channel",
+      "chat_id": -70801090403050,
+      "post_id": "mid.fff"
+    },
+    "timestamp": 1788528471428,
+    "body": {
+      "mid": "mid.fff",
+      "seq": 116327994376978687,
+      "text": "Comment text here"
+    }
+  },
+  "timestamp": 1788528471428,
+  "update_type": "comment_created"
+}

@@ -95,6 +95,9 @@ const (
 	UpdateDialogMuted      UpdateType = "dialog_muted"
 	UpdateDialogUnmuted    UpdateType = "dialog_unmuted"
 	UpdateChatTitleChanged UpdateType = "chat_title_changed"
+	UpdateCommentCreated   UpdateType = "comment_created"
+	UpdateCommentEdited    UpdateType = "comment_edited"
+	UpdateCommentRemoved   UpdateType = "comment_removed"
 )
 
 type MarkupType string

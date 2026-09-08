@@ -31,6 +31,7 @@ const (
 
 	formatPathMessageId               = "/messages/%s"
 	formatPathComments                = "/messages/%s/comments"
+	formatPathCommentByID             = "/messages/%s/comments/%s"
 	formatPathVideoAttachmentDetails  = "/videos/%s"
 	formatPathChatsID                 = "/chats/%d"
 	formatPathChatPin                 = "/chats/%d/pin"
@@ -73,4 +74,5 @@ const (
 	paramLimit              = "limit"
 	paramTimeout            = "timeout"
 	paramDisableLinkPreview = "disable_link_preview"
+	paramCommentID          = "comment_id"
 )

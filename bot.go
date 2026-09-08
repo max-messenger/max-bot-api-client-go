@@ -53,7 +53,14 @@ type MessagesAPI interface {
 	DeleteMessage(ctx context.Context, messageID string) (model.SimpleQueryResult, error)
 	AnswerOnCallback(ctx context.Context, callbackID string, answer model.CallbackAnswer) (model.SimpleQueryResult, error)
 	GetVideoAttachmentDetails(ctx context.Context, videoToken string) (model.VideoAttachmentDetails, error)
-	GetComments(ctx context.Context, messageID string, before, after, count int64, commentIds []string) (res model.CommentList, err error)
+}
+
+type CommentsAPI interface {
+	GetComments(ctx context.Context, postID string, before, after, count int64, commentIds []string) (model.CommentList, error)
+	GetCommentByID(ctx context.Context, postID, commentID string) (res model.Comment, err error)
+	Send(ctx context.Context, postID string, comment *Comment) (model.SendMessageResult, error)
+	Edit(ctx context.Context, postID, commentID string, comment *Comment) (model.SendMessageResult, error)
+	Delete(ctx context.Context, postID, commentID string) (model.SendMessageResult, error)
 }
 
 type SubscriptionsAPI interface {
@@ -82,6 +89,7 @@ func NewApi(token string, opt ...Opt) (*Api, error) {
 		Upload:        newUpload(cli),
 		Chats:         newChats(cli),
 		Messages:      newMessages(cli),
+		Comments:      newComments(cli),
 		Subscriptions: newSubscriptions(cli),
 	}
 
@@ -93,6 +101,7 @@ type Api struct {
 	Upload        UploadAPI
 	Chats         ChatsAPI
 	Messages      MessagesAPI
+	Comments      CommentsAPI
 	Subscriptions SubscriptionsAPI
 }
 
