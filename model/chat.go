@@ -27,10 +27,11 @@ type Chat struct {
 }
 
 type ChatPatch struct {
-	Icon   *Payload `json:"icon,omitempty"`
-	Title  string   `json:"title,omitempty"`
-	Pin    string   `json:"pin,omitempty"`
-	Notify *bool    `json:"notify,omitempty"`
+	Icon        *Payload `json:"icon,omitempty"`
+	Title       string   `json:"title,omitempty"`
+	Description string   `json:"description"`
+	Pin         string   `json:"pin,omitempty"`
+	Notify      *bool    `json:"notify,omitempty"`
 }
 
 type ChatMember struct {
