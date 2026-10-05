@@ -56,7 +56,7 @@ func (u updateRaw) FromRaw() model.Update {
 			},
 		}
 		update.Callback = &u.Callback
-		update.Payload = u.Payload
+		update.Payload = u.Callback.Payload
 
 	case model.UpdateMessageCreated, model.UpdateMessageEdited:
 		update.ChatID = u.Message.Recipient.ChatID
