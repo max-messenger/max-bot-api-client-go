@@ -8,6 +8,7 @@ type Attachment struct {
 
 	Latitude  float64 `json:"latitude,omitempty"`
 	Longitude float64 `json:"longitude,omitempty"`
+	Duration  int     `json:"duration,omitempty"`
 }
 
 type Payload struct {
