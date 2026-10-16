@@ -17,14 +17,16 @@ type Messages struct {
 
 func (m *Messages) GetMessages(ctx context.Context, chatID, from, to, count int64, messageIDs []string) (res model.MessageList, err error) {
 	values := url.Values{}
-	if from > to {
-		from, to = to, from
-	}
 	values.Set(paramChatID, strconv.FormatInt(chatID, 10))
 
 	if len(messageIDs) > 0 {
 		values.Set(paramMessageIDs, strings.Join(messageIDs, ","))
 	}
+
+	// Внимание: семантика параметров API противоположна названию локальных переменных.
+	// В API:
+	//   from — время, ДО которого запрашиваются сообщения (верхняя граница по времени)
+	//   to   — время, НАЧИНАЯ с которого запрашиваются сообщения (нижняя граница по времени)
 	if to > 0 {
 		values.Set(paramTo, strconv.FormatInt(to, 10))
 	}
