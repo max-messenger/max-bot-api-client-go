@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"runtime"
 	"runtime/debug"
+	"strings"
 	"time"
 )
 
@@ -33,7 +34,6 @@ type client struct {
 	pollTimeout time.Duration
 	libVersion  string
 	goVersion   string
-	osVersion   string
 }
 
 func newClient(token, host string) *client {
@@ -143,6 +143,9 @@ func (c *client) addClientHeaders(req *http.Request) *http.Request {
 	req.Header.Add(headerInfoClientName, headerInfoClientNameVal)
 	req.Header.Add(headerInfoClientVersion, c.libVersion)
 	req.Header.Add(headerInfoClientRuntime, c.goVersion)
+	for k, v := range req.Header {
+		fmt.Println(k, ":", strings.Join(v, ","))
+	}
 
 	return req
 }
