@@ -9,7 +9,16 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"runtime"
+	"runtime/debug"
 	"time"
+)
+
+const (
+	headerInfoClientName    = "X-Max-Client-Name"
+	headerInfoClientVersion = "X-Max-Client-Version"
+	headerInfoClientRuntime = "X-Max-Client-Runtime"
+	headerInfoClientNameVal = "max-bot-api-client-go"
 )
 
 type HttpClient interface {
@@ -22,6 +31,9 @@ type client struct {
 	httpClient  HttpClient
 	pollPause   time.Duration
 	pollTimeout time.Duration
+	libVersion  string
+	goVersion   string
+	osVersion   string
 }
 
 func newClient(token, host string) *client {
@@ -36,6 +48,8 @@ func newClient(token, host string) *client {
 		},
 		pollPause:   defaultPause,
 		pollTimeout: defaultTimeout,
+		libVersion:  libVersion(),
+		goVersion:   runtime.Version(),
 	}
 }
 
@@ -91,7 +105,7 @@ func (c *client) raw(ctx context.Context, method, path string, query url.Values,
 		req.Header.Set("Content-Type", "application/json")
 	}
 
-	resp, err := c.httpClient.Do(req)
+	resp, err := c.do(req)
 	if err != nil {
 		var urlErr *url.Error
 		if errors.As(err, &urlErr) {
@@ -122,9 +136,32 @@ func (c *client) raw(ctx context.Context, method, path string, query url.Values,
 }
 
 func (c *client) do(req *http.Request) (*http.Response, error) {
-	return c.httpClient.Do(req)
+	return c.httpClient.Do(c.addClientHeaders(req))
+}
+
+func (c *client) addClientHeaders(req *http.Request) *http.Request {
+	req.Header.Add(headerInfoClientName, headerInfoClientNameVal)
+	req.Header.Add(headerInfoClientVersion, c.libVersion)
+	req.Header.Add(headerInfoClientRuntime, c.goVersion)
+
+	return req
 }
 
 func (c *client) isNotOk(statusCode int) bool {
 	return statusCode < http.StatusOK || statusCode >= http.StatusMultipleChoices
+}
+
+func libVersion() string {
+	var version string
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		version = "unknown"
+		return version
+	}
+	version = info.Main.Version
+	if version == "" || version == "(devel)" {
+		version = "dev"
+	}
+
+	return version
 }
