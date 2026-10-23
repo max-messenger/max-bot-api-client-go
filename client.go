@@ -11,7 +11,6 @@ import (
 	"net/url"
 	"runtime"
 	"runtime/debug"
-	"strings"
 	"time"
 )
 
@@ -20,6 +19,7 @@ const (
 	headerInfoClientVersion = "X-Max-Client-Version"
 	headerInfoClientRuntime = "X-Max-Client-Runtime"
 	headerInfoClientNameVal = "max-bot-api-client-go"
+	depPathOwn              = "github.com/max-messenger/max-bot-api-client-go/v2"
 )
 
 type HttpClient interface {
@@ -143,9 +143,6 @@ func (c *client) addClientHeaders(req *http.Request) *http.Request {
 	req.Header.Add(headerInfoClientName, headerInfoClientNameVal)
 	req.Header.Add(headerInfoClientVersion, c.libVersion)
 	req.Header.Add(headerInfoClientRuntime, c.goVersion)
-	for k, v := range req.Header {
-		fmt.Println(k, ":", strings.Join(v, ","))
-	}
 
 	return req
 }
@@ -160,6 +157,16 @@ func libVersion() string {
 	if !ok {
 		version = "unknown"
 		return version
+	}
+
+	for _, dep := range info.Deps {
+		if dep == nil {
+			continue
+		}
+
+		if dep.Path == depPathOwn {
+			return dep.Version
+		}
 	}
 	version = info.Main.Version
 	if version == "" || version == "(devel)" {
