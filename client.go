@@ -18,8 +18,7 @@ const (
 	headerInfoClientName    = "X-Max-Client-Name"
 	headerInfoClientVersion = "X-Max-Client-Version"
 	headerInfoClientRuntime = "X-Max-Client-Runtime"
-	headerInfoClientNameVal = "max-bot-api-client-go"
-	depPathOwn              = "github.com/max-messenger/max-bot-api-client-go/v2"
+	headerInfoClientNameVal = "github.com/max-messenger/max-bot-api-client-go/v2"
 )
 
 type HttpClient interface {
@@ -162,7 +161,7 @@ func libVersion() string {
 			continue
 		}
 
-		if dep.Path == depPathOwn {
+		if dep.Path == headerInfoClientNameVal {
 			return dep.Version
 		}
 	}
