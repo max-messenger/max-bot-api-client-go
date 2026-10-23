@@ -152,11 +152,9 @@ func (c *client) isNotOk(statusCode int) bool {
 }
 
 func libVersion() string {
-	var version string
 	info, ok := debug.ReadBuildInfo()
 	if !ok {
-		version = "unknown"
-		return version
+		return "unknown"
 	}
 
 	for _, dep := range info.Deps {
@@ -168,7 +166,7 @@ func libVersion() string {
 			return dep.Version
 		}
 	}
-	version = info.Main.Version
+	version := info.Main.Version
 	if version == "" || version == "(devel)" {
 		version = "dev"
 	}
