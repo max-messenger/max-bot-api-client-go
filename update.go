@@ -76,6 +76,7 @@ func (u updateRaw) FromRaw() model.Update {
 				Seq:         u.Message.Body.Seq,
 				Text:        u.Message.Body.Text,
 				Attachments: u.Message.Body.Attachments,
+				MarkUp:      u.Message.Body.MarkUp,
 			},
 			Link: u.Message.Link,
 		}

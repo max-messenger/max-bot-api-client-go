@@ -34,6 +34,7 @@ type MessageBody struct {
 	Seq         int64        `json:"seq"`
 	Text        string       `json:"text"`
 	Attachments []Attachment `json:"attachments"`
+	MarkUp      []MarkupType `json:"markup"`
 }
 
 type MessageList struct {
