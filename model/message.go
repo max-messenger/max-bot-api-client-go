@@ -75,7 +75,10 @@ type GetPinnedMessageResult struct {
 }
 
 type Markup struct {
-	From   int    `json:"from"`
-	Length int    `json:"length"`
-	Type   string `json:"type"`
+	Type     string `json:"type"`
+	From     int32  `json:"from"`
+	Length   int32  `json:"length"`
+	URL      string `json:"url"`
+	UserLink string `json:"user_link"`
+	UserID   int64  `json:"user_id"`
 }
