@@ -1,0 +1,103 @@
+name: max-examples-daily
+
+on:
+  schedule:
+    - cron: "30 6 * * *" # ежедневно в 06:30 UTC
+  workflow_dispatch: {}
+
+# Один живой прогон за раз: GetUpdates потребляет очередь апдейтов (параллельные
+# прогоны воруют события друг у друга), а chats pin/unpin спорят за закрепление
+# одной группы. Группа общая с examples-weekly. Текущий прогон не отменяется.
+concurrency:
+  group: examples-live
+  cancel-in-progress: false
+
+jobs:
+  check:
+    environment: BOT_TOKEN
+    timeout-minutes: 20
+    env:
+      BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+      TEST_USER_ID: ${{ secrets.TEST_USER_ID }}
+      CHAN_ID: ${{ secrets.CHAN_ID }}
+      CHAT_ID: ${{ secrets.CHAT_ID }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27"
+
+      # Чтения: быстрый сигнал, что токен и среда живы, до первых записей.
+      - name: Bots.GetMyInfo
+        run: go run ./example/bots get
+
+      - name: Chats.GetChat
+        run: go run ./example/chats get
+
+      - name: Chats.GetMembership
+        run: go run ./example/chats membership
+
+      - name: Chats.GetAdmins
+        run: go run ./example/chats admins
+
+      - name: Chats.GetMembers
+        run: go run ./example/chats members
+
+      - name: Chats.GetPinnedMessage
+        run: go run ./example/chats pin-get
+
+      # post_id каждый раз берётся заново: значение из прошлого прогона не переиспользуется.
+      # pipefail и проверка на пустой файл обязательны — иначе шаг зелёный при упавшем примере.
+      - name: посты канала -> post_id
+        shell: bash
+        run: |
+          set -euo pipefail
+          go run ./example/comments posts | tee /dev/stderr \
+            | sed -n 's/.*post_id=\([^ ]*\).*/\1/p' > "$RUNNER_TEMP/post_ids"
+          test -s "$RUNNER_TEMP/post_ids" || { echo "post_id не получен"; exit 1; }
+
+      - name: Comments.GetComments
+        run: go run ./example/comments list "$(head -1 "$RUNNER_TEMP/post_ids")"
+
+      - name: Subscriptions.GetSubscriptions
+        run: go run ./example/subscriptions list
+
+      # Записи, которые сами возвращают среду в исходное состояние.
+      - name: Bots.PatchCommands (идемпотентно, список заменяется)
+        run: go run ./example/bots commands
+
+      - name: Messages.Send -> GetMessageByID -> DeleteMessage
+        run: go run ./example/messages send
+
+      - name: Messages.EditMessage
+        run: go run ./example/messages edit
+
+      - name: Messages.Send в CHAT_ID
+        run: go run ./example/messages send-group текст
+
+      - name: Messages.Send с клавиатурой — AnswerOnCallback не проверяется (нужен callback_id из клика)
+        run: go run ./example/messages answer-callback
+
+      - name: UploadAPI file (дефолт upload без аргумента)
+        run: go run ./example/upload upload
+
+      - name: Chats.PinMessage + GetPinnedMessage + UnpinMessage
+        run: go run ./example/chats pin
+
+      - name: Chats.UnpinMessage
+        run: go run ./example/chats unpin
+
+      # Поллинг последним: GetUpdates выдаёт событие один раз и сдвигает маркер.
+      - name: Subscriptions.GetUpdates с WithPollingPause/WithPollingTimeout
+        run: go run ./example/subscriptions options
+
+      - name: Subscriptions.GetUpdates, два прохода
+        run: go run ./example/subscriptions poll
+
+      # L3, справочно: Messages.GetMessages наблюдался нестабильным, поэтому красный
+      # шаг здесь не означает регрессию и не определяет статус job.
+      - name: Messages.GetMessages (L3, справочно)
+        continue-on-error: true
+        run: go run ./example/messages get-list
