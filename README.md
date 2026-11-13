@@ -1,6 +1,9 @@
-[![Apache 2.0](https://img.shields.io/badge/License-Apache%20License%202.0-blue.svg)](LICENSE) [![unitTests](https://github.com/max-messenger/max-bot-api-client-go/actions/workflows/unitTests.yml/badge.svg)](https://github.com/max-messenger/max-bot-api-client-go/actions/workflows/unitTests.yml)
 # Max Bot API Client library for Golang
 
+[![Go Reference](https://pkg.go.dev/github.com/max-messenger/max-bot-api-client-go)](https://pkg.go.dev/github.com/max-messenger/max-bot-api-client-go)
+[![Apache 2.0](https://img.shields.io/badge/License-Apache%20License%202.0-blue.svg)](LICENSE)
+[![unitTests](https://github.com/max-messenger/max-bot-api-client-go/actions/workflows/unitTests.yml/badge.svg)](https://github.com/max-messenger/max-bot-api-client-go/actions/workflows/unitTests.yml)
+[![Go Version](https://img.shields.io/github.com/max-messenger/max-bot-api-client-go)]
 
 ## Документация
 
