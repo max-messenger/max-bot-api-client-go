@@ -262,6 +262,7 @@ func (t *updateTest) TestUpdate() {
 						Name:             "John Doe",
 					},
 				},
+				Payload: "picture",
 			},
 		},
 		{

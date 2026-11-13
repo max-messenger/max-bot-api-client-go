@@ -15,7 +15,7 @@ func TestNewMessage(t *testing.T) {
 	assert.NotNil(t, msg)
 	assert.Equal(t, int64(0), msg.userID)
 	assert.Equal(t, int64(0), msg.chatID)
-	assert.Equal(t, model.NewMessageBody{}, msg.message)
+	assert.Equal(t, model.NewMessageBody{Attachments: []model.Attachment{}}, msg.message)
 	assert.False(t, msg.disableLinkPreview)
 }
 

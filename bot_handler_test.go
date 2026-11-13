@@ -266,6 +266,7 @@ func (t *testBotHandler) TestHandlerSuccess() {
 						Name:             "John Doe",
 					},
 				},
+				Payload: "picture",
 			},
 		},
 		{
