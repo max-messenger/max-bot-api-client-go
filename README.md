@@ -1,6 +1,6 @@
 # Max Bot API Client library for Golang
 
-[![Go Reference](https://pkg.go.dev/github.com/max-messenger/max-bot-api-client-go)](https://pkg.go.dev/github.com/max-messenger/max-bot-api-client-go)
+[![Go Reference](https://pkg.go.dev/badge/github.com/max-messenger/max-bot-api-client-go.svg)](https://pkg.go.dev/github.com/max-messenger/max-bot-api-client-go)
 [![Apache 2.0](https://img.shields.io/badge/License-Apache%20License%202.0-blue.svg)](LICENSE)
 [![unitTests](https://github.com/max-messenger/max-bot-api-client-go/actions/workflows/unitTests.yml/badge.svg)](https://github.com/max-messenger/max-bot-api-client-go/actions/workflows/unitTests.yml)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/max-messenger/max-bot-api-client-go?logo=go&logoColor=white&color=00ADD8)](https://github.com/max-messenger/max-bot-api-client-go/blob/main/go.mod)
