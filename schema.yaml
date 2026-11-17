@@ -1,23 +1,29 @@
 openapi: 3.0.0
 info:
-  version: 0.0.30
+  version: 0.0.34
   title: Max Bot API
   license:
     name: Apache 2.0
   description: |-
     # About
-    Bot API allows bots to interact with Max. Methods are called by sending HTTPS requests to [botapi.max.ru](https://botapi.max.ru) domain.
-    Bots are third-party applications that use Max features. A bot can legitimately take part in a conversation. It can be achieved through HTTP requests to the Max Bot API.
+
+    Bot API allows bots to interact with Max. Methods are called by sending HTTPS requests to [platform-api2.max.ru](https://platform-api2.max.ru) domain.
+    Bots are third-party applications that use Max features. A bot can legitimately take part in a conversation. It can be achieved through HTTPS requests to the Max Bot API.
 
     ## Features
+
     Max bots of the current version are able to:
+
     - Communicate with users and respond to requests
     - Recommend users complete actions via programmed buttons
-    - Request personal data from users (name, short reference, phone number)
+    - Request data from users (name, short reference, phone number)
+
     We'll keep working on expanding bot capabilities in the future.
 
     ## Examples
+
     Bots can be used for the following purposes:
+
     - Providing support, answering frequently asked questions
     - Sending typical information
     - Voting
@@ -25,11 +31,8 @@ info:
     - Following external links
     - Forwarding a user to a chat/channel
 
-    ## @MasterBot
-    [MasterBot](https://max.ru/MasterBot) is the main bot in Max, all bots creator. Use MasterBot to create and edit
-    your bots. Feel free to contact us for any questions, [@support](https://max.ru/support) or [help@max.ru](mailto:help@max.ru).
-
     ## HTTP verbs
+
     `GET` &mdash; getting resources, parameters are transmitted via URL
 
     `POST` &mdash; creation of resources (for example, sending new messages)
@@ -41,6 +44,7 @@ info:
     `PATCH` &mdash; patching resources
 
     ## HTTP response codes
+
     `200` &mdash; successful operation
 
     `400` &mdash; invalid request
@@ -49,6 +53,8 @@ info:
 
     `404` &mdash; resource not found
 
+    `403` &mdash; forbidden
+
     `405` &mdash; method is not allowed
 
     `429` &mdash; the number of requests is exceeded
@@ -56,74 +62,68 @@ info:
     `503` &mdash; service unavailable
 
     ## Resources format
+
     For content requests (PUT and POST) and responses, the API uses the JSON format.
     All strings are UTF-8 encoded.
     Date/time fields are represented as the number of milliseconds that have elapsed since 00:00 January 1, 1970 in the long format. To get it, you can simply multiply the UNIX timestamp by 1000. All date/time fields have a UTC timezone.
+
     ## Error responses
-    In case of an error, the API returns a response with the corresponding HTTP code and JSON with the following fields:
 
-    `code` - the string with the error key
+    In case of an error, the API returns a response with the corresponding HTTP status code and a JSON object containing the following fields, depending on the method:
 
-    `message` - a string describing the error </br>
+    - `success: false` — a flag indicating that an error has occurred; returned for certain methods
+    - `code` — a string with the error key
+    - `message` — a string describing the error
 
-    For example:
-    ```bash
-    > http https://botapi.max.ru/chats?access_token={EXAMPLE_TOKEN}
-    HTTP / 1.1 403 Forbidden
-    Cache-Control: no-cache
-    Connection: Keep-Alive
-    Content-Length: 57
-    Content-Type: application / json; charset = utf-8
-    Set-Cookie: web_ui_lang = ru; Path = /; Domain = .max.ru; Expires = 2019-03-24T11: 45: 36.500Z
-    {
-       "code": "verify.token",
-       "message": "Invalid access_token"
-    }
-    ```
+    Certain methods can return HTTP `200` with `success: false`. For these methods, check the `success` field as well as the HTTP status code. In such responses, the `code` field is optional and may be `null`.
+
     ## Receiving notifications
+
     Max Bot API supports 2 options of receiving notifications on new events for bots:
-    - Push notifications via WebHook. To receive data via WebHook, you'll have to [add subscription](https://dev.max.ru/#operation/subscribe);
-    - Notifications upon request via [long polling](#operation/getUpdates) API. All data can be received via long polling **by default** after creating the bot.
+
+    - Push notifications via WebHook (recommended). To receive data via WebHook, you'll have to [add subscription](https://dev.max.ru/docs-api/methods/POST/subscriptions);
+    - Notifications upon request via long polling (/getUpdates) API (not recommended). All data can be received via long polling **by default** after creating the bot.
+
+      Receiving updates via Long Polling is limited in speed and event retention time — this method is not suitable for production environments. We recommend using Webhook at all stages of work.
 
     Both methods **cannot** be used simultaneously.
-    Refer to the response schema of [/updates](https://dev.max.ru/#operation/getUpdates) method to check all available types of updates.
+    Refer to the response schema of [/updates](https://dev.max.ru/docs-api/methods/GET/updates) method to check all available types of updates.
 
     ### Webhook
+
     There is some notes about how we handle webhook subscription:
+
     1. Sometimes webhook notification cannot be delivered in case when bot server or network is down.
 
-      In such case we well retry delivery in a short period of time (from 30 to 60 seconds) and will do this until get
+      In such case we well retry delivery in exponentially increasing intervals and will do this until get
       `200 OK` status code from your server, but not longer than **8 hours** (*may change over time*) since update happened.
 
       We also consider any non `200`-response from server as failed delivery.
 
-    2. To protect your bot from unexpected high load we send **no more than 100** notifications per second by default.
-      If you want increase this limit, contact us at [@support](https://max.ru/support).
+    ### Updates
 
-
-    It should be from one of the following subnets:
-    ```
-    5.101.42.200/31
-    31.177.104.200/31
-    89.221.230.200/31
-    ```
-
+    1. Minimum polling time - 300ms
 
     ## Message buttons
+
     You can program buttons for users answering a bot.
     Max supports the following types of buttons:
 
     `callback` &mdash; sends a notification with payload to a bot (via WebHook or long polling)
 
+    `clipboard` &mdash; copies payload data to clipboard
+
+    `open_app` &mdash; opens mini app
+
     `link` &mdash; makes a user to follow a link
+
+    `message` &mdash; send a quick reply, command, or template message.
 
     `request_contact` &mdash; requests the user permission to access contact information (phone number, short link, email)
 
     `request_geo_location` &mdash; asks user to provide current geo location
 
-    `chat` &mdash; creates chat associated with message
-
-    To start create buttons [send message](#operation/sendMessage) with `InlineKeyboardAttachment`:
+    To start create buttons (sendMessage) with `InlineKeyboardAttachment`:
     ```json
     {
       "text": "It is message with inline keyboard",
@@ -138,13 +138,6 @@ info:
                   "text": "Press me!",
                   "payload": "button1 pressed"
                 }
-              ],
-              [
-                {
-                  "type": "chat",
-                  "text": "Discuss",
-                  "chat_title": "Message discussion"
-                }
               ]
             ]
           }
@@ -152,25 +145,15 @@ info:
       ]
     }
     ```
-    ### Chat button
-    Chat button is a button that starts chat assosiated with the current message. It will be **private** chat with a link, bot will be added as administrator by default.
-
-    Chat will be created as soon as the first user taps on button. Bot will receive `message_chat_created` update.
-
-    Bot can set title and description of new chat by setting `chat_title` and `chat_description` properties.
-
-    Whereas keyboard can contain several `chat`-buttons there is `uuid` property to distinct them between each other.
-    In case you do not pass `uuid` we will generate it. If you edit message, pass `uuid` so we know that this button starts the same chat as before.
-
-    Chat button also can contain `start_payload` that will be sent to bot as part of `message_chat_created` update.
 
     ## Deep linking
+
     Max supports deep linking mechanism for bots. It allows passing additional payload to the bot on startup.
     Deep link can contain any data encoded into string up to **128** characters long. Longer strings will be omitted and **not** passed to the bot.
 
     Each bot has start link that looks like:
     ```
-    https://max.ru/%BOT_USERNAME%/start/%PAYLOAD%
+    https://max.ru/<botName>?start=<payload>
     ```
     As soon as user clicks on such link we open dialog with bot and send this payload to bot as part of `bot_started` update:
     ```json
@@ -188,25 +171,26 @@ info:
     ```
 
     Deep linking mechanism is supported for iOS version 2.7.0 and Android 2.9.0 and higher.
-    
+
     ## Text formatting
-    
-    Message text can be improved with basic formatting such as: **strong**, *emphasis*, ~strikethough~, 
+
+    Message text can be improved with basic formatting such as: **strong**, *emphasis*, ~strikethough~,
     <ins>underline</ins>, `code` or link. You can use either markdown-like or HTML formatting.
-    
-    To enable text formatting set the `format` property of [NewMessageBody](#tag/new_message_model).
+
+    To enable text formatting set the `format` property of NewMessageBody model.
 
     ### Max flavored Markdown
-    To enable [Markdown](https://spec.commonmark.org/0.29/) parsing, set the `format` property of [NewMessageBody](#tag/new_message_model) to `markdown`.
-    
+
+    To enable [Markdown](https://spec.commonmark.org/0.29/) parsing, set the `format` property of NewMessageBody model to `markdown`.
+
     We currently support only the following syntax:
 
     `*empasized*` or `_empasized_` for *italic* text
-    
+
     `**strong**` or `__strong__` for __bold__ text
-    
+
     `~~strikethough~~`  for ~strikethough~ text
-    
+
     `++underline++`  for <ins>underlined</ins> text
 
     ``` `code` ``` or ` ```code``` ` for `monospaced` text
@@ -224,7 +208,7 @@ info:
     
     ### HTML support
     
-    To enable HTML parsing, set the `format` property of [NewMessageBody](#tag/new_message_model) to `html`.
+    To enable HTML parsing, set the `format` property of NewMessageBody model to `html`.
     
     Only the following HTML tags are supported. All others will be stripped:
     
@@ -248,57 +232,82 @@ info:
 
     Text formatting is supported for iOS since version 3.1 and Android since 2.20.0.
 
-    # Versioning
-    API models and interface may change over time. To make sure your bot will get the right info, we strongly recommend 
-    adding API version number to each request. You can add it as `v` parameter to each HTTP-request. For instance, 
-    `v=0.1.2`.
-    To specify the data model version you are getting through WebHook subscription, use the `version` property in the 
-    request body of the [subscribe](https://dev.max.ru/#operation/subscribe) request.
-
     # Libraries
-    We have developed the official [Java client](https://github.com/max-messenger/max-bot-api-client-java) and [SDK](https://github.com/max-messenger/max-bot-sdk-java).
-
-    # Changelog
-    To see changelog for older versions visit our [GitHub](https://github.com/max-messenger/max-bot-api-schema/releases).
+    We have developed the official [Typescript client](https://github.com/max-messenger/max-bot-api-client-ts), [Go client](https://github.com/max-messenger/max-bot-api-client-go) and also [Go framework](https://github.com/max-messenger/maxbot/tree/main) 
 servers:
-  - url: 'https://botapi.max.ru'
+  - url: '/'
 security:
   - access_token: [ ]
 tags:
+  - name: bots
+    description: Bot management
+  - name: chats
+    description: Chat and channel operations
+  - name: messages
+    description: Message sending and management
+  - name: subscriptions
+    description: Webhook subscriptions
+  - name: upload
+    description: File upload endpoints
   - name: user_model
     x-displayName: User
     description: |
       <SchemaDefinition schemaRef="#/components/schemas/User"/>
+  - name: user_with_photo_model
+    x-displayName: User
+    description: |
+      <SchemaDefinition schemaRef="#/components/schemas/UserWithPhoto"/>
+  - name: bot_info
+    x-displayName: BotInfo
+    description: |
+      <SchemaDefinition schemaRef="#/components/schemas/BotInfo"/>
   - name: chat_model
     x-displayName: Chat
     description: |
       <SchemaDefinition schemaRef="#/components/schemas/Chat"/>
+  - name: chat_member
+    x-displayName: ChatMember
+    description: |
+      <SchemaDefinition schemaRef="#/components/schemas/ChatMember"/>
   - name: message_model
     x-displayName: Message
     description: |
       <SchemaDefinition schemaRef="#/components/schemas/Message"/>
+  - name: comment_message_model
+    x-displayName: CommentMessage
+    description: |
+      <SchemaDefinition schemaRef="#/components/schemas/CommentMessage"/>
   - name: new_message_model
-    x-displayName: New message
+    x-displayName: NewMessageBody
     description: |
       <SchemaDefinition schemaRef="#/components/schemas/NewMessageBody"/>
+  - name: new_comment_message_model
+    x-displayName: NewCommentBody
+    description: |
+      <SchemaDefinition schemaRef="#/components/schemas/NewCommentBody"/>
   - name: update_model
     x-displayName: Update
     description: |
-      <SchemaDefinition schemaRef="#/components/schemas/Update"/>
+      <SchemaDefinition schemaRef="#/components/schemas/Update"/> 
 x-tagGroups:
   - name: Methods
     tags:
       - bots
       - chats
+      - comments
       - messages
       - subscriptions
       - upload
   - name: Objects
     tags:
       - user_model
+      - user_with_photo_model
+      - bot_info
+      - chat_member
       - chat_model
       - message_model
       - new_message_model
+      - new_comment_message_model
       - update_model
 paths:
   /me:
@@ -319,111 +328,50 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalError'
+  /me/commands:
     patch:
       tags:
         - bots
-      summary: Edit current bot info
-      operationId: editMyInfo
-      description: Edits current bot info. Fill only the fields you want to update. All remaining fields will stay untouched
+      summary: Edit current bot commands
+      operationId: editMyCommands
+      description: Edits current bot Commands.
       responses:
         '200':
-          description: Modified bot info
+          description: Modified bot commands info
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BotInfo'
+                $ref: '#/components/schemas/BotCommandsInfo'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalError'
       requestBody:
+        description: Bot commands to set
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/BotPatch'
-  /chats:
+              $ref: '#/components/schemas/BotCommandsPatch'
+  /chats/{chatId}: 
     get:
       tags:
         - chats
-      operationId: getChats
-      description: 'Returns information about chats that bot participated in: a result list and marker points to the next page'
-      summary: Get all chats
-      parameters:
-        - description: Number of chats requested
-          name: count
-          in: query
-          schema:
-            type: integer
-            format: int32
-            minimum: 1
-            maximum: 100
-            default: 50
-        - description: Points to next data page. `null` for the first page
-          name: marker
-          in: query
-          schema:
-            $ref: '#/components/schemas/bigint'
-      responses:
-        '200':
-          description: Returns paginated response of chats
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ChatList'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalError'
-  '/chats/{chatLink}':
-    get:
-      tags:
-        - chats
-      x-opGroup: chat
-      operationId: getChatByLink
-      description: Returns chat/channel information by its public link or dialog with user by username
-      summary: Get chat by link
-      parameters:
-        - name: chatLink
-          description: Public chat link or username
-          required: true
-          in: path
-          schema:
-            type: string
-            pattern: '@?[a-zA-Z]+[\w-]*'
-      responses:
-        '200':
-          description: Chat information
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Chat'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalError'
-  '/chats/{chatId}':
-    get:
-      tags:
-        - chats
-      x-opGroup: chat
       operationId: getChat
-      description: Returns info about chat.
+      description: Returns info about chat or channel.
       summary: Get chat
       parameters:
         - name: chatId
-          description: Requested chat identifier
+          description: Requested chat or channel identifier
           required: true
           in: path
           schema:
-            type: integer
-            format: int64
-            pattern: \-?\d+
+            allOf:
+              - $ref: '#/components/schemas/ChatId'
+            x-pattern: \-?\d+
       responses:
         '200':
-          description: Chat information
+          description: Chat or channel information
           content:
             application/json:
               schema:
@@ -432,23 +380,23 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalError'
-    patch:
+    patch: 
       tags:
         - chats
-      x-opGroup: chat
       operationId: editChat
-      description: 'Edits chat info: title, icon, etc…'
-      summary: Edit chat info
+      description: 'Edits chat or channel info: title, icon, etc…'
+      summary: Edit chat or channel info
       parameters:
         - name: chatId
-          description: Chat identifier
+          description: Chat or channel identifier
           required: true
           in: path
           schema:
-            type: integer
-            format: int64
-            pattern: \-?\d+
+            allOf:
+              - $ref: '#/components/schemas/ChatId'
+            x-pattern: \-?\d+
       requestBody:
+        description: Chat or channel info to update
         required: true
         content:
           application/json:
@@ -467,28 +415,6 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '500':
           $ref: '#/components/responses/InternalError'
-    delete:
-      tags:
-        - chats
-      operationId: deleteChat
-      description: Deletes chat for all participants.
-      summary: Delete chat
-      parameters:
-        - name: chatId
-          description: Chat identifier
-          required: true
-          in: path
-          schema:
-            type: integer
-            format: int64
-            pattern: \-?\d+
-      responses:
-        '200':
-          $ref: '#/components/responses/SuccessResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalError'
   '/chats/{chatId}/actions':
     post:
       tags:
@@ -502,10 +428,11 @@ paths:
           required: true
           in: path
           schema:
-            type: integer
-            format: int64
-            pattern: \-?\d+
+            allOf:
+              - $ref: '#/components/schemas/ChatId'
+            x-pattern: \-?\d+
       requestBody:
+        description: Action to send to chat members
         required: true
         content:
           application/json:
@@ -531,9 +458,9 @@ paths:
           required: true
           in: path
           schema:
-            type: integer
-            format: int64
-            pattern: \-?\d+
+            allOf:
+              - $ref: '#/components/schemas/ChatId'
+            x-pattern: \-?\d+
       responses:
         '200':
           description: Pinned message
@@ -561,10 +488,11 @@ paths:
           required: true
           in: path
           schema:
-            type: integer
-            format: int64
-            pattern: \-?\d+
+            allOf:
+              - $ref: '#/components/schemas/ChatId'
+            x-pattern: \-?\d+
       requestBody:
+        description: Message to pin in chat
         required: true
         content:
           application/json:
@@ -593,9 +521,9 @@ paths:
           required: true
           in: path
           schema:
-            type: integer
-            format: int64
-            pattern: \-?\d+
+            allOf:
+              - $ref: '#/components/schemas/ChatId'
+            x-pattern: \-?\d+
       responses:
         '200':
           $ref: '#/components/responses/SuccessResponse'
@@ -611,19 +539,18 @@ paths:
     get:
       tags:
         - chats
-      x-opGroup: myMembership
       operationId: getMembership
-      summary: Get chat membership
-      description: Returns chat membership info for current bot
+      summary: Get chat or channel membership
+      description: Returns chat or channel  membership info for current bot 
       parameters:
         - name: chatId
-          description: Chat identifier
+          description: Chat or channel identifier
           required: true
           in: path
           schema:
-            type: integer
-            format: int64
-            pattern: \-?\d+
+            allOf:
+              - $ref: '#/components/schemas/ChatId'
+            x-pattern: \-?\d+
       responses:
         '200':
           description: Current bot membership info
@@ -639,22 +566,21 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
-    delete:
+    delete: 
       tags:
         - chats
       operationId: leaveChat
-      x-opGroup: myMembership
       summary: Leave chat
-      description: Removes bot from chat members.
+      description: Removes bot from chat or channel members.
       parameters:
         - name: chatId
-          description: Chat identifier
+          description: Chat or channel identifier
           required: true
           in: path
           schema:
-            type: integer
-            format: int64
-            pattern: \-?\d+
+            allOf:
+              - $ref: '#/components/schemas/ChatId'
+            x-pattern: \-?\d+
       responses:
         '200':
           $ref: '#/components/responses/SuccessResponse'
@@ -671,17 +597,17 @@ paths:
       tags:
         - chats
       operationId: getAdmins
-      summary: Get chat admins
-      description: Returns all chat administrators. Bot must be **administrator** in requested chat.
+      summary: Get chat or channel admins
+      description: Returns all chat or channel administrators. Bot must be **administrator** in requested chat or channel. 
       parameters:
         - name: chatId
-          description: Chat identifier
+          description: Chat or channel identifier
           required: true
           in: path
           schema:
-            type: integer
-            format: int64
-            pattern: \-?\d+
+            allOf:
+              - $ref: '#/components/schemas/ChatId'
+            x-pattern: \-?\d+
       responses:
         '200':
           description: Administrators list
@@ -697,22 +623,23 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
-    post:
+    post: 
       tags:
         - chats
       operationId: postAdmins
-      summary: Set chat admins
-      description: Returns true if all administrators added.
+      summary: Set chat or channel admins
+      description: Returns true if all administrators added. Additional permissions may require
       parameters:
         - name: chatId
-          description: Chat identifier
+          description: Chat or channel identifier
           required: true
           in: path
           schema:
-            type: integer
-            format: int64
-            pattern: \-?\d+
+            allOf:
+              - $ref: '#/components/schemas/ChatId'
+            x-pattern: \-?\d+
       requestBody:
+        description: List of administrators to set in chat or channel
         required: true
         content:
           application/json:
@@ -730,29 +657,29 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
   '/chats/{chatId}/members/admins/{userId}':
-    delete:
+    delete: 
       tags:
         - chats
       operationId: deleteAdmins
       summary: Revoke admin rights
-      description: Revokes admin rights from a user in the chat by removing their administrative privileges
+      description: Revokes admin rights from a user in the chat or channel by removing their administrative privileges. Additional permissions may require.
       parameters:
         - name: chatId
-          description: Chat identifier
+          description: Chat or channel identifier
           required: true
           in: path
           schema:
-            type: integer
-            format: int64
-            pattern: \-?\d+
+            allOf:
+              - $ref: '#/components/schemas/ChatId'
+            x-pattern: \-?\d+
         - name: userId
           description: User identifier
           required: true
           in: path
           schema:
-            type: integer
-            format: int64
-            pattern: \-?\d+
+            allOf:
+              - $ref: '#/components/schemas/UserId'
+            x-pattern: \d+
       responses:
         '200':
           $ref: '#/components/responses/SuccessResponse'
@@ -766,20 +693,18 @@ paths:
         - chats
       operationId: getMembers
       summary: Get members
-      description: Returns users participated in chat.
+      description: Returns users participated in chat or channel. 
       parameters:
         - name: chatId
-          description: Chat identifier
+          description: Chat or channel identifier
           required: true
           in: path
           schema:
-            type: integer
-            format: int64
-            pattern: \-?\d+
+            allOf:
+              - $ref: '#/components/schemas/ChatId'
+            x-pattern: \-?\d+
         - name: user_ids
           description: |-
-            *Since* version [0.1.4](#section/About/Changelog).
-
             Comma-separated list of users identifiers to get their membership. When this parameter is passed, both `count` and `marker` are ignored
           required: false
           in: query
@@ -787,8 +712,7 @@ paths:
             type: array
             uniqueItems: true
             items:
-              type: integer
-              format: int64
+              $ref: '#/components/schemas/UserId'
             nullable: true
           style: form
         - name: marker
@@ -804,7 +728,7 @@ paths:
             type: integer
             minimum: 1
             maximum: 100
-            default: '20'
+            default: 20
       responses:
         '200':
           description: Returns members list and pointer to the next data page
@@ -832,10 +756,11 @@ paths:
           required: true
           in: path
           schema:
-            type: integer
-            format: int64
-            pattern: \-?\d+
+            allOf:
+              - $ref: '#/components/schemas/ChatId'
+            x-pattern: \-?\d+
       requestBody:
+        description: List of users to add to chat
         required: true
         content:
           application/json:
@@ -860,24 +785,23 @@ paths:
       tags:
         - chats
       operationId: removeMember
-      description: Removes member from chat. Additional permissions may require.
+      description: Removes member from chat or channel. Additional permissions may require. 
       summary: Remove member
       parameters:
         - name: chatId
-          description: Chat identifier
+          description: Chat or channel identifier
           required: true
           in: path
           schema:
-            type: integer
-            format: int64
-            pattern: \-?\d+
+            allOf:
+              - $ref: '#/components/schemas/ChatId'
+            x-pattern: \-?\d+
         - name: user_id
-          description: User id to remove from chat
+          description: User id to remove from chat or channel
           required: true
           in: query
           schema:
-            type: integer
-            format: int64
+            $ref: '#/components/schemas/UserId'
         - name: block
           description: |-
             Set to `true` if user should be blocked in chat.
@@ -921,9 +845,10 @@ paths:
       description: |-
         Subscribes bot to receive updates via WebHook. After calling this method, the bot will receive notifications about new events in chat rooms at the specified URL.
 
-        Your server **must** be listening on one of the following ports: **80, 8080, 443, 8443, 16384-32383**
+        Your server **must** be listening on port **443**
       summary: Subscribe
       requestBody:
+        description: WebHook subscription parameters
         required: true
         content:
           application/json:
@@ -936,11 +861,11 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalError'
-    delete:
+    delete: 
       tags:
         - subscriptions
       operationId: unsubscribe
-      description: Unsubscribes bot from receiving updates via WebHook. After calling the method, the bot stops receiving notifications about new events. Notification via the long-poll API becomes available for the bot
+      description: Unsubscribes bot from receiving updates via WebHook. After calling the method, the bot stops receiving notifications about new events. Notification via the long-poll API becomes available for the bot. Receiving updates via Long Polling is limited in speed and event retention time — this method is not suitable for production environments. We recommend using Webhook at all stages of work
       summary: Unsubscribe
       parameters:
         - name: url
@@ -957,7 +882,6 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
   /uploads:
-    # описание этого метода не отражает действительность
     post:
       tags:
         - upload
@@ -980,10 +904,14 @@ paths:
         reliable and agile. If a `Content-Type`: multipart/form-data header is passed in a request our service indicates
         upload type as a simple single request upload.
 
-        This type of an upload has some restrictions:
+        This type of an upload has some restrictions: 
 
-        - Max. file size - 2 Gb
-        - Only one file per request can be uploaded
+        - image — available formats: JPG, JPEG, PNG, GIF, TIFF, BMP, HEIC; maximum size for a single image: up to 50 MB AND no more than 7680 x 7680 px — both criteria must be met. For example, you cannot upload an image that is 55 MB and has dimensions of 7600 x 7600 px.
+        - video — available formats: MP4, MOV, MKV, WEBM; maximum size for a single video: up to 250 MB
+        - audio — available formats: MP3, WAV, M4A, and others, maximum size for a single audio file: up to 256 MB OR duration of no more than 60 minutes — both criteria must be met. For example, you cannot send an audio file that is 250 MB and 70 minutes long.
+        - file — available formats: TXT, DOC, PDF, and other common formats, maximum size for a single file: up to 4 GB
+        - type=photo parameter is no longer supported. If you used type=photo in previously created integrations, please replace it with type=image
+        - Only one mediafile per request can be uploaded
         - No possibility to restart stopped / failed upload
 
         ##### Resumable upload
@@ -995,14 +923,14 @@ paths:
         and continue to upload a file.
 
         ##### Get upload status
-        To GET an upload status you simply need to perform HTTP-GET request to a file upload URL.
+        To GET an upload status you simply need to perform HTTPS-GET request to a file upload URL.
         Our service will respond with current upload status,
         complete file size and last known uploaded byte. This data can be used to complete stopped upload
         if something went wrong. If `REQUESTED_RANGE_NOT_SATISFIABLE` or `INTERNAL_SERVER_ERROR` status was returned
         it is a good point to try to restart an upload
       summary: Get upload URL
       parameters:
-        - description: 'Uploaded file type: photo, audio, video, file'
+        - description: 'Uploaded file type: image, audio, video, file'
           name: type
           required: true
           in: query
@@ -1020,18 +948,18 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
   /messages:
-    get:
+    get: 
       tags:
         - messages
       operationId: getMessages
-      description: 'Returns messages in chat: result page and marker referencing to the next page. Messages traversed in reverse direction so the latest message in chat will be first in result array. Therefore if you use `from` and `to` parameters, `to` must be **less than** `from`'
+      description: 'Returns messages in chat or channel: result page and marker referencing to the next page. Messages traversed in reverse direction so the latest message in chat will be first in result array. Therefore if you use `from` and `to` parameters, `to` must be **less than** `from`'
       summary: Get messages
       parameters:
-        - description: Chat identifier to get messages in chat
+        - description: Chat or channel identifier to get messages in chat or channel
           name: chat_id
           in: query
           schema:
-            $ref: '#/components/schemas/bigint'
+            $ref: '#/components/schemas/ChatId'
         - description: Comma-separated list of message ids to get
           name: message_ids
           in: query
@@ -1042,15 +970,31 @@ paths:
               type: string
             nullable: true
         - name: from
-          description: Start time for requested messages
+          description: Start time for requested messages - use after instead
           in: query
           schema:
             $ref: '#/components/schemas/bigint'
+          deprecated: true
         - name: to
-          description: End time for requested messages
+          description: End time for requested messages  - use before instead
           in: query
           schema:
             $ref: '#/components/schemas/bigint'
+          deprecated: true
+        - name: before
+          description: Messages before timestamp
+          in: query
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+        - name: after
+          description: Messages after timestamp
+          in: query
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
         - name: count
           description: Maximum amount of messages in response
           in: query
@@ -1077,19 +1021,20 @@ paths:
                 $ref: '#/components/schemas/Error'
         '500':
           $ref: '#/components/responses/InternalError'
-    post:
+    post: 
       tags:
         - messages
       operationId: sendMessage
       description: |-
-        Sends a message to a chat.
+        Sends a message to a chat, channel or dialog. 
         As a result for this method new message identifier returns.
+        In the case of a channel, it returns an error if you pass notify=false
         ### Attaching media
         Attaching media to messages is a three-step process.
 
-        At first step, you should [obtain a URL to upload](#operation/getUploadUrl) your media files.
+        At first step, you should obtain a URL to upload your media files.
 
-        At the second, you should upload binary of appropriate format to URL you obtained at the previous step. See [upload](https://dev.max.ru/#operation/getUploadUrl) section for details.
+        At the second, you should upload binary of appropriate format to URL you obtained at the previous step. See [upload section](https://dev.max.ru/docs-api/methods/POST/uploads) in docs for details.
 
         Finally, if the upload process was successful, you will receive JSON-object in a response body.  Use this object to create attachment. Construct an object with two properties:
         - `type` with the value set to appropriate media type
@@ -1099,12 +1044,12 @@ paths:
 
         1. Get URL to upload. Execute following:
         ```shell
-        curl -X POST 'https://botapi.max.ru/uploads?access_token=%access_token%&type=video'
+        curl -X POST 'https://platform-api2.max.ru/uploads?type=video' -H 'Authorization: %access_token%' 
         ```
         As the result it will return URL for the next step.
         ```json
         {
-            "url": "http://vu.mycdn.me/upload.do…"
+            "url": "http://omub.okcdn.ru/upload.do…" 
         }
         ```
 
@@ -1112,7 +1057,7 @@ paths:
         ```shell
         curl -i -X POST
           -H "Content-Type: multipart/form-data"
-          -F "data=@movie.mp4" "http://vu.mycdn.me/upload.do…"
+          -F "data=@movie.mp4" "http://omub.okcdn.ru/upload.do…" 
         ```
         As the result it will return JSON you can attach to message:
         ```json
@@ -1147,13 +1092,11 @@ paths:
           in: query
           required: false
           schema:
-            type: integer
-            format: int64
+            $ref: '#/components/schemas/UserId'
         - name: chat_id
-          description: Fill this if you send message to chat
+          description: Fill this if you send message to chat or channel
           schema:
-            type: integer
-            format: int64
+            $ref: '#/components/schemas/ChatId'
           in: query
           required: false
         - name: disable_link_preview
@@ -1164,6 +1107,7 @@ paths:
             type: boolean
             default: false
       requestBody:
+        description: Message to send
         required: true
         content:
           application/json:
@@ -1178,6 +1122,15 @@ paths:
                 $ref: '#/components/schemas/SendMessageResult'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: This exception happens when user suspended bot, bot doesn't have access to chat or channel or forwarded message is prohibited
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: chat.denied
+                message: Forwarding messages from this chat or channel is prohibited
         '500':
           $ref: '#/components/responses/InternalError'
     put:
@@ -1192,9 +1145,9 @@ paths:
           required: true
           in: query
           schema:
-            type: string
-            minLength: 1
+            $ref: '#/components/schemas/MessageId'
       requestBody:
+        description: Updated message content
         required: true
         content:
           application/json:
@@ -1207,20 +1160,19 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalError'
-    delete:
+    delete: 
       tags:
         - messages
       operationId: deleteMessage
       summary: Delete message
-      description: Deletes message in a dialog or in a chat if bot has permission to delete messages.
+      description: Deletes message in a dialog, chat or channel if bot has permission to delete messages.
       parameters:
         - name: message_id
           description: Deleting message identifier
           required: true
           in: query
           schema:
-            type: string
-            minLength: 1
+            $ref: '#/components/schemas/MessageId'
       responses:
         '200':
           $ref: '#/components/responses/SuccessResponse'
@@ -1238,12 +1190,13 @@ paths:
       description: Returns single message by its identifier.
       summary: Get message
       parameters:
-        - description: Message identifier (`mid`) to get single message in chat
+        - description: Message identifier (`mid`) to get single message in chat or channel
           in: path
           name: messageId
           required: true
           schema:
-            type: string
+            allOf:
+              - $ref: '#/components/schemas/MessageId'
             pattern: (mid.)?[a-zA-Z0-9_\-]+
       responses:
         '200':
@@ -1256,6 +1209,209 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           description: In case when message is not found or bot has no access to it
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /messages/{messageId}/comments:
+    get: 
+      tags:
+        - comments
+      operationId: getComments
+      description: 'Returns comments for a message in channel: result page and marker referencing to the next page. Comments traversed in reverse direction so the latest comment for the message will be first in result array. Additional permissions may require'
+      summary: Get comments
+      parameters:
+        - description: Message identifier (`mid`) of the commented message
+          in: path
+          name: messageId
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/MessageId'
+            pattern: (mid.)?[a-zA-Z0-9_\-]+
+        - description: Comma-separated list of comment ids to get
+          name: comment_ids
+          in: query
+          style: form
+          schema:
+            uniqueItems: true
+            items:
+              $ref: '#/components/schemas/MessageId'
+            nullable: true
+        - name: before
+          description: Comments before timestamp
+          in: query
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+        - name: after
+          description: Comments after timestamp
+          in: query
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+        - name: count
+          description: Maximum amount of comments in response
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 50
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Returns list of comments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentMessageList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post: 
+      tags:
+        - comments
+      operationId: sendComment
+      description: Sends a comment to a message in channel. Attachments are not allowed in comments. Additional permissions may require
+      summary: Send comment
+      parameters:
+        - description: Message identifier (`mid`) of the commented message
+          in: path
+          name: messageId
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/MessageId'
+            pattern: (mid.)?[a-zA-Z0-9_\-]+
+        - name: disable_link_preview
+          description: If `false`, server will not generate media preview for links in text
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewCommentBody'
+      responses:
+        '200':
+          description: Returns info about created comment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendCommentResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    put: 
+      tags:
+        - comments
+      operationId: editComment
+      description: 'Updated comment should be sent as `NewCommentBody` in a request body. Attachments are not allowed in comments. Additional permissions may require'
+      summary: Edit comment
+      parameters:
+        - description: Message identifier (`mid`) of the commented message
+          in: path
+          name: messageId
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/MessageId'
+            pattern: (mid.)?[a-zA-Z0-9_\-]+
+        - name: comment_id
+          description: Editing comment identifier
+          required: true
+          in: query
+          schema:
+            $ref: '#/components/schemas/MessageId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewCommentBody'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags:
+        - comments
+      operationId: deleteComment
+      summary: Delete comment
+      description: Deletes comment for a message in channel if bot has permission to delete messages.
+      parameters:
+        - description: Message identifier (`mid`) of the commented message
+          in: path
+          name: messageId
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/MessageId'
+            pattern: (mid.)?[a-zA-Z0-9_\-]+
+        - name: comment_id
+          description: Deleting comment identifier
+          required: true
+          in: query
+          schema:
+            $ref: '#/components/schemas/MessageId'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /messages/{messageId}/comments/{commentId}:
+    get: 
+      tags:
+        - comments
+      operationId: getCommentById
+      description: Returns single comment by its identifier. Additional permissions may require
+      summary: Get comment
+      parameters:
+        - description: Message identifier (`mid`) of the commented message
+          in: path
+          name: messageId
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/MessageId'
+            pattern: (mid.)?[a-zA-Z0-9_\-]+
+        - description: Comment identifier (`mid`) to get single comment in channel
+          in: path
+          name: commentId
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/MessageId'
+            pattern: (mid.)?[a-zA-Z0-9_\-]+
+      responses:
+        '200':
+          description: Returns single comment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: In case when comment or message is not found or bot has no access to it
           content:
             application/json:
               schema:
@@ -1312,8 +1468,16 @@ paths:
           schema:
             type: string
             minLength: 1
-            pattern: ^(?!\s*$).+
+            pattern: '^\s*\S[\s\S]*$'
+        - name: disable_link_preview
+          description: If `true`, server will not generate media preview for links in updated message text
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
       requestBody:
+        description: Answer to callback button press
         required: true
         content:
           application/json:
@@ -1330,10 +1494,12 @@ paths:
           $ref: '#/components/responses/InternalError'
   /updates:
     get:
-      operationId: getUpdates
+      operationId: getUpdates 
       tags:
         - subscriptions
       description: |-
+        Receiving updates via Long Polling is limited in speed and event retention time — this method is not suitable for production environments. We recommend using Webhook at all stages of work.
+
         You can use this method for getting updates in case your bot is not subscribed to WebHook. The method is based on long polling.
 
         Every update has its own sequence number. `marker` property in response points to the next upcoming update.
@@ -1368,16 +1534,19 @@ paths:
         - name: types
           description: Comma separated list of update types your bot want to receive
           in: query
-          example: 'types=message_created,message_callback'
+          style: form
+          explode: false
+          example:
+            - message_created
+            - message_callback
           schema:
             type: array
             uniqueItems: true
             items:
               type: string
             nullable: true
-          style: form
       responses:
-        200:
+        '200':
           description: List of updates
           content:
             application/json:
@@ -1393,15 +1562,11 @@ components:
   securitySchemes:
     access_token:
       type: apiKey
-      name: access_token
+      name: Authorization
       description: |-
-        A token is given to you by [MasterBot](https://max.ru/MasterBot) after you have created a bot.
-        In all subsequent requests to the Bot API, you **must** pass the received token as an `access_token` parameter to the HTTP request.
-
-
-        If [Terms and Conditions of Max usage](https://team.max.ru/en/terms/) have been violated, the Max administration may withdraw tokens by aborting user sessions.
-        If your token has been compromised, you can request a new one by sending a `/revoke` command to **[MasterBot](https://max.ru/MasterBot)**.
-      in: query
+        A token is given to you on https://business.max.ru/ after you have created a bot.
+        In all subsequent requests to the Bot API, you **must** pass the received token as an Authorization header in the HTTPS request. 
+      in: header
   responses:
     SuccessResponse:
       description: Success or not result
@@ -1441,19 +1606,35 @@ components:
             $ref: '#/components/schemas/Error'
   schemas:
     bigint:
+      description: 64-bit integer identifier
       type: integer
       format: int64
+    UserId:
+      description: User identifier
+      type: integer
+      format: int64
+    ChatId:
+      description: Chat identifier
+      type: integer
+      format: int64
+    MessageId:
+      description: Message identifier
+      type: string
+      minLength: 1
     Url:
+      description: URL string
       type: string
     SubscriptionUrl:
       type: string
-      description: URL of HTTP(S)-endpoint of your bot. Must starts with http(s)://
+      description: URL of HTTPS-endpoint of your bot. Must starts with https://
     User:
+      type: object
+      description: User object
       properties:
         user_id:
           description: Users identifier
-          type: integer
-          format: int64
+          allOf:
+            - $ref: '#/components/schemas/UserId'
         first_name:
           description: Users first name
           type: string
@@ -1461,10 +1642,12 @@ components:
           description: Users last name
           type: string
           nullable: true
+          readOnly: false
         username:
           description: Unique public user name. Can be `null` if user is not accessible or it is not set
           type: string
           nullable: true
+          readOnly: false
         is_bot:
           description: '`true` if user is bot'
           type: boolean
@@ -1472,14 +1655,15 @@ components:
           description: Time of last user activity in Max (Unix timestamp in milliseconds). Can be outdated if user disabled its "online" status in settings
           type: integer
           format: int64
+          nullable: true
+          readOnly: false
       required:
         - user_id
         - first_name
-        - last_name
-        - username
         - is_bot
-        - last_activity_time
     UserWithPhoto:
+      type: object
+      description: User with description and avatar URLs
       allOf:
         - $ref: '#/components/schemas/User'
         - properties:
@@ -1493,18 +1677,18 @@ components:
               description: URL of avatar
               type: string
               readOnly: false
+              nullable: true
             full_avatar_url:
               description: URL of avatar of a bigger size
               type: string
               readOnly: false
+              nullable: true
     BotInfo:
+      type: object
+      description: Bot information with commands and official status
       allOf:
         - $ref: '#/components/schemas/UserWithPhoto'
         - properties:
-            is_official:
-              type: boolean
-              readOnly: false
-              nullable: true
             commands:
               description: Commands supported by bot
               type: array
@@ -1513,45 +1697,32 @@ components:
               maxItems: 32
               readOnly: false
               nullable: true
-    BotPatch:
+    BotCommandsInfo:
+      type: object
+      description: Bot commands information
       properties:
-        name:
-          description: Visible name of bot
-          type: string
-          maxLength: 59
-          minLength: 1
-          readOnly: false
-          nullable: true
-          deprecated: true
-        first_name:
-          description: Visible name of bot
-          type: string
-          maxLength: 59
-          minLength: 1
-          readOnly: false
-          nullable: true
-        description:
-          description: Bot description up to 16k characters long
-          type: string
-          minLength: 1
-          maxLength: 16000
-          readOnly: false
-          nullable: true
         commands:
-          description: Commands supported by bot. Pass empty list if you want to remove commands
+          description: Commands supported by bot
           type: array
           items:
             $ref: '#/components/schemas/BotCommand'
           maxItems: 32
           readOnly: false
           nullable: true
-        photo:
-          description: Request to set bot photo
-          allOf:
-            - $ref: '#/components/schemas/PhotoAttachmentRequestPayload'
+    BotCommandsPatch:
+      type: object
+      description: Patch object for updating bot commands
+      properties:
+        commands:
+          description: Commands supported by bot
+          type: array
+          items:
+            $ref: '#/components/schemas/BotCommand'
+          maxItems: 32
           readOnly: false
-          nullable: true
     BotCommand:
+      type: object
+      description: Bot command with name and description
       properties:
         name:
           description: Command name
@@ -1568,11 +1739,13 @@ components:
       required:
         - name
     Chat:
+      type: object
+      description: Chat, channel or dialog object 
       properties:
         chat_id:
           description: Chats identifier
-          type: integer
-          format: int64
+          allOf:
+            - $ref: '#/components/schemas/ChatId'
         type:
           description: 'Type of chat. One of: dialog, chat, channel'
           allOf:
@@ -1591,11 +1764,13 @@ components:
           description: Visible title of chat. Can be null for dialogs
           type: string
           nullable: true
+          readOnly: false
         icon:
           description: Icon of chat
           nullable: true
           allOf:
             - $ref: '#/components/schemas/Image'
+          readOnly: false
         last_event_time:
           description: Time of last event occurred in chat
           type: integer
@@ -1607,8 +1782,8 @@ components:
         owner_id:
           description: Identifier of chat owner. Visible only for chat admins
           nullable: true
-          type: integer
-          format: int64
+          allOf:
+            - $ref: '#/components/schemas/UserId'
           readOnly: false
         participants:
           description: Participants in chat with time of last activity. Can be *null* when you request list of chats. Visible for chat admins only
@@ -1630,6 +1805,7 @@ components:
           description: Chat description
           type: string
           nullable: true
+          readOnly: false
         dialog_with_user:
           description: Another user in conversation. For `dialog` type chats only
           allOf:
@@ -1641,11 +1817,6 @@ components:
           nullable: true
           readOnly: false
           type: integer
-        chat_message_id:
-          description: Identifier of message that contains `chat` button initialized chat
-          nullable: true
-          readOnly: false
-          type: string
         pinned_message:
           description: Pinned message in chat or channel. Returned only when single chat is requested
           nullable: true
@@ -1656,19 +1827,18 @@ components:
         - chat_id
         - type
         - status
-        - title
         - last_event_time
         - participants_count
-        - icon
         - is_public
-        - description
     ChatType:
+      type: string
       description: Type of chat. Dialog (one-on-one), chat or channel
       enum:
         - dialog
         - chat
         - channel
     ChatStatus:
+      type: string
       description: Chat status for current bot
       enum:
         - active
@@ -1677,6 +1847,8 @@ components:
         - closed
         - suspended
     ChatList:
+      type: object
+      description: Paginated list of chats
       properties:
         chats:
           description: List of requested chats
@@ -1688,10 +1860,12 @@ components:
           nullable: true
           type: integer
           format: int64
+          readOnly: false
       required:
         - chats
-        - marker
     ChatPatch:
+      type: object
+      description: Patch object for updating chat info
       properties:
         icon:
           readOnly: false
@@ -1704,8 +1878,14 @@ components:
           maxLength: 200
           readOnly: false
           nullable: true
-        pin:
-          description: Identifier of message to be pinned in chat. In case you want to remove pin, use [unpin](#operation/unpinMessage) method
+        description:
+          description: Chat description up to 16k characters long. Pass empty string to remove description
+          type: string
+          maxLength: 16000
+          readOnly: false
+          nullable: true
+        pin: 
+          description: Identifier of message to be pinned in chat. In case you want to remove pin, use /unpin method
           type: string
           readOnly: false
           nullable: true
@@ -1716,11 +1896,13 @@ components:
           readOnly: false
           nullable: true
     ChatMember:
+      type: object
+      description: Chat or channel member with membership info 
       allOf:
         - $ref: '#/components/schemas/UserWithPhoto'
         - properties:
             last_access_time:
-              description: User last activity time in chat. Can be outdated for super chats and channels (equals to `join_time`)
+              description: User last activity time in chat or channel . Can be outdated for super chats and channels (equals to `join_time`)
               type: integer
               format: int64
             is_owner:
@@ -1737,17 +1919,17 @@ components:
               nullable: true
               items:
                 $ref: '#/components/schemas/ChatAdminPermission'
+              readOnly: false
             alias:
               description: Alias in chat if member is admin. By default, `null`
               type: string
               nullable: true
+              readOnly: false
           required:
             - last_access_time
             - is_owner
             - is_admin
-            - permissions
             - join_time
-            - alias
     ChatAdminPermission:
       description: Chat admin permissions
       type: string
@@ -1764,9 +1946,11 @@ components:
         - can_call
         - view_stats
     ChatMembersList:
+      type: object
+      description: Paginated list of chat members
       properties:
         members:
-          description: Participants in chat with time of last activity. Visible only for chat admins
+          description: Participants in chat with time of last activity
           type: array
           items:
             $ref: '#/components/schemas/ChatMember'
@@ -1779,6 +1963,7 @@ components:
       required:
         - members
     Image:
+      type: object
       description: Generic schema describing image object
       properties:
         url:
@@ -1787,15 +1972,12 @@ components:
       required:
         - url
     Subscription:
+      type: object
       description: Schema to describe WebHook subscription
       properties:
         url:
           description: Webhook URL
           type: string
-        self_signed_cert:
-          description: Self-signed X.509 certificate in PEM format
-          type: string
-          readOnly: false
         time:
           description: Unix-time when subscription was created
           type: integer
@@ -1809,37 +1991,40 @@ components:
           items:
             type: string
             minLength: 1
-        version:
-          type: string
-          nullable: true
-          pattern: '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'
+          readOnly: false
       required:
         - url
         - time
-        - update_types
-        - version
     Recipient:
-      description: New message recipient. Could be user or chat
+      type: object
+      description: New message recipient. Could be user, chat or channel 
       properties:
         chat_id:
-          description: Chat identifier
-          type: integer
-          format: int64
+          description: Chat or channel identifier
+          allOf:
+            - $ref: '#/components/schemas/ChatId'
           nullable: true
+          readOnly: false
         chat_type:
           description: Chat type
           allOf:
             - $ref: '#/components/schemas/ChatType'
         user_id:
           description: User identifier, if message was sent to user
-          type: integer
-          format: int64
+          allOf:
+            - $ref: '#/components/schemas/UserId'
           nullable: true
+          readOnly: false
+        post_id:
+          description: Post identifier for comments
+          allOf:
+            - $ref: '#/components/schemas/MessageId'
+          nullable: true
+          readOnly: false
       required:
-        - chat_id
         - chat_type
-        - user_id
     Message:
+      type: object
       description: Message in chat
       properties:
         sender:
@@ -1847,8 +2032,9 @@ components:
           allOf:
             - $ref: '#/components/schemas/User'
           readOnly: false
+          nullable: true
         recipient:
-          description: Message recipient. Could be user or chat
+          description: Message recipient. Could be user, chat or channel  
           allOf:
             - $ref: '#/components/schemas/Recipient'
         timestamp:
@@ -1866,7 +2052,7 @@ components:
           allOf:
             - $ref: '#/components/schemas/MessageBody'
         stat:
-          description: 'Message statistics. Available only for channels in [GET:/messages](#operation/getMessages) context'
+          description: 'Message statistics. Available only for channels in getMessages method context'
           allOf:
             - $ref: '#/components/schemas/MessageStat'
           nullable: true
@@ -1880,7 +2066,46 @@ components:
         - recipient
         - body
         - timestamp
+    CommentMessage:
+      type: object
+      description: Comment message in chat. Unlike Message, has no public url and body has no attachments.
+      properties:
+        sender:
+          description: User who sent this comment. Can be `null` if message has been posted on behalf of a channel
+          allOf:
+            - $ref: '#/components/schemas/User'
+          readOnly: false
+          nullable: true
+        recipient:
+          description: Message recipient. Could be user or chat, for comments - only channel
+          allOf:
+            - $ref: '#/components/schemas/Recipient'
+        timestamp:
+          description: Unix-time when message was created
+          type: integer
+          format: int64
+        link:
+          description: Forwarded or replied message
+          nullable: true
+          readOnly: false
+          allOf:
+            - $ref: '#/components/schemas/CommentLinkedMessage'
+        body:
+          description: Body of created comment. Text only, no attachments.
+          allOf:
+            - $ref: '#/components/schemas/CommentMessageBody'
+        stat:
+          description: 'Message statistics. Available only for channels in in getMessages method context'
+          allOf:
+            - $ref: '#/components/schemas/MessageStat'
+          nullable: true
+          readOnly: false
+      required:
+        - recipient
+        - body
+        - timestamp
     MessageStat:
+      type: object
       description: Message statistics
       properties:
         views:
@@ -1893,7 +2118,8 @@ components:
       properties:
         mid:
           description: Unique identifier of message
-          type: string
+          allOf:
+            - $ref: '#/components/schemas/MessageId'
         seq:
           description: Sequence identifier of message in chat
           type: integer
@@ -1902,14 +2128,16 @@ components:
           description: Message text
           type: string
           nullable: true
+          readOnly: false
         attachments:
           description: Message attachments. Could be one of `Attachment` type. See description of this schema
           type: array
           nullable: true
           items:
             $ref: '#/components/schemas/Attachment'
+          readOnly: false
         markup:
-          description: Message text markup. See [Formatting](#section/About/Text-formatting) section for more info
+          description: Message text markup. See formatting section in https://dev.max.ru/docs-api for more info
           type: array
           nullable: true
           readOnly: false
@@ -1918,10 +2146,35 @@ components:
       required:
         - mid
         - seq
-        - text
-        - attachments
-        - link
+    CommentMessageBody:
+      description: Schema representing body of a comment message. Unlike MessageBody, attachments are not allowed.
+      type: object
+      properties:
+        mid:
+          description: Unique identifier of message
+          allOf:
+            - $ref: '#/components/schemas/MessageId'
+        seq:
+          description: Sequence identifier of message in chat
+          type: integer
+          format: int64
+        text:
+          description: Message text
+          type: string
+          nullable: true
+          readOnly: false
+        markup:
+          description: Message text markup. See Formatting section in https://dev.max.ru/docs-api for more info
+          type: array
+          nullable: true
+          readOnly: false
+          items:
+            $ref: '#/components/schemas/MarkupElement'
+      required:
+        - mid
+        - seq
     MessageList:
+      type: object
       description: Paginated list of messages
       properties:
         messages:
@@ -1931,6 +2184,17 @@ components:
             $ref: '#/components/schemas/Message'
       required:
         - messages
+    CommentMessageList:
+      type: object
+      description: Paginated list of comment messages
+      properties:
+        messages:
+          description: List of comment messages
+          type: array
+          items:
+            $ref: '#/components/schemas/CommentMessage'
+      required:
+        - messages
     TextFormat:
       description: Message text format
       type: string
@@ -1938,40 +2202,66 @@ components:
         - markdown
         - html
     NewMessageBody:
+      type: object
+      description: Body of a new message to send
       properties:
         text:
           description: Message text
           type: string
           maxLength: 4000
           nullable: true
+          readOnly: false
         attachments:
           description: Message attachments. See `AttachmentRequest` and it's inheritors for full information
           type: array
           nullable: true
           items:
             $ref: '#/components/schemas/AttachmentRequest'
+          readOnly: false
         link:
           description: Link to Message
           type: object
           nullable: true
           allOf:
             - $ref: '#/components/schemas/NewMessageLink'
+          readOnly: false
         notify:
           description: If false, chat participants would not be notified
           type: boolean
           default: true
           readOnly: false
         format:
-          description: If set, message text will be formated according to given markup
+          description: If set, message text will be formatted according to given markup
           readOnly: false
           nullable: true
           allOf:
             - $ref: '#/components/schemas/TextFormat'
-      required:
-        - text
-        - attachments
-        - link
+    NewCommentBody:
+      type: object
+      description: Body of a new comment to send. Unlike NewMessageBody, attachments are not allowed.
+      properties:
+        text:
+          description: Message text
+          type: string
+          maxLength: 4000
+          nullable: true
+          readOnly: false
+        link:
+          description: Link to Message
+          type: object
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/NewMessageLink'
+          readOnly: false
+        format:
+          description: If set, message text will be formatted according to given markup
+          readOnly: false
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/TextFormat'
     NewMessageLink:
+      type: object
+      description: Link to a message for reply or forward
       properties:
         type:
           description: Type of message link
@@ -1980,12 +2270,15 @@ components:
             - $ref: '#/components/schemas/MessageLinkType'
         mid:
           description: Message identifier of original message
-          type: string
+          allOf:
+            - $ref: '#/components/schemas/MessageId'
           nullable: false
       required:
         - type
         - mid
     LinkedMessage:
+      type: object
+      description: Forwarded or replied message
       properties:
         type:
           description: Type of linked message
@@ -1996,10 +2289,11 @@ components:
           allOf:
             - $ref: '#/components/schemas/User'
           readOnly: false
+          nullable: true
         chat_id:
-          description: Chat where message has been originally posted. For forwarded messages only
-          type: integer
-          format: int64
+          description: Chat where message has been originally posted
+          allOf:
+            - $ref: '#/components/schemas/ChatId'
           readOnly: false
         message:
           allOf:
@@ -2007,13 +2301,49 @@ components:
       required:
         - type
         - message
+    CommentLinkedMessage:
+      type: object
+      description: Forwarded or replied comment. Unlike LinkedMessage, `message` is a CommentMessageBody (no attachments, as comments cannot have them)
+      properties:
+        type:
+          description: Type of linked message
+          allOf:
+            - $ref: '#/components/schemas/MessageLinkType'
+        sender:
+          description: User sent this message. Can be `null` if message has been posted on behalf of a channel
+          allOf:
+            - $ref: '#/components/schemas/User'
+          readOnly: false
+          nullable: true
+        chat_id:
+          description: Chat where message has been originally posted
+          allOf:
+            - $ref: '#/components/schemas/ChatId'
+          readOnly: false
+        message:
+          allOf:
+            - $ref: '#/components/schemas/CommentMessageBody'
+      required:
+        - type
+        - message
     SendMessageResult:
+      type: object
+      description: Result of sending a message
       properties:
         message:
           $ref: '#/components/schemas/Message'
       required:
         - message
+    SendCommentResult:
+      type: object
+      description: Result of sending a comment
+      properties:
+        message:
+          $ref: '#/components/schemas/CommentMessage'
+      required:
+        - message
     Attachment:
+      type: object
       description: Generic schema representing message attachment
       discriminator:
         propertyName: type
@@ -2025,16 +2355,15 @@ components:
           sticker: '#/components/schemas/StickerAttachment'
           contact: '#/components/schemas/ContactAttachment'
           inline_keyboard: '#/components/schemas/InlineKeyboardAttachment'
-          reply_keyboard: '#/components/schemas/ReplyKeyboardAttachment'
           share: '#/components/schemas/ShareAttachment'
           location: '#/components/schemas/LocationAttachment'
-          data: '#/components/schemas/DataAttachment'
       properties:
         type:
           type: string
       required:
         - type
     PhotoAttachment:
+      type: object
       description: Image attachment
       allOf:
         - $ref: '#/components/schemas/Attachment'
@@ -2044,6 +2373,8 @@ components:
           required:
             - payload
     PhotoAttachmentPayload:
+      type: object
+      description: Payload of photo attachment containing image metadata
       properties:
         photo_id:
           description: Unique identifier of this image
@@ -2060,6 +2391,8 @@ components:
         - url
         - token
     VideoAttachment:
+      type: object
+      description: Video attachment
       allOf:
         - $ref: '#/components/schemas/Attachment'
         - properties:
@@ -2089,6 +2422,8 @@ components:
           required:
             - payload
     VideoThumbnail:
+      type: object
+      description: Video thumbnail image
       properties:
         url:
           description: Image URL
@@ -2096,6 +2431,8 @@ components:
       required:
         - url
     VideoUrls:
+      type: object
+      description: Available video download and streaming URLs by resolution
       properties:
         mp4_1080:
           description: Video URL in 1080p resolution, if available
@@ -2133,6 +2470,8 @@ components:
           nullable: true
           readOnly: false
     VideoAttachmentDetails:
+      type: object
+      description: Detailed information about video attachment including direct URLs
       properties:
         token:
           description: Video attachment token
@@ -2164,6 +2503,8 @@ components:
         - duration
         - token
     AudioAttachment:
+      type: object
+      description: Audio attachment
       allOf:
         - $ref: '#/components/schemas/Attachment'
         - properties:
@@ -2177,6 +2518,8 @@ components:
           required:
             - payload
     FileAttachment:
+      type: object
+      description: File attachment
       allOf:
         - $ref: '#/components/schemas/Attachment'
         - properties:
@@ -2194,15 +2537,19 @@ components:
             - filename
             - size
     AttachmentPayload:
+      type: object
+      description: Base payload for message attachments containing media URL
       properties:
         url:
           description: |-
             Media attachment URL.
-            For video attachments use [getVideoAttachmentDetails](#operation/getVideoAttachmentDetails) method to obtain direct links.
+            For video attachments use getVideoAttachmentDetails method to obtain direct links.
           type: string
       required:
         - url
     MediaAttachmentPayload:
+      type: object
+      description: Payload for media (video/audio) attachments with reuse token
       allOf:
         - $ref: '#/components/schemas/AttachmentPayload'
         - properties:
@@ -2212,6 +2559,8 @@ components:
           required:
             - token
     FileAttachmentPayload:
+      type: object
+      description: Payload for file attachments with reuse token
       allOf:
         - $ref: '#/components/schemas/AttachmentPayload'
         - properties:
@@ -2221,6 +2570,8 @@ components:
           required:
             - token
     ContactAttachment:
+      type: object
+      description: Contact attachment
       allOf:
         - $ref: '#/components/schemas/Attachment'
         - properties:
@@ -2229,9 +2580,16 @@ components:
           required:
             - payload
     ContactAttachmentPayload:
+      type: object
+      description: Payload of contact attachment containing user contact info
       properties:
         vcf_info:
           description: User info in VCF format
+          nullable: true
+          readOnly: false
+          type: string
+        hash:
+          description: User info in VCF format hash
           nullable: true
           readOnly: false
           type: string
@@ -2242,6 +2600,8 @@ components:
           allOf:
             - $ref: '#/components/schemas/User'
     StickerAttachmentPayload:
+      type: object
+      description: Payload of sticker attachment
       allOf:
         - $ref: '#/components/schemas/AttachmentPayload'
         - properties:
@@ -2251,6 +2611,8 @@ components:
           required:
             - code
     StickerAttachment:
+      type: object
+      description: Sticker attachment
       allOf:
         - $ref: '#/components/schemas/Attachment'
         - properties:
@@ -2267,6 +2629,7 @@ components:
             - width
             - height
     ShareAttachmentPayload:
+      type: object
       description: Payload of ShareAttachmentRequest
       properties:
         url:
@@ -2281,6 +2644,8 @@ components:
           nullable: true
           readOnly: false
     ShareAttachment:
+      type: object
+      description: Link preview attachment with media
       allOf:
         - $ref: '#/components/schemas/Attachment'
         - properties:
@@ -2304,6 +2669,8 @@ components:
           required:
             - payload
     LocationAttachment:
+      type: object
+      description: Geographic location attachment
       allOf:
         - $ref: '#/components/schemas/Attachment'
         - properties:
@@ -2317,6 +2684,7 @@ components:
             - latitude
             - longitude
     InlineKeyboardAttachment:
+      type: object
       description: Buttons in messages
       allOf:
         - $ref: '#/components/schemas/Attachment'
@@ -2325,29 +2693,8 @@ components:
               $ref: '#/components/schemas/Keyboard'
           required:
             - payload
-    ReplyKeyboardAttachment:
-      description: Custom reply keyboard in message
-      allOf:
-        - $ref: '#/components/schemas/Attachment'
-        - properties:
-            buttons:
-              type: array
-              items:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ReplyButton'
-          required:
-            - buttons
-    DataAttachment:
-      description: Attachment contains payload sent through `SendMessageButton`
-      allOf:
-        - $ref: '#/components/schemas/Attachment'
-        - properties:
-            data:
-              type: string
-          required:
-            - data
     Keyboard:
+      type: object
       description: Keyboard is two-dimension array of buttons
       properties:
         buttons:
@@ -2359,6 +2706,8 @@ components:
       required:
         - buttons
     Button:
+      type: object
+      description: Inline keyboard button
       properties:
         type:
           type: string
@@ -2374,7 +2723,6 @@ components:
           link: '#/components/schemas/LinkButton'
           request_geo_location: '#/components/schemas/RequestGeoLocationButton'
           request_contact: '#/components/schemas/RequestContactButton'
-          chat: '#/components/schemas/ChatButton'
           message: '#/components/schemas/MessageButton'
           open_app: '#/components/schemas/OpenAppButton'
           clipboard: '#/components/schemas/ClipboardButton'
@@ -2382,6 +2730,7 @@ components:
         - type
         - text
     CallbackButton:
+      type: object
       description: After pressing this type of button client sends to server payload it contains
       allOf:
         - $ref: '#/components/schemas/Button'
@@ -2390,15 +2739,10 @@ components:
               description: Button payload
               type: string
               maxLength: 1024
-            intent:
-              description: Intent of button. Affects clients representation
-              readOnly: false
-              default: default
-              allOf:
-                - $ref: '#/components/schemas/Intent'
           required:
             - payload
     LinkButton:
+      type: object
       description: After pressing this type of button user follows the link it contains
       allOf:
         - $ref: '#/components/schemas/Button'
@@ -2409,14 +2753,17 @@ components:
           required:
             - url
     MessageButton:
+      type: object
       description: After pressing this type of button it sends message from user in chat
       allOf:
         - $ref: '#/components/schemas/Button'
     RequestContactButton:
+      type: object
       description: After pressing this type of button client sends new message with attachment of current user contact
       allOf:
         - $ref: '#/components/schemas/Button'
     RequestGeoLocationButton:
+      type: object
       description: After pressing this type of button client sends new message with attachment of current user geo location
       allOf:
         - $ref: '#/components/schemas/Button'
@@ -2427,6 +2774,7 @@ components:
               type: boolean
               default: false
     OpenAppButton:
+      type: object
       description: After pressing this type of button client opens mini app
       allOf:
         - $ref: '#/components/schemas/Button'
@@ -2436,7 +2784,8 @@ components:
               nullable: true
               readOnly: false
               type: string
-              pattern: ^[\w-]{0,512}$
+              pattern: '^[\w-]*$'
+              maxLength: 512
             web_app:
               description: Unique public name of the bot wired to the mini app
               type: string
@@ -2444,11 +2793,12 @@ components:
               description: Unique identifier of the bot wired to the mini app
               nullable: true
               readOnly: false
-              type: integer
-              format: int64
+              allOf:
+                - $ref: '#/components/schemas/UserId'
           required:
             - web_app
     ClipboardButton:
+      type: object
       description: After pressing this type of button client copies payload data to clipboard
       allOf:
         - $ref: '#/components/schemas/Button'
@@ -2459,96 +2809,6 @@ components:
               maxLength: 1024
           required:
             - payload
-    ChatButton:
-      description: |-
-        Button that creates new chat as soon as the first user clicked on it.
-        Bot will be added to chat participants as administrator.
-        Message author will be owner of the chat.
-      allOf:
-        - $ref: '#/components/schemas/Button'
-        - properties:
-            chat_title:
-              description: Title of chat to be created
-              type: string
-              maxLength: 200
-            chat_description:
-              description: Chat description
-              readOnly: false
-              nullable: true
-              type: string
-              maxLength: 400
-            start_payload:
-              description: Start payload will be sent to bot as soon as chat created
-              readOnly: false
-              nullable: true
-              type: string
-              maxLength: 512
-            uuid:
-              description: |-
-                Unique button identifier across all chat buttons in keyboard.
-                If `uuid` changed, new chat will be created on the next click.
-                Server will generate it at the time when button initially posted.
-                Reuse it when you edit the message.'
-              readOnly: false
-              nullable: true
-              type: integer
-          required:
-            - chat_title
-    Intent:
-      description: Intent of button
-      type: string
-      enum:
-        - positive
-        - negative
-        - default
-    ReplyButton:
-      description: After pressing this type of button client will send a message on behalf of user with given payload
-      properties:
-        text:
-          description: Visible text of button
-          type: string
-          minLength: 1
-          maxLength: 128
-        payload:
-          description: Button payload
-          type: string
-          maxLength: 1024
-          readOnly: false
-          nullable: true
-      discriminator:
-        propertyName: type
-        mapping:
-          message: '#/components/schemas/SendMessageButton'
-          user_geo_location: '#/components/schemas/SendGeoLocationButton'
-          user_contact: '#/components/schemas/SendContactButton'
-      required:
-        - text
-        - type
-    SendMessageButton:
-      description: After pressing this type of button client will send a message on behalf of user with given payload
-      allOf:
-        - $ref: '#/components/schemas/ReplyButton'
-        - properties:
-            intent:
-              description: Intent of button. Affects clients representation
-              readOnly: false
-              default: default
-              allOf:
-                - $ref: '#/components/schemas/Intent'
-    SendGeoLocationButton:
-      description: After pressing this type of button client sends new message with attachment of current user geo location
-      allOf:
-        - $ref: '#/components/schemas/ReplyButton'
-        - properties:
-            quick:
-              description: If *true*, sends location without asking user's confirmation
-              readOnly: false
-              type: boolean
-              default: false
-    SendContactButton:
-      description: After pressing this type of button client sends new message with attachment of current user contact
-      allOf:
-        - $ref: '#/components/schemas/ReplyButton'
     MessageLinkType:
       description: Type of linked message
       type: string
@@ -2556,6 +2816,7 @@ components:
         - forward
         - reply
     AttachmentRequest:
+      type: object
       description: Request to attach some data to message
       discriminator:
         propertyName: type
@@ -2567,7 +2828,6 @@ components:
           sticker: '#/components/schemas/StickerAttachmentRequest'
           contact: '#/components/schemas/ContactAttachmentRequest'
           inline_keyboard: '#/components/schemas/InlineKeyboardAttachmentRequest'
-          reply_keyboard: '#/components/schemas/ReplyKeyboardAttachmentRequest'
           location: '#/components/schemas/LocationAttachmentRequest'
           share: '#/components/schemas/ShareAttachmentRequest'
       properties:
@@ -2576,6 +2836,8 @@ components:
       required:
         - type
     PhotoAttachmentRequest:
+      type: object
+      description: Request to attach image to message
       allOf:
         - $ref: '#/components/schemas/AttachmentRequest'
         - properties:
@@ -2584,6 +2846,7 @@ components:
           required:
             - payload
     PhotoAttachmentRequestPayload:
+      type: object
       description: Request to attach image. All fields are mutually exclusive
       properties:
         url:
@@ -2605,23 +2868,16 @@ components:
           additionalProperties:
             $ref: '#/components/schemas/PhotoToken'
     PhotoToken:
+      type: object
+      description: Token representing an uploaded image
       properties:
         token:
           description: Encoded information of uploaded image
           type: string
       required:
         - token
-    PhotoTokens:
-      description: This is information you will receive as soon as an image uploaded
-      type: object
-      properties:
-        photos:
-          type: object
-          additionalProperties:
-            $ref: '#/components/schemas/PhotoToken'
-      required:
-        - photos
     VideoAttachmentRequest:
+      type: object
       description: Request to attach video to message
       allOf:
         - $ref: '#/components/schemas/AttachmentRequest'
@@ -2631,6 +2887,7 @@ components:
           required:
             - payload
     AudioAttachmentRequest:
+      type: object
       description: Request to attach audio to message. MUST be the only attachment in message
       allOf:
         - $ref: '#/components/schemas/AttachmentRequest'
@@ -2640,6 +2897,7 @@ components:
           required:
             - payload
     UploadedInfo:
+      type: object
       description: This is information you will receive as soon as audio/video is uploaded
       properties:
         token:
@@ -2647,6 +2905,7 @@ components:
           type: string
           readOnly: false
     FileAttachmentRequest:
+      type: object
       description: Request to attach file to message. MUST be the only attachment in message
       allOf:
         - $ref: '#/components/schemas/AttachmentRequest'
@@ -2656,6 +2915,7 @@ components:
           required:
             - payload
     UploadType:
+      type: string
       description: Type of file uploading
       enum:
         - image
@@ -2663,6 +2923,7 @@ components:
         - audio
         - file
     ContactAttachmentRequest:
+      type: object
       description: Request to attach contact card to message. MUST be the only attachment in message
       allOf:
         - $ref: '#/components/schemas/AttachmentRequest'
@@ -2672,17 +2933,20 @@ components:
           required:
             - payload
     ContactAttachmentRequestPayload:
+      type: object
+      description: Payload for contact attachment request
       properties:
         name:
           description: Contact name
           nullable: true
           type: string
+          readOnly: false
         contact_id:
           description: Contact identifier if it is registered Max user
           nullable: true
           readOnly: false
-          type: integer
-          format: int64
+          allOf:
+            - $ref: '#/components/schemas/UserId'
         vcf_info:
           description: Full information about contact in VCF format
           nullable: true
@@ -2693,9 +2957,8 @@ components:
           readOnly: false
           nullable: true
           type: string
-      required:
-        - name
     StickerAttachmentRequest:
+      type: object
       description: Request to attach sticker. MUST be the only attachment request in message
       allOf:
         - $ref: '#/components/schemas/AttachmentRequest'
@@ -2705,6 +2968,8 @@ components:
           required:
             - payload
     StickerAttachmentRequestPayload:
+      type: object
+      description: Payload for sticker attachment request
       properties:
         code:
           description: Sticker code
@@ -2712,6 +2977,7 @@ components:
       required:
         - code
     InlineKeyboardAttachmentRequest:
+      type: object
       description: Request to attach keyboard to message
       allOf:
         - $ref: '#/components/schemas/AttachmentRequest'
@@ -2721,6 +2987,8 @@ components:
           required:
             - payload
     InlineKeyboardAttachmentRequestPayload:
+      type: object
+      description: Payload for inline keyboard attachment request
       properties:
         buttons:
           description: Two-dimensional array of buttons
@@ -2732,34 +3000,9 @@ components:
               $ref: '#/components/schemas/Button'
       required:
         - buttons
-    ReplyKeyboardAttachmentRequest:
-      description: Request to attach reply keyboard to message
-      allOf:
-        - $ref: '#/components/schemas/AttachmentRequest'
-        - properties:
-            direct:
-              description: Applicable only for chats. If `true` keyboard will be shown only for user bot mentioned or replied
-              type: boolean
-              default: false
-              readOnly: false
-            direct_user_id:
-              description: If set to `true`, reply keyboard will only be shown to this participant in chat
-              type: integer
-              format: int64
-              nullable: true
-              readOnly: false
-            buttons:
-              description: Two-dimensional array of buttons
-              type: array
-              minItems: 1
-              items:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ReplyButton'
-          required:
-            - buttons
     LocationAttachmentRequest:
-      description: Request to attach keyboard to message
+      type: object
+      description: Request to attach geographic location to message
       allOf:
         - $ref: '#/components/schemas/AttachmentRequest'
         - properties:
@@ -2773,6 +3016,7 @@ components:
             - latitude
             - longitude
     ShareAttachmentRequest:
+      type: object
       description: Request to attach media preview of any external URL
       allOf:
         - $ref: '#/components/schemas/AttachmentRequest'
@@ -2782,11 +3026,13 @@ components:
           required:
             - payload
     MarkupElement:
+      type: object
+      description: Base type for text markup (formatting) elements
       properties:
         type:
           description: Type of the markup element.
             Can be **strong**,
-            *emphasized*, ~strikethrough~, ++underline++, `monospaced`, link, quote or user_mention
+            *emphasized*, ~strikethrough~, ++underline++, `monospaced`, highlighted, link, quote, header or user_mention 
           type: string
         from:
           description: Element start index (zero-based) in text
@@ -2814,18 +3060,22 @@ components:
         - from
         - length
     StrongMarkup:
+      type: object
       description: Represents **bold** in text
       allOf:
         - $ref: '#/components/schemas/MarkupElement'
     EmphasizedMarkup:
+      type: object
       description: Represents *italic* in text
       allOf:
         - $ref: '#/components/schemas/MarkupElement'
     MonospacedMarkup:
+      type: object
       description: Represents `monospaced` or ```code``` block in text
       allOf:
         - $ref: '#/components/schemas/MarkupElement'
     LinkMarkup:
+      type: object
       description: Represents link in text
       allOf:
         - $ref: '#/components/schemas/MarkupElement'
@@ -2838,18 +3088,22 @@ components:
           required:
             - url
     StrikethroughMarkup:
+      type: object
       description: Represents ~strikethrough~ block in text
       allOf:
         - $ref: '#/components/schemas/MarkupElement'
     UnderlineMarkup:
+      type: object
       description: Represents ++underlined++ part of the text
       allOf:
         - $ref: '#/components/schemas/MarkupElement'
     HeadingMarkup:
+      type: object
       description: Represents header part of the text
       allOf:
         - $ref: '#/components/schemas/MarkupElement'
     UserMentionMarkup:
+      type: object
       description: Represents user mention in text. Mention can be both by user's username or ID if user doesn't have username
       allOf:
         - $ref: '#/components/schemas/MarkupElement'
@@ -2861,19 +3115,22 @@ components:
               readOnly: false
             user_id:
               description: Identifier of mentioned user without username
-              type: integer
-              format: int64
+              allOf:
+                - $ref: '#/components/schemas/UserId'
               nullable: true
               readOnly: false
     HighlightedMarkup:
+      type: object
       description: Represents a highlighted piece of text
       allOf:
         - $ref: '#/components/schemas/MarkupElement'
     QuoteMarkup:
+      type: object
       description: Represents quote block in text
       allOf:
         - $ref: '#/components/schemas/MarkupElement'
     SubscriptionRequestBody:
+      type: object
       description: Request to set up WebHook subscription
       properties:
         url:
@@ -2881,11 +3138,9 @@ components:
         secret:
           description: A secret to be sent in a header “X-Max-Bot-Api-Secret” in every webhook request, 5-256 characters. Only characters A-Z, a-z, 0-9, _ and - are allowed. The header is useful to ensure that the request comes from a webhook set by you.
           type: string
-          pattern: ^[\w-]{5,256}$
-          readOnly: false
-        self_signed_cert:
-          description: An X.509 certificate in PEM format is only needed if your resource has a self-signed certificate
-          type: string
+          pattern: '^[\w-]+$'
+          minLength: 5
+          maxLength: 256
           readOnly: false
         update_types:
           description: List of update types your bot want to receive. See `Update` object for a complete list of types
@@ -2895,13 +3150,10 @@ components:
           items:
             type: string
           readOnly: false
-        version:
-          description: Version of API. Affects model representation
-          type: string
-          readOnly: false
       required:
         - url
     GetSubscriptionsResult:
+      type: object
       description: List of all WebHook subscriptions
       properties:
         subscriptions:
@@ -2912,6 +3164,7 @@ components:
       required:
         - subscriptions
     SimpleQueryResult:
+      type: object
       description: Simple response to request
       properties:
         success:
@@ -2921,13 +3174,21 @@ components:
           description: Explanatory message if the result is not successful
           type: string
           readOnly: false
+        code:
+          description: Error code
+          type: string
+          nullable: true
+          readOnly: false
       required:
         - success
     PinMessageBody:
+      type: object
+      description: Request body for pinning a message in chat
       properties:
         message_id:
           description: Identifier of message to be pinned in chat
-          type: string
+          allOf:
+            - $ref: '#/components/schemas/MessageId'
         notify:
           description: If `true`, participants will be notified with system message in chat/channel
           type: boolean
@@ -2937,6 +3198,8 @@ components:
       required:
         - message_id
     GetPinnedMessageResult:
+      type: object
+      description: Result of getting pinned message in chat
       properties:
         message:
           description: Pinned message. Can be `null` if no message pinned in chat
@@ -2945,6 +3208,7 @@ components:
           allOf:
             - $ref: '#/components/schemas/Message'
     Callback:
+      type: object
       description: Object sent to bot when user presses button
       properties:
         timestamp:
@@ -2967,6 +3231,7 @@ components:
         - callback_id
         - user
     CallbackAnswer:
+      type: object
       description: Send this object when your bot wants to react to when a button is pressed
       properties:
         message:
@@ -2981,9 +3246,10 @@ components:
           readOnly: false
           type: string
     Error:
+      type: object
       description: Server returns this if there was an exception to your request
       properties:
-        error:
+        error: 
           description: Error
           type: string
         code:
@@ -3010,20 +3276,26 @@ components:
       required:
         - url
     UserIdsList:
+      type: object
+      description: List of user identifiers
       properties:
         user_ids:
           items:
-            type: integer
-            format: int64
+            $ref: '#/components/schemas/UserId'
+          maxItems: 100
       required:
         - user_ids
     ActionRequestBody:
+      type: object
+      description: Request body for sending action to chat
       properties:
         action:
           $ref: '#/components/schemas/SenderAction'
       required:
         - action
     ChatAdminsList:
+      type: object
+      description: List of chat administrators with permissions
       properties:
         admins:
           type: array
@@ -3032,11 +3304,11 @@ components:
       required:
         - admins
     ChatAdmin:
+      type: object
       description: Administrator id with permissions
       properties:
         user_id:
-          type: integer
-          format: int64
+          $ref: '#/components/schemas/UserId'
         permissions:
           type: array
           uniqueItems: true
@@ -3051,6 +3323,7 @@ components:
         - user_id
         - permissions
     SenderAction:
+      type: string
       description: Different actions to send to chat members
       enum:
         - typing_on
@@ -3060,6 +3333,7 @@ components:
         - sending_file
         - mark_seen
     UpdateList:
+      type: object
       description: List of all updates in chats your bot participated in
       properties:
         updates:
@@ -3072,28 +3346,12 @@ components:
           type: integer
           format: int64
           nullable: true
+          readOnly: false
       required:
         - updates
-        - marker
     Update:
+      type: object
       description: '`Update` object represents different types of events that happened in chat. See its inheritors'
-      oneOf:
-        - $ref: '#/components/schemas/MessageCreatedUpdate'
-        - $ref: '#/components/schemas/MessageCallbackUpdate'
-        - $ref: '#/components/schemas/MessageEditedUpdate'
-        - $ref: '#/components/schemas/MessageRemovedUpdate'
-        - $ref: '#/components/schemas/BotAddedToChatUpdate'
-        - $ref: '#/components/schemas/BotRemovedFromChatUpdate'
-        - $ref: '#/components/schemas/UserAddedToChatUpdate'
-        - $ref: '#/components/schemas/UserRemovedFromChatUpdate'
-        - $ref: '#/components/schemas/BotStartedUpdate'
-        - $ref: '#/components/schemas/BotStoppedUpdate'
-        - $ref: '#/components/schemas/DialogClearedUpdate'
-        - $ref: '#/components/schemas/DialogRemovedUpdate'
-        - $ref: '#/components/schemas/DialogMutedUpdate'
-        - $ref: '#/components/schemas/DialogUnmutedUpdate'
-        - $ref: '#/components/schemas/ChatTitleChangedUpdate'
-        - $ref: '#/components/schemas/MessageChatCreatedUpdate'
       discriminator:
         propertyName: update_type
         mapping:
@@ -3101,6 +3359,9 @@ components:
           message_callback: '#/components/schemas/MessageCallbackUpdate'
           message_edited: '#/components/schemas/MessageEditedUpdate'
           message_removed: '#/components/schemas/MessageRemovedUpdate'
+          comment_created: '#/components/schemas/CommentCreatedUpdate'
+          comment_edited: '#/components/schemas/CommentEditedUpdate'
+          comment_removed: '#/components/schemas/CommentRemovedUpdate'
           bot_added: '#/components/schemas/BotAddedToChatUpdate'
           bot_removed: '#/components/schemas/BotRemovedFromChatUpdate'
           user_added: '#/components/schemas/UserAddedToChatUpdate'
@@ -3112,7 +3373,7 @@ components:
           dialog_muted: '#/components/schemas/DialogMutedUpdate'
           dialog_unmuted: '#/components/schemas/DialogUnmutedUpdate'
           chat_title_changed: '#/components/schemas/ChatTitleChangedUpdate'
-          message_chat_created: '#/components/schemas/MessageChatCreatedUpdate'
+          bot_admin_permissions_changed: '#/components/schemas/BotAdminPermissionsChangedUpdate'
       properties:
         update_type:
           type: string
@@ -3124,6 +3385,7 @@ components:
         - update_type
         - timestamp
     MessageCallbackUpdate:
+      type: object
       description: You will get this `update` as soon as user presses button
       allOf:
         - $ref: '#/components/schemas/Update'
@@ -3137,6 +3399,7 @@ components:
               nullable: true
               allOf:
                 - $ref: '#/components/schemas/Message'
+              readOnly: false
             user_locale:
               description: Current user locale in IETF BCP 47 format
               type: string
@@ -3144,9 +3407,9 @@ components:
               readOnly: false
           required:
             - callback
-            - message
     MessageCreatedUpdate:
-      description: You will get this `update` as soon as message is created
+      type: object
+      description: You will get this `update` as soon as message is created. In group chats bot receives this update only if it is administrator with `read_all_messages` permission
       allOf:
         - $ref: '#/components/schemas/Update'
         - properties:
@@ -3162,27 +3425,30 @@ components:
           required:
             - message
     MessageRemovedUpdate:
-      description: You will get this `update` as soon as message is removed
+      type: object
+      description: You will get this `update` as soon as message is removed. In group chats bot receives this update only if it is administrator with `read_all_messages` permission
       allOf:
         - $ref: '#/components/schemas/Update'
         - properties:
             message_id:
               description: Identifier of removed message
-              type: string
+              allOf:
+                - $ref: '#/components/schemas/MessageId'
             chat_id:
               description: Chat identifier where message has been deleted
-              type: integer
-              format: int64
+              allOf:
+                - $ref: '#/components/schemas/ChatId'
             user_id:
               description: User who deleted this message
-              type: integer
-              format: int64
+              allOf:
+                - $ref: '#/components/schemas/UserId'
           required:
             - message_id
             - chat_id
             - user_id
     MessageEditedUpdate:
-      description: You will get this `update` as soon as message is edited
+      type: object
+      description: You will get this `update` as soon as message is edited. In group chats bot receives this update only if it is administrator with `read_all_messages` permission
       allOf:
         - $ref: '#/components/schemas/Update'
         - properties:
@@ -3192,15 +3458,67 @@ components:
                 - $ref: '#/components/schemas/Message'
           required:
             - message
+    CommentCreatedUpdate:
+      type: object
+      description: You will get this `update` as soon as comment is created. Bot receives this update only if it is administrator of the channel with `read_all_messages` permission
+      allOf:
+        - $ref: '#/components/schemas/Update'
+        - properties:
+            message:
+              description: Newly created comment
+              allOf:
+                - $ref: '#/components/schemas/Message'
+          required:
+            - message
+    CommentRemovedUpdate:
+      type: object
+      description: You will get this `update` as soon as comment is removed. Bot receives this update only if it is administrator of the channel with `read_all_messages` permission
+      allOf:
+        - $ref: '#/components/schemas/Update'
+        - properties:
+            message_id:
+              description: Identifier of removed comment
+              allOf:
+                - $ref: '#/components/schemas/MessageId'
+            chat_id:
+              description: Chat identifier where comment has been deleted
+              allOf:
+                - $ref: '#/components/schemas/ChatId'
+            user_id:
+              description: User who deleted this comment
+              allOf:
+                - $ref: '#/components/schemas/UserId'
+            post_id:
+              description: Post identifier
+              allOf:
+                - $ref: '#/components/schemas/MessageId'
+          required:
+            - message_id
+            - chat_id
+            - user_id
+            - post_id
+    CommentEditedUpdate:
+      type: object
+      description: You will get this `update` as soon as comment is edited. Bot receives this update only if it is administrator of the channel with `read_all_messages` permission
+      allOf:
+        - $ref: '#/components/schemas/Update'
+        - properties:
+            message:
+              description: Edited comment
+              allOf:
+                - $ref: '#/components/schemas/Message'
+          required:
+            - message
     BotAddedToChatUpdate:
+      type: object
       description: You will receive this update when bot has been added to chat
       allOf:
         - $ref: '#/components/schemas/Update'
         - properties:
             chat_id:
               description: Chat id where bot was added
-              type: integer
-              format: int64
+              allOf:
+                - $ref: '#/components/schemas/ChatId'
             user:
               description: User who added bot to chat
               allOf:
@@ -3213,14 +3531,15 @@ components:
             - user
             - is_channel
     BotRemovedFromChatUpdate:
+      type: object
       description: You will receive this update when bot has been removed from chat
       allOf:
         - $ref: '#/components/schemas/Update'
         - properties:
             chat_id:
               description: Chat identifier bot removed from
-              type: integer
-              format: int64
+              allOf:
+                - $ref: '#/components/schemas/ChatId'
             user:
               description: User who removed bot from chat
               allOf:
@@ -3233,22 +3552,23 @@ components:
             - user
             - is_channel
     UserAddedToChatUpdate:
-      description: You will receive this update when user has been added to chat where bot is administrator
+      type: object
+      description: You will receive this update when user has been added to chat where bot is administrator with `read_all_messages` permission
       allOf:
         - $ref: '#/components/schemas/Update'
         - properties:
             chat_id:
               description: Chat identifier where event has occurred
-              type: integer
-              format: int64
+              allOf:
+                - $ref: '#/components/schemas/ChatId'
             user:
               description: User added to chat
               allOf:
                 - $ref: '#/components/schemas/User'
             inviter_id:
               description: User who added user to chat. Can be `null` in case when user joined chat by link
-              type: integer
-              format: int64
+              allOf:
+                - $ref: '#/components/schemas/UserId'
               readOnly: false
               nullable: true
             is_channel:
@@ -3259,22 +3579,23 @@ components:
             - user
             - is_channel
     UserRemovedFromChatUpdate:
-      description: You will receive this update when user has been removed from chat where bot is administrator
+      type: object
+      description: You will receive this update when user has been removed from chat where bot is administrator with `read_all_messages` permission
       allOf:
         - $ref: '#/components/schemas/Update'
         - properties:
             chat_id:
               description: Chat identifier where event has occurred
-              type: integer
-              format: int64
+              allOf:
+                - $ref: '#/components/schemas/ChatId'
             user:
               description: User removed from chat
               allOf:
                 - $ref: '#/components/schemas/User'
             admin_id:
               description: Administrator who removed user from chat. Can be `null` in case when user left chat
-              type: integer
-              format: int64
+              allOf:
+                - $ref: '#/components/schemas/UserId'
               readOnly: false
             is_channel:
               description: Indicates whether user has been removed from channel or not
@@ -3284,14 +3605,15 @@ components:
             - user
             - is_channel
     BotStartedUpdate:
+      type: object
       description: Bot gets this type of update as soon as user pressed `Start` button
       allOf:
         - $ref: '#/components/schemas/Update'
         - properties:
             chat_id:
               description: Dialog identifier where event has occurred
-              type: integer
-              format: int64
+              allOf:
+                - $ref: '#/components/schemas/ChatId'
             user:
               description: User pressed the 'Start' button
               allOf:
@@ -3310,14 +3632,15 @@ components:
             - chat_id
             - user
     BotStoppedUpdate:
+      type: object
       description: Bot gets this type of update as soon as bot has been stopped
       allOf:
         - $ref: '#/components/schemas/Update'
         - properties:
             chat_id:
               description: Dialog identifier where event has occurred
-              type: integer
-              format: int64
+              allOf:
+                - $ref: '#/components/schemas/ChatId'
             user:
               description: User who stopped the bot
               allOf:
@@ -3330,14 +3653,15 @@ components:
             - chat_id
             - user
     DialogClearedUpdate:
+      type: object
       description: Bot gets this type of update as soon as dialog history has been cleared
       allOf:
         - $ref: '#/components/schemas/Update'
         - properties:
             chat_id:
               description: Dialog identifier where event has occurred
-              type: integer
-              format: int64
+              allOf:
+                - $ref: '#/components/schemas/ChatId'
             user:
               description: User who cleared the dialog
               allOf:
@@ -3350,14 +3674,15 @@ components:
             - chat_id
             - user
     DialogRemovedUpdate:
+      type: object
       description: Bot gets this type of update as soon as dialog has been removed
       allOf:
         - $ref: '#/components/schemas/Update'
         - properties:
             chat_id:
               description: Dialog identifier where event has occurred
-              type: integer
-              format: int64
+              allOf:
+                - $ref: '#/components/schemas/ChatId'
             user:
               description: User who removed the dialog
               allOf:
@@ -3370,14 +3695,15 @@ components:
             - chat_id
             - user
     DialogMutedUpdate:
+      type: object
       description: Bot gets this type of update as soon as dialog has been muted
       allOf:
         - $ref: '#/components/schemas/Update'
         - properties:
             chat_id:
               description: Dialog identifier where event has occurred
-              type: integer
-              format: int64
+              allOf:
+                - $ref: '#/components/schemas/ChatId'
             user:
               description: User who muted the dialog
               allOf:
@@ -3395,14 +3721,15 @@ components:
             - user
             - muted_until
     DialogUnmutedUpdate:
+      type: object
       description: Bot gets this type of update as soon as dialog has been unmuted
       allOf:
         - $ref: '#/components/schemas/Update'
         - properties:
             chat_id:
               description: Dialog identifier where event has occurred
-              type: integer
-              format: int64
+              allOf:
+                - $ref: '#/components/schemas/ChatId'
             user:
               description: User who unmuted the dialog
               allOf:
@@ -3415,14 +3742,15 @@ components:
             - chat_id
             - user
     ChatTitleChangedUpdate:
+      type: object
       description: Bot gets this type of update as soon as title has been changed in chat
       allOf:
         - $ref: '#/components/schemas/Update'
         - properties:
             chat_id:
               description: Chat identifier where event has occurred
-              type: integer
-              format: int64
+              allOf:
+                - $ref: '#/components/schemas/ChatId'
             user:
               description: User who changed title
               allOf:
@@ -3434,27 +3762,45 @@ components:
             - chat_id
             - user
             - title
-    MessageChatCreatedUpdate:
-      description: Bot will get this update when chat has been created as soon as first user clicked chat button
+    BotAdminPermissionsChangedUpdate:
+      type: object
+      description: Bot will get this update when bot admin permissions changed
       allOf:
         - $ref: '#/components/schemas/Update'
         - properties:
-            chat:
-              description: Created chat
+            chat_id:
+              description: Chat identifier where event has occurred
               allOf:
-                - $ref: '#/components/schemas/Chat'
-            message_id:
-              description: Message identifier where the button has been clicked
-              type: string
-            start_payload:
-              description: Payload from chat button
-              type: string
+                - $ref: '#/components/schemas/ChatId'
+            user_id:
+              description: User or bot who changed bot admin permissions
+              allOf:
+                - $ref: '#/components/schemas/UserId'
+            bot_id:
+              description: Bot that admin permissions changed
+              allOf:
+                - $ref: '#/components/schemas/UserId'
+            is_channel:
+              description: Indicates whether bot admin permissions has been changed in channel or not
+              type: boolean
+            is_admin:
+              description: Indicates whether bot is admin in chat/channel or not
+              type: boolean
+            permissions:
+              type: array
+              uniqueItems: true
               nullable: true
+              items:
+                $ref: '#/components/schemas/ChatAdminPermission'
               readOnly: false
           required:
-            - message_id
-            - chat
+            - chat_id
+            - user_id
+            - bot_id
+            - is_channel
+            - is_admin
     ModifyMembersResult:
+      type: object
       description: Result of members list modification request
       allOf:
         - $ref: '#/components/schemas/SimpleQueryResult'
@@ -3463,10 +3809,10 @@ components:
               description: List of user IDs failed to add or delete
               type: array
               items:
-                type: integer
-                format: int64
+                $ref: '#/components/schemas/UserId'
               nullable: true
               readOnly: false
+              uniqueItems: true
             failed_user_details:
               type: array
               items:
@@ -3474,6 +3820,7 @@ components:
               nullable: true
               readOnly: false
     FailedUserDetails:
+      type: object
       description: Detailed info about why a user cannot be added to the chat.
       properties:
         error_code:
@@ -3483,8 +3830,7 @@ components:
           description: List of user IDs failed to add
           type: array
           items:
-            type: integer
-            format: int64
+            $ref: '#/components/schemas/UserId'
           nullable: false
       required:
         - error_code
