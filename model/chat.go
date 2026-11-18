@@ -58,6 +58,19 @@ type ChatMembersList struct {
 	Marker  int64        `json:"marker,omitempty"`
 }
 
+type ModifyMembersResult struct {
+	Message           string              `json:"message,omitempty"`
+	Success           bool                `json:"success"`
+	Code              string              `json:"code,omitempty"`
+	FailedUserIDs     []int64             `json:"failed_user_ids,omitempty"`
+	FailedUserDetails []FailedUserDetails `json:"failed_user_details,omitempty"`
+}
+
+type FailedUserDetails struct {
+	UserIDs   []int64 `json:"user_ids"`
+	ErrorCode string  `json:"error_code"`
+}
+
 type Image struct {
 	URL string `json:"url"`
 }

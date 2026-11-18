@@ -118,7 +118,7 @@ func (c *Chats) GetMembers(ctx context.Context, chatID, marker, count int64, use
 	return
 }
 
-func (c *Chats) AddMembers(ctx context.Context, chatID int64, userIDs []int64) (res model.SimpleQueryResult, err error) {
+func (c *Chats) AddMembers(ctx context.Context, chatID int64, userIDs []int64) (res model.ModifyMembersResult, err error) {
 	data := model.UserIdsList{
 		UserIds: userIDs,
 	}

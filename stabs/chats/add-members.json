@@ -1,0 +1,21 @@
+{
+  "success": true,
+  "failed_user_ids": [
+    201201201,
+    229229229
+  ],
+  "failed_user_details": [
+    {
+      "error_code": "add.participant.privacy",
+      "user_ids": [
+        201201201
+      ]
+    },
+    {
+      "error_code": "add.participant.not.found",
+      "user_ids": [
+        229229229
+      ]
+    }
+  ]
+}

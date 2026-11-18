@@ -1,0 +1,71 @@
+{
+  "sender": {
+    "user_id": 123123123,
+    "first_name": "John",
+    "last_name": "Doe",
+    "is_bot": false,
+    "last_activity_time": 1775628268494
+  },
+  "recipient": {
+    "chat_id": -70000000000005,
+    "chat_type": "chat"
+  },
+  "timestamp": 1775628268494,
+  "body": {
+    "mid": "mid.attachments",
+    "seq": 116328127605864690,
+    "text": "all attachments",
+    "attachments": [
+      {
+        "type": "image",
+        "payload": {
+          "photo_id": 987654321,
+          "token": "photo-token",
+          "url": "https://example.com/photo.jpg"
+        }
+      },
+      {
+        "type": "video",
+        "payload": {
+          "token": "video-token"
+        },
+        "thumbnail": {
+          "url": "https://example.com/thumbnail.jpg"
+        },
+        "width": 1920,
+        "height": 1080,
+        "duration": 42
+      },
+      {
+        "type": "audio",
+        "payload": {
+          "token": "audio-token"
+        },
+        "duration": 187,
+        "transcription": "audio transcription text"
+      },
+      {
+        "type": "sticker",
+        "payload": {
+          "code": "sticker-code"
+        },
+        "width": 512,
+        "height": 512
+      },
+      {
+        "type": "share",
+        "payload": {
+          "url": "https://example.com/shared",
+          "token": "share-token"
+        },
+        "title": "Share title",
+        "description": "Share description",
+        "image_url": "https://example.com/share-image.jpg"
+      }
+    ]
+  },
+  "stat": {
+    "views": 7
+  },
+  "url": "https://max.ru/chats/-70000000000005/messages/mid.attachments"
+}

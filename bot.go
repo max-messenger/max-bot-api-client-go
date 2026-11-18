@@ -41,7 +41,7 @@ type ChatsAPI interface {
 	SetAdmins(ctx context.Context, chatID int64, admins []model.ChatAdmin) (model.SimpleQueryResult, error)
 	DeleteAdmins(ctx context.Context, chatID, userID int64) (model.SimpleQueryResult, error)
 	GetMembers(ctx context.Context, chatID, marker, count int64, userIDs []int64) (model.ChatMembersList, error)
-	AddMembers(ctx context.Context, chatID int64, userIDs []int64) (model.SimpleQueryResult, error)
+	AddMembers(ctx context.Context, chatID int64, userIDs []int64) (model.ModifyMembersResult, error)
 	RemoveMember(ctx context.Context, chatID, userID int64, block bool) (model.SimpleQueryResult, error)
 }
 

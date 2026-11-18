@@ -1,6 +1,7 @@
 package maxbot
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -324,4 +325,45 @@ func TestMessage_EdgeCases(t *testing.T) {
 		msg.SetReply("test", "")
 		assert.Equal(t, "", msg.message.Link.Mid)
 	})
+}
+
+func TestMessageAttachmentsDecoding(t *testing.T) {
+	data, err := stabs.ReadFile("stabs/message.attachments.json")
+	require.NoError(t, err)
+
+	var msg model.Message
+	require.NoError(t, json.Unmarshal(data, &msg))
+
+	require.Len(t, msg.Body.Attachments, 5)
+
+	photo := msg.Body.Attachments[0]
+	assert.Equal(t, model.AttachImage, photo.Type)
+	assert.Equal(t, int64(987654321), photo.Payload.PhotoID)
+	assert.Equal(t, "photo-token", photo.Payload.Token)
+	assert.Equal(t, "https://example.com/photo.jpg", photo.Payload.URL)
+
+	video := msg.Body.Attachments[1]
+	assert.Equal(t, model.AttachVideo, video.Type)
+	assert.Equal(t, 1920, video.Width)
+	assert.Equal(t, 1080, video.Height)
+	assert.Equal(t, 42, video.Duration)
+	require.NotNil(t, video.Thumbnail)
+	assert.Equal(t, "https://example.com/thumbnail.jpg", video.Thumbnail.URL)
+
+	audio := msg.Body.Attachments[2]
+	assert.Equal(t, model.AttachAudio, audio.Type)
+	assert.Equal(t, 187, audio.Duration)
+	assert.Equal(t, "audio transcription text", audio.Transcription)
+
+	sticker := msg.Body.Attachments[3]
+	assert.Equal(t, model.AttachSticker, sticker.Type)
+	assert.Equal(t, "sticker-code", sticker.Payload.Code)
+	assert.Equal(t, 512, sticker.Width)
+	assert.Equal(t, 512, sticker.Height)
+
+	share := msg.Body.Attachments[4]
+	assert.Equal(t, model.AttachShare, share.Type)
+	assert.Equal(t, "Share title", share.Title)
+	assert.Equal(t, "Share description", share.Description)
+	assert.Equal(t, "https://example.com/share-image.jpg", share.ImageURL)
 }
