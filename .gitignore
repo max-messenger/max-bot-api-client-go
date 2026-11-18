@@ -1,4 +1,6 @@
 /debug
+.agents
+/openspec
 
 .DS_Store
 **/.DS_Store
