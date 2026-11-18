@@ -2,6 +2,7 @@ package maxbot
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -73,4 +74,29 @@ func (t *subscriptionsTest) TestGetUpdatesWithoutTypes() {
 
 	_, _, err = api.Subscriptions.GetUpdates(context.Background(), 0)
 	t.NoError(err)
+}
+
+func (t *subscriptionsTest) TestSubscribe() {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Equal(r.Header.Get(AuthorizationHeader), testToken)
+		t.Equal(r.Method, http.MethodPost)
+		t.Equal(r.URL.Path, pathSubscriptions)
+
+		body, err := io.ReadAll(r.Body)
+		t.NoError(err)
+		t.JSONEq(`{"url":"https://example.com/webhook","secret":"secret","update_types":["message_created"]}`, string(body))
+
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"success":true}`))
+	}))
+
+	defer srv.Close()
+
+	api, err := NewApi(testToken, WithBaseURL(srv.URL))
+	t.NoError(err)
+
+	res, err := api.Subscriptions.Subscribe(context.Background(), "https://example.com/webhook", "secret", []string{"message_created"})
+	t.NoError(err)
+
+	t.True(res.Success)
 }

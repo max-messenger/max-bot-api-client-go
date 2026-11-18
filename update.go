@@ -157,7 +157,6 @@ func (u updateRaw) senderFromRaw() model.Sender {
 		LastName:         u.Message.Sender.LastName,
 		IsBot:            u.Message.Sender.IsBot,
 		LastActivityTime: u.Message.Sender.LastActivityTime,
-		Name:             u.Message.Sender.Name,
 		Username:         u.Message.Sender.Username,
 	}
 }

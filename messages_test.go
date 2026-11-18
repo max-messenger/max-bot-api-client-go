@@ -36,7 +36,6 @@ func (t *messagesTest) TestGetMessages() {
 					LastName:         "Doe",
 					IsBot:            false,
 					LastActivityTime: 1775053249000,
-					Name:             "John Doe",
 				},
 				Recipient: model.Recipient{
 					ChatID:   182182182,

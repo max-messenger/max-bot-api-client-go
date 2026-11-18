@@ -22,7 +22,6 @@ type Chat struct {
 	Description       string           `json:"description,omitempty"`
 	DialogWithUser    *User            `json:"dialog_with_user,omitempty"`
 	MessagesCount     int              `json:"messages_count,omitempty"`
-	ChatMessageID     string           `json:"chat_message_id,omitempty"`
 	PinnedMessage     Message          `json:"pinned_message"`
 }
 
@@ -48,7 +47,6 @@ type ChatMember struct {
 	LastActivityTime int64                 `json:"last_activity_time"`
 	AvatarURL        string                `json:"avatar_url"`
 	FullAvatarURL    string                `json:"full_avatar_url"`
-	Name             string                `json:"name"`
 	Username         string                `json:"username"` // need for bot
 	Description      string                `json:"description"`
 }

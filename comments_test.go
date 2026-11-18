@@ -49,7 +49,6 @@ func (t *commentsTest) TestGetCommentByID() {
 			LastName:         "Doe",
 			IsBot:            false,
 			LastActivityTime: 1775025580000,
-			Name:             "John Doe",
 		},
 		Stat: &model.MessageStat{
 			Views: 42,
@@ -61,7 +60,6 @@ func (t *commentsTest) TestGetCommentByID() {
 				FirstName:        "UniBot",
 				IsBot:            true,
 				LastActivityTime: 1775025580000,
-				Name:             "UniBot",
 				Username:         "unit_bot",
 			},
 			ChatID: -70801090403050,

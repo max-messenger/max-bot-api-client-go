@@ -122,6 +122,7 @@ func (m *Messages) GetVideoAttachmentDetails(ctx context.Context, videoToken str
 	return
 }
 
+// Deprecated: use Comments.GetComments
 func (m *Messages) GetComments(ctx context.Context, messageID string, before, after, count int64, commentIds []string) (res model.CommentList, err error) {
 	values := url.Values{}
 

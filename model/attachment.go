@@ -6,10 +6,9 @@ type Attachment struct {
 	FileName string         `json:"filename,omitempty"`
 	Size     int            `json:"size,omitempty"`
 
-	Latitude  float64   `json:"latitude,omitempty"`
-	Longitude float64   `json:"longitude,omitempty"`
-	Duration  int       `json:"duration,omitempty"`
-	VideoType VideoType `json:"video_type,omitempty"`
+	Latitude  float64 `json:"latitude,omitempty"`
+	Longitude float64 `json:"longitude,omitempty"`
+	Duration  int     `json:"duration,omitempty"`
 
 	Width         int      `json:"width,omitempty"`
 	Height        int      `json:"height,omitempty"`

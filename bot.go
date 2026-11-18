@@ -22,8 +22,6 @@ var commandReg = regexp.MustCompile(`^(/[^\s:]+)`)
 
 type BotsAPI interface {
 	GetMyInfo(ctx context.Context) (model.BotInfo, error)
-	// Deprecated: use PatchCommands
-	EditMyInfo(ctx context.Context, patch model.BotPatch) (model.BotInfo, error)
 	PatchCommands(ctx context.Context, botPatch model.BotPatchCommands) (model.BotPatchCommands, error)
 }
 
@@ -67,7 +65,7 @@ type CommentsAPI interface {
 
 type SubscriptionsAPI interface {
 	GetSubscriptions(ctx context.Context) (model.GetSubscriptionsResult, error)
-	Subscribe(ctx context.Context, url, secret string, updateTypes []string, version string) (model.SimpleQueryResult, error)
+	Subscribe(ctx context.Context, url, secret string, updateTypes []string) (model.SimpleQueryResult, error)
 	Unsubscribe(ctx context.Context, url string) (model.SimpleQueryResult, error)
 	GetUpdates(ctx context.Context, marker int64) ([]model.Update, int64, error)
 }

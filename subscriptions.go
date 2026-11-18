@@ -37,12 +37,11 @@ func (s *Subscriptions) GetSubscriptions(ctx context.Context) (res model.GetSubs
 	return
 }
 
-func (s *Subscriptions) Subscribe(ctx context.Context, u, st string, ut []string, v string) (res model.SimpleQueryResult, err error) {
+func (s *Subscriptions) Subscribe(ctx context.Context, u, st string, ut []string) (res model.SimpleQueryResult, err error) {
 	data := model.SubscriptionRequestBody{
 		URL:         u,
 		Secret:      st,
 		UpdateTypes: ut,
-		Version:     v,
 	}
 	err = s.client.raw(ctx, http.MethodPost, pathSubscriptions, nil, data, &res)
 

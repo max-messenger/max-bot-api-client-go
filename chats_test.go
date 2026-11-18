@@ -99,7 +99,6 @@ func (t *chatsTest) TestEditChat() {
 				LastName:         "Doe",
 				IsBot:            false,
 				LastActivityTime: 1775626919577,
-				Name:             "John Doe",
 			},
 		},
 	}
@@ -195,7 +194,6 @@ func (t *chatsTest) TestGetPinMessage() {
 				LastName:         "Doe",
 				IsBot:            false,
 				LastActivityTime: 1775628268494,
-				Name:             "John Doe",
 			},
 		},
 	}
@@ -286,7 +284,6 @@ func (t *chatsTest) TestGetMembership() {
 		Description:      "bot for unit-test",
 		AvatarURL:        "https://localhost/avatar.png",
 		FullAvatarURL:    "https://localhost/avatar.full.png",
-		Name:             "bot firstname",
 	}
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -357,7 +354,6 @@ func (t *chatsTest) TestGetAdmins() {
 				Description:      "bot for unit-test",
 				AvatarURL:        "https://localhost/avatar.png",
 				FullAvatarURL:    "https://localhost/avatar.full.png",
-				Name:             "bot firstname",
 			},
 			{
 				LastAccessTime: 1775626919577,
@@ -384,7 +380,6 @@ func (t *chatsTest) TestGetAdmins() {
 				LastActivityTime: 1775626919577,
 				AvatarURL:        "https://localhost/avatar.png",
 				FullAvatarURL:    "https://localhost/avatar.full.png",
-				Name:             "John Doe",
 			},
 		},
 	}
@@ -487,7 +482,6 @@ func (t *chatsTest) TestGetMembers() {
 				Description:      "bot for unit-test",
 				AvatarURL:        "https://localhost/avatar.png",
 				FullAvatarURL:    "https://localhost/avatar.full.png",
-				Name:             "bot firstname",
 			},
 			{
 				LastAccessTime: 1775626919577,
@@ -514,7 +508,6 @@ func (t *chatsTest) TestGetMembers() {
 				LastActivityTime: 1775626919577,
 				AvatarURL:        "https://localhost/avatar.png",
 				FullAvatarURL:    "https://localhost/avatar.full.png",
-				Name:             "John Doe",
 			},
 		},
 	}

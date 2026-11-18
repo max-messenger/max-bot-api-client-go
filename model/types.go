@@ -142,10 +142,3 @@ const (
 	AttachLocation       AttachmentType = "location"
 	AttachShare          AttachmentType = "share"
 )
-
-type VideoType string
-
-const (
-	VideoTypeRegular      VideoType = "video"
-	VideoTypeVideoMessage VideoType = "video_message"
-)
