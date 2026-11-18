@@ -3,22 +3,25 @@ package maxbot
 import "github.com/max-messenger/max-bot-api-client-go/v2/model"
 
 type updateRaw struct {
-	Timestamp  int64            `json:"timestamp"`
-	ChatID     int64            `json:"chat_id"`
-	UserID     int64            `json:"user_id"`
-	UserLocale string           `json:"user_locale"`
-	IsChannel  bool             `json:"is_channel"`
-	Title      string           `json:"title"`
-	MutedUntil int64            `json:"muted_until"`
-	InviterID  int64            `json:"inviter_id"`
-	AdminID    int64            `json:"admin_id"`
-	MessageID  string           `json:"message_id"`
-	PostID     string           `json:"post_id"`
-	UpdateType model.UpdateType `json:"update_type"`
-	User       model.User       `json:"user"`
-	Message    model.Message    `json:"message"`
-	Callback   model.Callback   `json:"callback"`
-	Payload    string           `json:"payload"`
+	Timestamp   int64                       `json:"timestamp"`
+	ChatID      int64                       `json:"chat_id"`
+	UserID      int64                       `json:"user_id"`
+	UserLocale  string                      `json:"user_locale"`
+	IsChannel   bool                        `json:"is_channel"`
+	Title       string                      `json:"title"`
+	MutedUntil  int64                       `json:"muted_until"`
+	InviterID   int64                       `json:"inviter_id"`
+	AdminID     int64                       `json:"admin_id"`
+	MessageID   string                      `json:"message_id"`
+	PostID      string                      `json:"post_id"`
+	BotID       int64                       `json:"bot_id"`
+	IsAdmin     bool                        `json:"is_admin"`
+	Permissions []model.ChatAdminPermission `json:"permissions"`
+	UpdateType  model.UpdateType            `json:"update_type"`
+	User        model.User                  `json:"user"`
+	Message     model.Message               `json:"message"`
+	Callback    model.Callback              `json:"callback"`
+	Payload     string                      `json:"payload"`
 }
 
 type updateList struct {
@@ -136,6 +139,12 @@ func (u updateRaw) FromRaw() model.Update {
 		update.UserID = u.UserID
 		update.MessageID = u.MessageID
 		update.PostID = u.PostID
+	case model.UpdateBotAdminPermissionsChanged:
+		update.UserID = u.UserID
+		update.IsChannel = u.IsChannel
+		update.BotID = u.BotID
+		update.IsAdmin = u.IsAdmin
+		update.Permissions = u.Permissions
 	}
 
 	return update

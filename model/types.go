@@ -98,6 +98,8 @@ const (
 	UpdateCommentCreated   UpdateType = "comment_created"
 	UpdateCommentEdited    UpdateType = "comment_edited"
 	UpdateCommentRemoved   UpdateType = "comment_removed"
+
+	UpdateBotAdminPermissionsChanged UpdateType = "bot_admin_permissions_changed"
 )
 
 type MarkupType string

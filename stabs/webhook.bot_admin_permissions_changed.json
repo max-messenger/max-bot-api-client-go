@@ -1,0 +1,14 @@
+{
+  "timestamp": 1775025604499,
+  "chat_id": -70801090403050,
+  "user_id": 123456789,
+  "bot_id": 229229229,
+  "is_channel": false,
+  "is_admin": true,
+  "permissions": [
+    "add_admins",
+    "pin_message",
+    "write"
+  ],
+  "update_type": "bot_admin_permissions_changed"
+}

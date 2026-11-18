@@ -417,6 +417,19 @@ func (t *updateTest) TestUpdate() {
 				},
 			},
 		},
+		{
+			fileName: "stabs/update.bot_admin_permissions_changed.json",
+			expected: model.Update{
+				Timestamp:   1775025604499,
+				ChatID:      -70801090403050,
+				UserID:      123456789,
+				IsChannel:   false,
+				UpdateType:  model.UpdateBotAdminPermissionsChanged,
+				BotID:       229229229,
+				IsAdmin:     true,
+				Permissions: []model.ChatAdminPermission{model.PermAddAdmins, model.PermPinMessage, model.PermWrite},
+			},
+		},
 	}
 
 	for _, c := range cases {

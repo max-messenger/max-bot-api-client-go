@@ -1,6 +1,7 @@
 {
   "user_id": 123123123,
   "first_name": "unit bot",
+  "last_name": "bot lastname",
   "username": "test-bot",
   "is_bot": true,
   "last_activity_time": 1774677196913,
