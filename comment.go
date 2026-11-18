@@ -3,9 +3,10 @@ package maxbot
 import "github.com/max-messenger/max-bot-api-client-go/v2/model"
 
 type Comment struct {
-	Text   string           `json:"text"`
-	Format model.TextFormat `json:"format,omitempty"`
-	Link   *CommentLink     `json:"link,omitempty"`
+	Text               string           `json:"text"`
+	Format             model.TextFormat `json:"format,omitempty"`
+	Link               *CommentLink     `json:"link,omitempty"`
+	disableLinkPreview bool
 }
 
 type CommentLink struct {
@@ -27,6 +28,12 @@ func (c *Comment) SetFormat(format model.TextFormat) *Comment {
 }
 func (c *Comment) SetLink(link CommentLink) *Comment {
 	c.Link = &link
+
+	return c
+}
+
+func (c *Comment) SetDisableLinkPreview(mode bool) *Comment {
+	c.disableLinkPreview = mode
 
 	return c
 }

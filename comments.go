@@ -47,7 +47,13 @@ func (c *Comments) Send(ctx context.Context, postID string, comment *Comment) (r
 
 		return
 	}
-	err = c.client.rawWithRetry(ctx, http.MethodPost, fmt.Sprintf(formatPathComments, postID), nil, comment, &res)
+
+	values := url.Values{}
+	if comment.disableLinkPreview {
+		values.Set(paramDisableLinkPreview, "true")
+	}
+
+	err = c.client.rawWithRetry(ctx, http.MethodPost, fmt.Sprintf(formatPathComments, postID), values, comment, &res)
 
 	return
 }

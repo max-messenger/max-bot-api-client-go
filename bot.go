@@ -46,12 +46,14 @@ type ChatsAPI interface {
 }
 
 type MessagesAPI interface {
+	// Deprecated: use GetMessagesV2
 	GetMessages(ctx context.Context, chatID, from, to, count int64, messageIDs []string) (model.MessageList, error)
+	GetMessagesV2(ctx context.Context, chatID int64, opts ...QueryOpt) (model.MessageList, error)
 	GetMessageByID(ctx context.Context, messageID string) (model.Message, error)
 	Send(ctx context.Context, msg *Message) (res model.SendMessageResult, err error)
 	EditMessage(ctx context.Context, messageID string, body model.NewMessageBody) (model.SimpleQueryResult, error)
 	DeleteMessage(ctx context.Context, messageID string) (model.SimpleQueryResult, error)
-	AnswerOnCallback(ctx context.Context, callbackID string, answer model.CallbackAnswer) (model.SimpleQueryResult, error)
+	AnswerOnCallback(ctx context.Context, callbackID string, answer model.CallbackAnswer, opts ...QueryOpt) (model.SimpleQueryResult, error)
 	GetVideoAttachmentDetails(ctx context.Context, videoToken string) (model.VideoAttachmentDetails, error)
 }
 

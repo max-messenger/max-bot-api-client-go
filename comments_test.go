@@ -91,3 +91,27 @@ func (t *commentsTest) TestGetCommentByID() {
 
 	t.Equal(expect, res)
 }
+
+func (t *commentsTest) TestSend() {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Equal(r.Header.Get(AuthorizationHeader), testToken)
+		t.Equal(r.Method, http.MethodPost)
+		t.Equal(r.URL.Path, fmt.Sprintf(formatPathComments, "mid.post"))
+		t.Equal("true", r.URL.Query().Get(paramDisableLinkPreview))
+
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"message":{}}`))
+	}))
+
+	defer srv.Close()
+
+	api, err := NewApi(testToken, WithBaseURL(srv.URL))
+	t.NoError(err)
+
+	comment := NewComment("comment text").SetDisableLinkPreview(true)
+
+	res, err := api.Comments.Send(context.Background(), "mid.post", comment)
+	t.NoError(err)
+
+	t.Equal(model.SendMessageResult{}, res)
+}
