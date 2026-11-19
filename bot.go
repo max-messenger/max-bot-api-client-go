@@ -58,9 +58,9 @@ type MessagesAPI interface {
 type CommentsAPI interface {
 	GetComments(ctx context.Context, postID string, before, after, count int64, commentIds []string) (model.CommentList, error)
 	GetCommentByID(ctx context.Context, postID, commentID string) (res model.Comment, err error)
-	Send(ctx context.Context, postID string, comment *Comment) (model.SendMessageResult, error)
-	Edit(ctx context.Context, postID, commentID string, comment *Comment) (model.SendMessageResult, error)
-	Delete(ctx context.Context, postID, commentID string) (model.SendMessageResult, error)
+	Send(ctx context.Context, postID string, comment *Comment) (model.SendCommentResult, error)
+	Edit(ctx context.Context, postID, commentID string, comment *Comment) (model.SimpleQueryResult, error)
+	Delete(ctx context.Context, postID, commentID string) (model.SimpleQueryResult, error)
 }
 
 type SubscriptionsAPI interface {

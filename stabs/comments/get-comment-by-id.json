@@ -4,8 +4,7 @@
     "first_name": "John",
     "last_name": "Doe",
     "is_bot": false,
-    "last_activity_time": 1775025580000,
-    "name": "John Doe"
+    "last_activity_time": 1775025580000
   },
   "recipient": {
     "chat_id": -70801090403050,
@@ -32,7 +31,6 @@
       "first_name": "UniBot",
       "is_bot": true,
       "last_activity_time": 1775025580000,
-      "name": "UniBot",
       "username": "unit_bot"
     },
     "chat_id": -70801090403050,

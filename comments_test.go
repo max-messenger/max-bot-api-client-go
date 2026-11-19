@@ -29,7 +29,7 @@ func (t *commentsTest) TestGetCommentByID() {
 	t.NoError(err)
 
 	expect := model.Comment{
-		Recipient: model.CommentRecipient{
+		Recipient: model.Recipient{
 			ChatID:   -70801090403050,
 			ChatType: model.ChatTypeChannel,
 			PostID:   "mid.post",
@@ -111,5 +111,50 @@ func (t *commentsTest) TestSend() {
 	res, err := api.Comments.Send(context.Background(), "mid.post", comment)
 	t.NoError(err)
 
-	t.Equal(model.SendMessageResult{}, res)
+	t.Equal(model.SendCommentResult{}, res)
+}
+
+func (t *commentsTest) TestEdit() {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Equal(r.Header.Get(AuthorizationHeader), testToken)
+		t.Equal(r.Method, http.MethodPut)
+		t.Equal(r.URL.Path, fmt.Sprintf(formatPathComments, "mid.post"))
+		t.Equal("mid.comment", r.URL.Query().Get(paramCommentID))
+
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"success":true}`))
+	}))
+
+	defer srv.Close()
+
+	api, err := NewApi(testToken, WithBaseURL(srv.URL))
+	t.NoError(err)
+
+	res, err := api.Comments.Edit(context.Background(), "mid.post", "mid.comment", NewComment("edited text"))
+	t.NoError(err)
+
+	t.True(res.Success)
+}
+
+func (t *commentsTest) TestDelete() {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Equal(r.Header.Get(AuthorizationHeader), testToken)
+		t.Equal(r.Method, http.MethodDelete)
+		t.Equal(r.URL.Path, fmt.Sprintf(formatPathComments, "mid.post"))
+		t.Equal("mid.comment", r.URL.Query().Get(paramCommentID))
+
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"success":true,"code":"ok.code"}`))
+	}))
+
+	defer srv.Close()
+
+	api, err := NewApi(testToken, WithBaseURL(srv.URL))
+	t.NoError(err)
+
+	res, err := api.Comments.Delete(context.Background(), "mid.post", "mid.comment")
+	t.NoError(err)
+
+	t.True(res.Success)
+	t.Equal("ok.code", res.Code)
 }

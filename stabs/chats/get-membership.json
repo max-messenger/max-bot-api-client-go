@@ -20,6 +20,5 @@
   "last_activity_time": 1775626919577,
   "description": "bot for unit-test",
   "avatar_url": "https://localhost/avatar.png",
-  "full_avatar_url": "https://localhost/avatar.full.png",
-  "name": "bot firstname"
+  "full_avatar_url": "https://localhost/avatar.full.png"
 }
