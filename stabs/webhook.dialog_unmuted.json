@@ -5,10 +5,7 @@
     "first_name": "John",
     "last_name": "Doe",
     "is_bot": false,
-    "last_activity_time": 1775025580000,
-    "avatar_url": "avatar.png",
-    "full_avatar_url": "avatar.full.png",
-    "name": "John Doe"
+    "last_activity_time": 1775025580000
   },
   "timestamp": 1775025604499,
   "user_locale": "ru",

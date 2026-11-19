@@ -22,8 +22,6 @@ var commandReg = regexp.MustCompile(`^(/[^\s:]+)`)
 
 type BotsAPI interface {
 	GetMyInfo(ctx context.Context) (model.BotInfo, error)
-	// Deprecated: use PatchCommands
-	EditMyInfo(ctx context.Context, patch model.BotPatch) (model.BotInfo, error)
 	PatchCommands(ctx context.Context, botPatch model.BotPatchCommands) (model.BotPatchCommands, error)
 }
 
@@ -41,31 +39,33 @@ type ChatsAPI interface {
 	SetAdmins(ctx context.Context, chatID int64, admins []model.ChatAdmin) (model.SimpleQueryResult, error)
 	DeleteAdmins(ctx context.Context, chatID, userID int64) (model.SimpleQueryResult, error)
 	GetMembers(ctx context.Context, chatID, marker, count int64, userIDs []int64) (model.ChatMembersList, error)
-	AddMembers(ctx context.Context, chatID int64, userIDs []int64) (model.SimpleQueryResult, error)
+	AddMembers(ctx context.Context, chatID int64, userIDs []int64) (model.ModifyMembersResult, error)
 	RemoveMember(ctx context.Context, chatID, userID int64, block bool) (model.SimpleQueryResult, error)
 }
 
 type MessagesAPI interface {
+	// Deprecated: use GetMessagesV2
 	GetMessages(ctx context.Context, chatID, from, to, count int64, messageIDs []string) (model.MessageList, error)
+	GetMessagesV2(ctx context.Context, chatID int64, opts ...QueryOpt) (model.MessageList, error)
 	GetMessageByID(ctx context.Context, messageID string) (model.Message, error)
 	Send(ctx context.Context, msg *Message) (res model.SendMessageResult, err error)
 	EditMessage(ctx context.Context, messageID string, body model.NewMessageBody) (model.SimpleQueryResult, error)
 	DeleteMessage(ctx context.Context, messageID string) (model.SimpleQueryResult, error)
-	AnswerOnCallback(ctx context.Context, callbackID string, answer model.CallbackAnswer) (model.SimpleQueryResult, error)
+	AnswerOnCallback(ctx context.Context, callbackID string, answer model.CallbackAnswer, opts ...QueryOpt) (model.SimpleQueryResult, error)
 	GetVideoAttachmentDetails(ctx context.Context, videoToken string) (model.VideoAttachmentDetails, error)
 }
 
 type CommentsAPI interface {
 	GetComments(ctx context.Context, postID string, before, after, count int64, commentIds []string) (model.CommentList, error)
 	GetCommentByID(ctx context.Context, postID, commentID string) (res model.Comment, err error)
-	Send(ctx context.Context, postID string, comment *Comment) (model.SendMessageResult, error)
-	Edit(ctx context.Context, postID, commentID string, comment *Comment) (model.SendMessageResult, error)
-	Delete(ctx context.Context, postID, commentID string) (model.SendMessageResult, error)
+	Send(ctx context.Context, postID string, comment *Comment) (model.SendCommentResult, error)
+	Edit(ctx context.Context, postID, commentID string, comment *Comment) (model.SimpleQueryResult, error)
+	Delete(ctx context.Context, postID, commentID string) (model.SimpleQueryResult, error)
 }
 
 type SubscriptionsAPI interface {
 	GetSubscriptions(ctx context.Context) (model.GetSubscriptionsResult, error)
-	Subscribe(ctx context.Context, url, secret string, updateTypes []string, version string) (model.SimpleQueryResult, error)
+	Subscribe(ctx context.Context, url, secret string, updateTypes []string) (model.SimpleQueryResult, error)
 	Unsubscribe(ctx context.Context, url string) (model.SimpleQueryResult, error)
 	GetUpdates(ctx context.Context, marker int64) ([]model.Update, int64, error)
 }

@@ -12,6 +12,8 @@ import (
 	"runtime"
 	"runtime/debug"
 	"time"
+
+	"github.com/max-messenger/max-bot-api-client-go/v2/model"
 )
 
 const (
@@ -31,6 +33,7 @@ type client struct {
 	httpClient  HttpClient
 	pollPause   time.Duration
 	pollTimeout time.Duration
+	updateTypes []model.UpdateType
 	libVersion  string
 	goVersion   string
 }

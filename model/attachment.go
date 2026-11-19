@@ -6,21 +6,32 @@ type Attachment struct {
 	FileName string         `json:"filename,omitempty"`
 	Size     int            `json:"size,omitempty"`
 
-	Latitude  float64   `json:"latitude,omitempty"`
-	Longitude float64   `json:"longitude,omitempty"`
-	Duration  int       `json:"duration,omitempty"`
-	VideoType VideoType `json:"video_type,omitempty"`
+	Latitude  float64 `json:"latitude,omitempty"`
+	Longitude float64 `json:"longitude,omitempty"`
+	Duration  int     `json:"duration,omitempty"`
+
+	Width         int      `json:"width,omitempty"`
+	Height        int      `json:"height,omitempty"`
+	Thumbnail     *Payload `json:"thumbnail,omitempty"`
+	Transcription string   `json:"transcription,omitempty"`
+	Title         string   `json:"title,omitempty"`
+	Description   string   `json:"description,omitempty"`
+	ImageURL      string   `json:"image_url,omitempty"`
 }
 
 type Payload struct {
-	Token     string      `json:"token,omitempty"`
-	URL       string      `json:"url,omitempty"`
-	Code      string      `json:"code,omitempty"`
-	ContactID int64       `json:"contact_id,omitempty"` // for send contact
-	VCFInfo   string      `json:"vcf_info,omitempty"`
-	MaxInfo   *User       `json:"max_info,omitempty"`
-	Hash      string      `json:"hash,omitempty"`
-	Buttons   [][]*Button `json:"buttons,omitempty"`
+	Token     string                `json:"token,omitempty"`
+	URL       string                `json:"url,omitempty"`
+	Code      string                `json:"code,omitempty"`
+	PhotoID   int64                 `json:"photo_id,omitempty"`
+	ContactID int64                 `json:"contact_id,omitempty"` // for send contact
+	Name      string                `json:"name,omitempty"`
+	VCFInfo   string                `json:"vcf_info,omitempty"`
+	VCFPhone  string                `json:"vcf_phone,omitempty"`
+	MaxInfo   *User                 `json:"max_info,omitempty"`
+	Hash      string                `json:"hash,omitempty"`
+	Photos    map[string]PhotoToken `json:"photos,omitempty"`
+	Buttons   [][]*Button           `json:"buttons,omitempty"`
 }
 
 type VideoUrls struct {

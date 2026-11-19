@@ -22,7 +22,6 @@ type Chat struct {
 	Description       string           `json:"description,omitempty"`
 	DialogWithUser    *User            `json:"dialog_with_user,omitempty"`
 	MessagesCount     int              `json:"messages_count,omitempty"`
-	ChatMessageID     string           `json:"chat_message_id,omitempty"`
 	PinnedMessage     Message          `json:"pinned_message"`
 }
 
@@ -44,11 +43,11 @@ type ChatMember struct {
 	UserID           int64                 `json:"user_id"`
 	FirstName        string                `json:"first_name"`
 	LastName         string                `json:"last_name"`
+	Name             string                `json:"name"` // deprecated
 	IsBot            bool                  `json:"is_bot"`
 	LastActivityTime int64                 `json:"last_activity_time"`
 	AvatarURL        string                `json:"avatar_url"`
 	FullAvatarURL    string                `json:"full_avatar_url"`
-	Name             string                `json:"name"`
 	Username         string                `json:"username"` // need for bot
 	Description      string                `json:"description"`
 }
@@ -56,6 +55,19 @@ type ChatMember struct {
 type ChatMembersList struct {
 	Members []ChatMember `json:"members"`
 	Marker  int64        `json:"marker,omitempty"`
+}
+
+type ModifyMembersResult struct {
+	Message           string              `json:"message,omitempty"`
+	Success           bool                `json:"success"`
+	Code              string              `json:"code,omitempty"`
+	FailedUserIDs     []int64             `json:"failed_user_ids,omitempty"`
+	FailedUserDetails []FailedUserDetails `json:"failed_user_details,omitempty"`
+}
+
+type FailedUserDetails struct {
+	UserIDs   []int64 `json:"user_ids"`
+	ErrorCode string  `json:"error_code"`
 }
 
 type Image struct {

@@ -15,8 +15,7 @@
       "first_name": "John",
       "last_name": "Doe",
       "is_bot": false,
-      "last_activity_time": 1775053249000,
-      "name": "John Doe"
+      "last_activity_time": 1775053249000
     },
     "link": {
       "type": "forward",
@@ -30,8 +29,7 @@
         "first_name": "Tod",
         "last_name": "V",
         "is_bot": false,
-        "last_activity_time": 1775755269000,
-        "name": "Tod V"
+        "last_activity_time": 1775755269000
       },
       "chat_id": -695695695695
     }

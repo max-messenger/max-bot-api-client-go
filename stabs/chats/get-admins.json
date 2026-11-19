@@ -22,8 +22,7 @@
       "last_activity_time": 1775626919577,
       "description": "bot for unit-test",
       "avatar_url": "https://localhost/avatar.png",
-      "full_avatar_url": "https://localhost/avatar.full.png",
-      "name": "bot firstname"
+      "full_avatar_url": "https://localhost/avatar.full.png"
     },
     {
       "last_access_time": 1775626919577,
@@ -49,8 +48,7 @@
       "is_bot": false,
       "last_activity_time": 1775626919577,
       "avatar_url": "https://localhost/avatar.png",
-      "full_avatar_url": "https://localhost/avatar.full.png",
-      "name": "John Doe"
+      "full_avatar_url": "https://localhost/avatar.full.png"
     }
   ]
 }

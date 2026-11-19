@@ -3,20 +3,23 @@ package model
 import "time"
 
 type Update struct {
-	Timestamp  int64
-	ChatID     int64
-	UserID     int64
-	UserLocale string
-	IsChannel  bool
-	UpdateType UpdateType
-	MessageID  string
-	PostID     string
-	CommentID  string
-	User       *User
-	Callback   *Callback
-	ChatProp   *ChatProp
-	Message    *MessageUpdate
-	Payload    string
+	Timestamp   int64
+	ChatID      int64
+	UserID      int64
+	UserLocale  string
+	IsChannel   bool
+	UpdateType  UpdateType
+	MessageID   string
+	PostID      string
+	CommentID   string
+	User        *User
+	Callback    *Callback
+	ChatProp    *ChatProp
+	Message     *MessageUpdate
+	Payload     string
+	BotID       int64
+	IsAdmin     bool
+	Permissions []ChatAdminPermission
 }
 
 func (u Update) GetTimestampTime() time.Time {

@@ -150,7 +150,7 @@ func htmlHandler(ctx context.Context, api *maxbot.Api, update model.Update) {
 	msg := maxbot.NewMessage().
 		SetUser(update.UserID).
 		SetFormat(model.FormatHTML).
-		SetText(fmt.Sprintf(`hello <b><i>%s</i></b>`, update.GetUser().Name))
+		SetText(fmt.Sprintf(`hello <b><i>%s</i></b>`, update.GetUser().FirstName))
 	_, _ = api.Messages.Send(ctx, msg)
 }
 
@@ -158,7 +158,7 @@ func mdHandler(ctx context.Context, api *maxbot.Api, update model.Update) {
 	msg := maxbot.NewMessage().
 		SetUser(update.UserID).
 		SetFormat(model.FormatMarkdown).
-		SetText(fmt.Sprintf(`hi **_%s_**`, update.GetUser().Name))
+		SetText(fmt.Sprintf(`hi **_%s_**`, update.GetUser().FirstName))
 	_, _ = api.Messages.Send(ctx, msg)
 }
 

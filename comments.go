@@ -41,18 +41,24 @@ func (c *Comments) GetCommentByID(ctx context.Context, postID, commentID string)
 	return
 }
 
-func (c *Comments) Send(ctx context.Context, postID string, comment *Comment) (res model.SendMessageResult, err error) {
+func (c *Comments) Send(ctx context.Context, postID string, comment *Comment) (res model.SendCommentResult, err error) {
 	if comment == nil {
 		err = fmt.Errorf("nil comment")
 
 		return
 	}
-	err = c.client.rawWithRetry(ctx, http.MethodPost, fmt.Sprintf(formatPathComments, postID), nil, comment, &res)
+
+	values := url.Values{}
+	if comment.disableLinkPreview {
+		values.Set(paramDisableLinkPreview, "true")
+	}
+
+	err = c.client.rawWithRetry(ctx, http.MethodPost, fmt.Sprintf(formatPathComments, postID), values, comment, &res)
 
 	return
 }
 
-func (c *Comments) Edit(ctx context.Context, postID, commentID string, comment *Comment) (res model.SendMessageResult, err error) {
+func (c *Comments) Edit(ctx context.Context, postID, commentID string, comment *Comment) (res model.SimpleQueryResult, err error) {
 	if comment == nil {
 		err = fmt.Errorf("nil comment")
 
@@ -67,7 +73,7 @@ func (c *Comments) Edit(ctx context.Context, postID, commentID string, comment *
 	return
 }
 
-func (c *Comments) Delete(ctx context.Context, postID, commentID string) (res model.SendMessageResult, err error) {
+func (c *Comments) Delete(ctx context.Context, postID, commentID string) (res model.SimpleQueryResult, err error) {
 	values := url.Values{}
 	values.Set(paramCommentID, commentID)
 

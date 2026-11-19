@@ -15,6 +15,7 @@ type Messages struct {
 	client *client
 }
 
+// Deprecated: use GetMessagesV2
 func (m *Messages) GetMessages(ctx context.Context, chatID, from, to, count int64, messageIDs []string) (res model.MessageList, err error) {
 	values := url.Values{}
 	values.Set(paramChatID, strconv.FormatInt(chatID, 10))
@@ -35,6 +36,23 @@ func (m *Messages) GetMessages(ctx context.Context, chatID, from, to, count int6
 	}
 	if count > 0 {
 		values.Set(paramCount, strconv.FormatInt(count, 10))
+	}
+
+	err = m.client.raw(ctx, http.MethodGet, pathMessages, values, nil, &res)
+
+	return
+}
+
+// GetMessagesV2 возвращает сообщения чата или канала.
+// Необязательные параметры задаются опциями: WithMessageIDs, WithBefore,
+// WithAfter, WithCount. Параметры from и to удалены из схемы API как
+// устаревшие — вместо них используются before и after.
+func (m *Messages) GetMessagesV2(ctx context.Context, chatID int64, opts ...QueryOpt) (res model.MessageList, err error) {
+	values := url.Values{}
+	values.Set(paramChatID, strconv.FormatInt(chatID, 10))
+
+	for _, opt := range opts {
+		opt(values)
 	}
 
 	err = m.client.raw(ctx, http.MethodGet, pathMessages, values, nil, &res)
@@ -85,9 +103,14 @@ func (m *Messages) DeleteMessage(ctx context.Context, messageID string) (res mod
 	return
 }
 
-func (m *Messages) AnswerOnCallback(ctx context.Context, id string, answer model.CallbackAnswer) (res model.SimpleQueryResult, err error) {
+func (m *Messages) AnswerOnCallback(ctx context.Context, id string, answer model.CallbackAnswer, opts ...QueryOpt) (res model.SimpleQueryResult, err error) {
 	values := url.Values{}
 	values.Set(paramCallbackID, id)
+
+	for _, opt := range opts {
+		opt(values)
+	}
+
 	err = m.client.raw(ctx, http.MethodPost, pathAnswers, values, answer, &res)
 
 	return
@@ -99,6 +122,7 @@ func (m *Messages) GetVideoAttachmentDetails(ctx context.Context, videoToken str
 	return
 }
 
+// Deprecated: use Comments.GetComments
 func (m *Messages) GetComments(ctx context.Context, messageID string, before, after, count int64, commentIds []string) (res model.CommentList, err error) {
 	values := url.Values{}
 

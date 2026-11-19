@@ -99,7 +99,6 @@ func (t *chatsTest) TestEditChat() {
 				LastName:         "Doe",
 				IsBot:            false,
 				LastActivityTime: 1775626919577,
-				Name:             "John Doe",
 			},
 		},
 	}
@@ -195,7 +194,6 @@ func (t *chatsTest) TestGetPinMessage() {
 				LastName:         "Doe",
 				IsBot:            false,
 				LastActivityTime: 1775628268494,
-				Name:             "John Doe",
 			},
 		},
 	}
@@ -286,7 +284,6 @@ func (t *chatsTest) TestGetMembership() {
 		Description:      "bot for unit-test",
 		AvatarURL:        "https://localhost/avatar.png",
 		FullAvatarURL:    "https://localhost/avatar.full.png",
-		Name:             "bot firstname",
 	}
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -357,7 +354,6 @@ func (t *chatsTest) TestGetAdmins() {
 				Description:      "bot for unit-test",
 				AvatarURL:        "https://localhost/avatar.png",
 				FullAvatarURL:    "https://localhost/avatar.full.png",
-				Name:             "bot firstname",
 			},
 			{
 				LastAccessTime: 1775626919577,
@@ -384,7 +380,6 @@ func (t *chatsTest) TestGetAdmins() {
 				LastActivityTime: 1775626919577,
 				AvatarURL:        "https://localhost/avatar.png",
 				FullAvatarURL:    "https://localhost/avatar.full.png",
-				Name:             "John Doe",
 			},
 		},
 	}
@@ -487,7 +482,6 @@ func (t *chatsTest) TestGetMembers() {
 				Description:      "bot for unit-test",
 				AvatarURL:        "https://localhost/avatar.png",
 				FullAvatarURL:    "https://localhost/avatar.full.png",
-				Name:             "bot firstname",
 			},
 			{
 				LastAccessTime: 1775626919577,
@@ -514,7 +508,6 @@ func (t *chatsTest) TestGetMembers() {
 				LastActivityTime: 1775626919577,
 				AvatarURL:        "https://localhost/avatar.png",
 				FullAvatarURL:    "https://localhost/avatar.full.png",
-				Name:             "John Doe",
 			},
 		},
 	}
@@ -540,12 +533,24 @@ func (t *chatsTest) TestGetMembers() {
 }
 
 func (t *chatsTest) TestAddMembers() {
+	data, err := stabs.ReadFile("stabs/chats/add-members.json")
+	t.NoError(err)
+
+	expect := model.ModifyMembersResult{
+		Success:       true,
+		FailedUserIDs: []int64{201201201, 229229229},
+		FailedUserDetails: []model.FailedUserDetails{
+			{ErrorCode: "add.participant.privacy", UserIDs: []int64{201201201}},
+			{ErrorCode: "add.participant.not.found", UserIDs: []int64{229229229}},
+		},
+	}
+
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Equal(r.Header.Get(AuthorizationHeader), testToken)
 		t.Equal(r.Method, http.MethodPost)
 		t.Equal(r.URL.Path, fmt.Sprintf(formatPathChatsMembers, -70000000000005))
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(`{"success":true}`))
+		_, _ = w.Write(data)
 	}))
 
 	defer srv.Close()
@@ -556,7 +561,7 @@ func (t *chatsTest) TestAddMembers() {
 	res, err := api.Chats.AddMembers(context.Background(), -70000000000005, []int64{123123123})
 	t.NoError(err)
 
-	t.True(res.Success)
+	t.Equal(expect, res)
 }
 
 func (t *chatsTest) TestRemoveMember() {

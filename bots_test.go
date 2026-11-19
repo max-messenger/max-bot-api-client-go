@@ -30,6 +30,7 @@ func (t *botsTest) TestInfoSuccess() {
 	info := model.BotInfo{
 		UserID:           123123123,
 		FirstName:        "unit bot",
+		LastName:         "bot lastname",
 		Username:         "test-bot",
 		IsBot:            true,
 		LastActivityTime: 1774677196913,

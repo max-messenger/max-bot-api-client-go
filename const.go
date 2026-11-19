@@ -73,6 +73,7 @@ const (
 	paramFrom               = "from"
 	paramLimit              = "limit"
 	paramTimeout            = "timeout"
+	paramTypes              = "types"
 	paramDisableLinkPreview = "disable_link_preview"
 	paramCommentID          = "comment_id"
 )

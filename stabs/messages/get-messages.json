@@ -1,0 +1,27 @@
+{
+  "messages": [
+    {
+      "sender": {
+        "user_id": 123456789,
+        "first_name": "John",
+        "last_name": "Doe",
+        "is_bot": false,
+        "last_activity_time": 1775053249000
+      },
+      "recipient": {
+        "chat_id": 182182182,
+        "chat_type": "chat"
+      },
+      "timestamp": 1775053255737,
+      "body": {
+        "mid": "mid.ffffbdb48e6c3775019d496b34394b84",
+        "seq": 116327994376978687,
+        "text": "..."
+      },
+      "stat": {
+        "views": 1
+      },
+      "url": "https://max.ru/chats/182182182/messages/mid.ffffbdb48e6c3775019d496b34394b84"
+    }
+  ]
+}

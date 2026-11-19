@@ -98,6 +98,8 @@ const (
 	UpdateCommentCreated   UpdateType = "comment_created"
 	UpdateCommentEdited    UpdateType = "comment_edited"
 	UpdateCommentRemoved   UpdateType = "comment_removed"
+
+	UpdateBotAdminPermissionsChanged UpdateType = "bot_admin_permissions_changed"
 )
 
 type MarkupType string
@@ -139,11 +141,4 @@ const (
 	AttachInlineKeyboard AttachmentType = "inline_keyboard"
 	AttachLocation       AttachmentType = "location"
 	AttachShare          AttachmentType = "share"
-)
-
-type VideoType string
-
-const (
-	VideoTypeRegular      VideoType = "video"
-	VideoTypeVideoMessage VideoType = "video_message"
 )

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/max-messenger/max-bot-api-client-go/v2/model"
@@ -15,16 +16,18 @@ import (
 type UpdateHandler func(context.Context, model.Update)
 
 type Subscriptions struct {
-	client  *client
-	pause   time.Duration
-	timeout time.Duration
+	client      *client
+	pause       time.Duration
+	timeout     time.Duration
+	updateTypes []model.UpdateType
 }
 
 func newSubscriptions(client *client) *Subscriptions {
 	return &Subscriptions{
-		client:  client,
-		pause:   client.pollPause,
-		timeout: client.pollTimeout,
+		client:      client,
+		pause:       client.pollPause,
+		timeout:     client.pollTimeout,
+		updateTypes: client.updateTypes,
 	}
 }
 
@@ -34,12 +37,11 @@ func (s *Subscriptions) GetSubscriptions(ctx context.Context) (res model.GetSubs
 	return
 }
 
-func (s *Subscriptions) Subscribe(ctx context.Context, u, st string, ut []string, v string) (res model.SimpleQueryResult, err error) {
+func (s *Subscriptions) Subscribe(ctx context.Context, u, st string, ut []string) (res model.SimpleQueryResult, err error) {
 	data := model.SubscriptionRequestBody{
 		URL:         u,
 		Secret:      st,
 		UpdateTypes: ut,
-		Version:     v,
 	}
 	err = s.client.raw(ctx, http.MethodPost, pathSubscriptions, nil, data, &res)
 
@@ -114,6 +116,13 @@ func (s *Subscriptions) getUpdates(ctx context.Context, limit, timeout int, mark
 	}
 	if marker > 0 {
 		values.Set(paramMarker, strconv.FormatInt(marker, 10))
+	}
+	if len(s.updateTypes) > 0 {
+		types := make([]string, len(s.updateTypes))
+		for i, t := range s.updateTypes {
+			types[i] = string(t)
+		}
+		values.Set(paramTypes, strings.Join(types, ","))
 	}
 
 	err = s.client.raw(ctx, http.MethodGet, pathUpdates, values, nil, &res)

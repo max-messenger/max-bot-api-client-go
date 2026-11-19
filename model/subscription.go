@@ -1,11 +1,9 @@
 package model
 
 type Subscription struct {
-	URL            string   `json:"url"`
-	SelfSignedCert string   `json:"self_signed_cert"`
-	Time           int64    `json:"time"`
-	UpdateTypes    []string `json:"update_types"`
-	Version        string   `json:"version"`
+	URL         string   `json:"url"`
+	Time        int64    `json:"time"`
+	UpdateTypes []string `json:"update_types"`
 }
 
 type GetSubscriptionsResult struct {
@@ -13,9 +11,7 @@ type GetSubscriptionsResult struct {
 }
 
 type SubscriptionRequestBody struct {
-	URL            string   `json:"url"`
-	Secret         string   `json:"secret,omitempty"`
-	SelfSignedCert string   `json:"self_signed_cert,omitempty"`
-	UpdateTypes    []string `json:"update_types,omitempty"`
-	Version        string   `json:"version,omitempty"`
+	URL         string   `json:"url"`
+	Secret      string   `json:"secret,omitempty"`
+	UpdateTypes []string `json:"update_types,omitempty"`
 }
