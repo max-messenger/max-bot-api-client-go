@@ -6,48 +6,15 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"strings"
 
-	"github.com/max-messenger/max-bot-api-client-go/v2/model"
+	"github.com/max-messenger/max-bot-api-client-go/v3/model"
 )
 
 type Messages struct {
 	client *client
 }
 
-// Deprecated: use GetMessagesV2
-func (m *Messages) GetMessages(ctx context.Context, chatID, from, to, count int64, messageIDs []string) (res model.MessageList, err error) {
-	values := url.Values{}
-	values.Set(paramChatID, strconv.FormatInt(chatID, 10))
-
-	if len(messageIDs) > 0 {
-		values.Set(paramMessageIDs, strings.Join(messageIDs, ","))
-	}
-
-	// Внимание: семантика параметров API противоположна названию локальных переменных.
-	// В API:
-	//   from — время, ДО которого запрашиваются сообщения (верхняя граница по времени)
-	//   to   — время, НАЧИНАЯ с которого запрашиваются сообщения (нижняя граница по времени)
-	if to > 0 {
-		values.Set(paramTo, strconv.FormatInt(to, 10))
-	}
-	if from > 0 {
-		values.Set(paramFrom, strconv.FormatInt(from, 10))
-	}
-	if count > 0 {
-		values.Set(paramCount, strconv.FormatInt(count, 10))
-	}
-
-	err = m.client.raw(ctx, http.MethodGet, pathMessages, values, nil, &res)
-
-	return
-}
-
-// GetMessagesV2 возвращает сообщения чата или канала.
-// Необязательные параметры задаются опциями: WithMessageIDs, WithBefore,
-// WithAfter, WithCount. Параметры from и to удалены из схемы API как
-// устаревшие — вместо них используются before и after.
-func (m *Messages) GetMessagesV2(ctx context.Context, chatID int64, opts ...QueryOpt) (res model.MessageList, err error) {
+func (m *Messages) GetMessages(ctx context.Context, chatID int64, opts ...QueryOpt) (res model.MessageList, err error) {
 	values := url.Values{}
 	values.Set(paramChatID, strconv.FormatInt(chatID, 10))
 
@@ -118,27 +85,6 @@ func (m *Messages) AnswerOnCallback(ctx context.Context, id string, answer model
 
 func (m *Messages) GetVideoAttachmentDetails(ctx context.Context, videoToken string) (res model.VideoAttachmentDetails, err error) {
 	err = m.client.raw(ctx, http.MethodGet, fmt.Sprintf(formatPathVideoAttachmentDetails, videoToken), nil, nil, &res)
-
-	return
-}
-
-// Deprecated: use Comments.GetComments
-func (m *Messages) GetComments(ctx context.Context, messageID string, before, after, count int64, commentIds []string) (res model.CommentList, err error) {
-	values := url.Values{}
-
-	if len(commentIds) > 0 {
-		values.Set(paramCommentIDs, strings.Join(commentIds, ","))
-	}
-	if before > 0 {
-		values.Set(paramBefore, strconv.FormatInt(before, 10))
-	}
-	if after > 0 {
-		values.Set(paramAfter, strconv.FormatInt(after, 10))
-	}
-	if count > 0 {
-		values.Set(paramCount, strconv.FormatInt(count, 10))
-	}
-	err = m.client.raw(ctx, http.MethodGet, fmt.Sprintf(formatPathComments, messageID), values, nil, &res)
 
 	return
 }

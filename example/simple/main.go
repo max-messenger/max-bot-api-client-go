@@ -8,8 +8,8 @@ import (
 	"log"
 	"os"
 
-	maxbot "github.com/max-messenger/max-bot-api-client-go/v2"
-	"github.com/max-messenger/max-bot-api-client-go/v2/model"
+	maxbot "github.com/max-messenger/max-bot-api-client-go/v3"
+	"github.com/max-messenger/max-bot-api-client-go/v3/model"
 )
 
 //go:embed all:upload

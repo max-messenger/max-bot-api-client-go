@@ -5,7 +5,7 @@
 2. [Добавьте бота и пройдите модерацию](https://dev.max.ru//docs/chatbots/bots-create/create)
 3. После успешной модерации бота вы [получите его токен](https://dev.max.ru//docs/chatbots/bots-create/manage#Получение%20токена%20бота)
 
-Создайте новый проект `my-first-bot` и установите `github.com/max-messenger/max-bot-api-client-go/v2`. Для этого откройте терминал и выполните следующие команды:
+Создайте новый проект `my-first-bot` и установите `github.com/max-messenger/max-bot-api-client-go/v3`. Для этого откройте терминал и выполните следующие команды:
 
 ```sh
 # Создайте новую папку для исходного кода вашего модуля Go и перейдите в неё
@@ -15,7 +15,7 @@ cd my-first-bot
 go mod init first-max-bot
 
 # Установите библиотеку для работы с MAX API на golang
-go get github.com/max-messenger/max-bot-api-client-go/v2
+go get github.com/max-messenger/max-bot-api-client-go/v3
 ```
 
 Команда go mod init создает файл go.mod для отслеживания зависимостей вашего кода. Пока что файл включает только имя вашего модуля и версию Go, которую поддерживает ваш код.
@@ -39,7 +39,7 @@ func main() {
 
 Есть два типа пакетов: исполняемые (executable) и библиотеки (reusable). Для создания исполняемых файлов пакет должен иметь имя main. Все остальные пакеты не являются исполняемыми. При этом пакет main должен содержать функцию main, которая является входной точкой в приложение.
 
-Импортируем в наш пакет main установленный модуль `github.com/max-messenger/max-bot-api-client-go/v2`
+Импортируем в наш пакет main установленный модуль `github.com/max-messenger/max-bot-api-client-go/v3`
 
 ```go
 package main
@@ -51,7 +51,7 @@ import (
 	"os"
 	"time"
 
-	maxbot "github.com/max-messenger/max-bot-api-client-go/v2"
+	maxbot "github.com/max-messenger/max-bot-api-client-go/v3"
 )
 
 func main() {
@@ -87,8 +87,8 @@ import (
 	"os"
 	"time"
 
-	maxbot "github.com/max-messenger/max-bot-api-client-go/v2"
-	"github.com/max-messenger/max-bot-api-client-go/v2/model"
+	maxbot "github.com/max-messenger/max-bot-api-client-go/v3"
+	"github.com/max-messenger/max-bot-api-client-go/v3/model"
 )
 
 func main() {

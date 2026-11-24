@@ -5,10 +5,7 @@ import "time"
 const (
 	defaultScheme = "https"
 
-	// Deprecated: not allowed
-	DefaultHost = "platform-api.max.ru"
-
-	DefaultHostV2   = "platform-api2.max.ru"
+	DefaultHost     = "platform-api2.max.ru"
 	defaultFileName = "file"
 
 	SecretHeader        = "X-Max-Bot-Api-Secret"

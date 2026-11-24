@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/max-messenger/max-bot-api-client-go/v2/model"
+	"github.com/max-messenger/max-bot-api-client-go/v3/model"
 )
 
 func TestNewMessage(t *testing.T) {

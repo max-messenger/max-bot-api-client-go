@@ -13,14 +13,14 @@ import (
 	"runtime/debug"
 	"time"
 
-	"github.com/max-messenger/max-bot-api-client-go/v2/model"
+	"github.com/max-messenger/max-bot-api-client-go/v3/model"
 )
 
 const (
 	headerInfoClientName    = "X-Max-Client-Name"
 	headerInfoClientVersion = "X-Max-Client-Version"
 	headerInfoClientRuntime = "X-Max-Client-Runtime"
-	headerInfoClientNameVal = "github.com/max-messenger/max-bot-api-client-go/v2"
+	headerInfoClientNameVal = "github.com/max-messenger/max-bot-api-client-go/v3"
 )
 
 type HttpClient interface {

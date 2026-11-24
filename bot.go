@@ -15,7 +15,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/max-messenger/max-bot-api-client-go/v2/model"
+	"github.com/max-messenger/max-bot-api-client-go/v3/model"
 )
 
 var commandReg = regexp.MustCompile(`^(/[^\s:]+)`)
@@ -44,9 +44,7 @@ type ChatsAPI interface {
 }
 
 type MessagesAPI interface {
-	// Deprecated: use GetMessagesV2
-	GetMessages(ctx context.Context, chatID, from, to, count int64, messageIDs []string) (model.MessageList, error)
-	GetMessagesV2(ctx context.Context, chatID int64, opts ...QueryOpt) (model.MessageList, error)
+	GetMessages(ctx context.Context, chatID int64, opts ...QueryOpt) (model.MessageList, error)
 	GetMessageByID(ctx context.Context, messageID string) (model.Message, error)
 	Send(ctx context.Context, msg *Message) (res model.SendMessageResult, err error)
 	EditMessage(ctx context.Context, messageID string, body model.NewMessageBody) (model.SimpleQueryResult, error)
@@ -75,7 +73,7 @@ type UploadAPI interface {
 }
 
 func NewApi(token string, opt ...Opt) (*Api, error) {
-	cli := newClient(token, DefaultHostV2)
+	cli := newClient(token, DefaultHost)
 	var err error
 	for _, o := range opt {
 		err = o(cli)

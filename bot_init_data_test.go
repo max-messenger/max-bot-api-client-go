@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/max-messenger/max-bot-api-client-go/v2/model"
+	"github.com/max-messenger/max-bot-api-client-go/v3/model"
 )
 
 // generateTestHash генерирует валидный hash для тестовых данных

@@ -58,20 +58,7 @@ func (k *KeyboardRow) Build() []*Button {
 	return buttons
 }
 
-// Deprecated: use AddCallBack
-func (k *KeyboardRow) AddCallback(text string, _ Intent, payload string) *KeyboardRow {
-	kr := &Button{
-		Type:    ButtonCallback,
-		Text:    text,
-		Payload: payload,
-	}
-
-	k.cols = append(k.cols, kr)
-
-	return k
-}
-
-func (k *KeyboardRow) AddCallBack(text string, payload string) *KeyboardRow {
+func (k *KeyboardRow) AddCallback(text string, payload string) *KeyboardRow {
 	kr := &Button{
 		Type:    ButtonCallback,
 		Text:    text,

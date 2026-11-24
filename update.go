@@ -1,6 +1,6 @@
 package maxbot
 
-import "github.com/max-messenger/max-bot-api-client-go/v2/model"
+import "github.com/max-messenger/max-bot-api-client-go/v3/model"
 
 type updateRaw struct {
 	Timestamp   int64                       `json:"timestamp"`
