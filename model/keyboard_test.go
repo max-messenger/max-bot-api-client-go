@@ -126,7 +126,6 @@ func TestKeyboardRowAddCallback(t *testing.T) {
 	tests := []struct {
 		name     string
 		text     string
-		intent   Intent
 		payload  string
 		expected Button
 	}{
@@ -155,7 +154,7 @@ func TestKeyboardRowAddCallback(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			row := &KeyboardRow{cols: make([]*Button, 0)}
-			result := row.AddCallBack(tt.text, tt.payload)
+			result := row.AddCallback(tt.text, tt.payload)
 
 			if result != row {
 				t.Error("AddCallback should return the same row instance for chaining")
@@ -332,7 +331,7 @@ func TestKeyboardRowChaining(t *testing.T) {
 
 	row.
 		AddMessage("Msg1").
-		AddCallBack("Callback", "data").
+		AddCallback("Callback", "data").
 		AddLink("Link", "https://example.com").
 		AddGeoLocation("Geo", true).
 		AddContact("Contact").
@@ -377,7 +376,7 @@ func TestKeyboardMultipleRowsAndButtons(t *testing.T) {
 
 	// Row 3: 1 button
 	row3 := k.AddRow()
-	row3.AddCallBack("Action", "doIt")
+	row3.AddCallback("Action", "doIt")
 
 	result := k.build()
 

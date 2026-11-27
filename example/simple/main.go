@@ -121,7 +121,7 @@ func textHandler(ctx context.Context, api *maxbot.Api, update model.Update) {
 		AddRow().
 		AddMessage("message").
 		AddClipboard("скопировать url", "https://max.ru").
-		AddCallBack("delete", "callback-payload")
+		AddCallback("delete", "callback-payload")
 
 	msg := maxbot.NewMessage().
 		SetText("hello").
